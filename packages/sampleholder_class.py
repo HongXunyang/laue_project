@@ -1,5 +1,12 @@
 """ 
-This module defines the class of the sample holder 
+This module defines the class of the sample holder. There are two types of sample holder
+1. Plain sample holder: an initial sample holder with grid on 
+2. Engraved sample holder: an sample holder with sample contour engraved on it
+
+# setup of the class definition
+1. Basic sample holder class that share the same properties between the two types
+2. Plain sample holder class that inherits from the basic sample holder class
+3. Engraved sample holder class that inherits from the basic sample holder class
 """
 
 import numpy as np
@@ -7,6 +14,7 @@ import matplotlib.pyplot as plt
 from .sample_class import Sample
 
 
+# Below is merely a draft of the sample holder
 class SampleHolder:
     def __init__(self, grid_size=(10, 10)):
         self.name = "Sample Holder"

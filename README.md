@@ -1,4 +1,23 @@
-# Sample and Sample Holder Management System
+# Contour finding, Sample re-orientation and all that
+This is a sub-project of the larger project *Automizing Sample re-orientation for Neutron Scattering*. The main focus of this subproject is: 
+1. Digitalizing Samples and sample holder (assuming there are ~ 100 samples on the holder)
+2. Determining the Orientation of each sample (asssuming only phi offset, this is a orientation-finding project)
+3. Finding the countour of each sample using open CV (Jasmin's project)
+4. Generating the sample contour after re-orientation (Jasmin's project)
+5. Finding the most compact configuration of samples on the holder (Sissi's project)
+6. If possible, generate a CAD file of the sample holder engraved with the re-oriented sample contours. 
+
+The expected outcome of this project would be with a GUI where the user can upload:
+1. sample holder image
+2. Laue image of each sample 
+
+the program will automaticall detect the contour of each sample using the sample holder image (open cv library); and determine the offset of each sample using the Laue image of each sample (orientation-finding project). and then produce the re-oriented sample contour. 
+
+After this, the program will find the most compact configuration, and ideally generate a CAD file of the engraved sample holder (if that's possibl).
+
+**Assumptions to simplify the prolem**
+- Samples are flakes and c-axis is well-aligned. The only offset is in phi.
+
 
 ## Overview
 
@@ -17,8 +36,8 @@ workspace/
    │   ├── sample_class.py             # Defines the Sample class
    │   ├── sampleholder_class.py       # Defines the SampleHolder class
    ├── scripts/
-   │   ├── run.py                     # Script for running and testing the project
    ├── __init__.py                     # Root-level package initialization (empty)
+   ├── main.py                         # main file
    └── README.md                       # Project documentation (this file)
 ```
 
@@ -45,7 +64,7 @@ To get started with the project:
 
 ## Usage
 
-The core functionality is demonstrated in the `scripts/run.py` file. Here’s how you can run the code:
+The core functionality is demonstrated in the `main.py` file. Here’s how you can run the code:
 
 ### Running the Script
 
@@ -54,9 +73,9 @@ The core functionality is demonstrated in the `scripts/run.py` file. Here’s ho
    cd workspace
    ```
 
-2. Run the `run.py` script:
+2. Run the `main.py` script:
    ```bash
-   python scripts/run.py
+   python main.py
    ```
 
 This script imports the `Sample` and `SampleHolder` classes from the `packages/` directory and allows you to add samples to the holder and visualize their placement.
@@ -92,10 +111,6 @@ Each sample's ID is labeled next to the dot, and if a sample has a defined `phi_
 - Define the origin of the coordinate system.
 - Define the origin of the sample itself for better positioning and orientation.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
 ---
 
 ### Future Improvements
@@ -103,6 +118,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - Add more robust error handling and validation for sample placement.
 - Extend visualization with additional features such as 3D plotting or alignment indicators.
 
----
-
-This `README.md` provides an overview of your project, instructions for installation and usage, and an outline of the project structure and key components. Let me know if you want any adjustments!
