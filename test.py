@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
-from packages import Sample, SampleHolder
+from packages import Sample, GridSampleHolder
 
 
 sample1 = Sample(1, "LBCO", (0, 0))
 sample2 = Sample(2, "LBCO", (0, 1))
 sample3 = Sample(3, "LBCO", (1, 0))
 
-sample_holder = SampleHolder(grid_size=(5, 5))
+sample_holder = GridSampleHolder(grid_size=(5, 5))
 sample_holder.add_sample(sample1)
 sample_holder.add_sample(sample2)
 sample_holder.add_sample(sample3)

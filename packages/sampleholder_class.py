@@ -1,12 +1,14 @@
 """ 
 This module defines the class of the sample holder. There are two types of sample holder
-1. Plain sample holder: an initial sample holder with grid on 
-2. Engraved sample holder: an sample holder with sample contour engraved on it
+1. Grid sample holder: an sample holder with grid on 
+2. Functional sample holder: an advanced sample holder that can perform re-orientation of sample and close packing of samples. This is a bridge between the plain sample holder and the engraved sample holder
+3. Engraved sample holder: an sample holder with sample contour engraved on it
 
 # setup of the class definition
 1. Basic sample holder class that share the same properties between the two types
-2. Plain sample holder class that inherits from the basic sample holder class
-3. Engraved sample holder class that inherits from the basic sample holder class
+2. grid sample holder class that inherits from the functional sample holder class
+3. Functional sample holder class that inherits from the basic sample holder class. 
+4. Engraved sample holder class that inherits from the functional sample holder class
 """
 
 import numpy as np
@@ -14,68 +16,47 @@ import matplotlib.pyplot as plt
 from .sample_class import Sample
 
 
-# Below is merely a draft of the sample holder
+# Basic sample holder class
 class SampleHolder:
-    def __init__(self, grid_size=(10, 10)):
+    """
+    the class of the sample holder. Samples are labeled by the list_index, 0, 1 for example. list_index is assigned to a sample once it is added to the sample holder. Sample objects are stored in the samples_list. Each sample should have a unique id (int).
+    """
+
+    def __init__(self):
         self.name = "Sample Holder"
-        self.grid_size = (
-            grid_size  # This is the index range of the grid on the sample holder
-        )
         self.size = (
-            None  # this is the actual dimension/size of the sample holder, in mm
+            None  # This is the actual dimension/size of the sample holder, in mm
         )
-        self.grid = np.zeros(
-            self.grid_size
-        )  # This is the true table of the sample holder: 0 -> no sample; 1 -> with sample
-        self.samples = [
-            [None for _ in range(grid_size[1])] for _ in range(grid_size[0])
-        ]  # This is the list storing the sample objects
-        self._index2id = [
-            [None for _ in range(grid_size[1])] for _ in range(grid_size[0])
-        ]  # given the index, return the id of the sample
-        self._id2index = {}  # given the id, return the index of the sample
+        self.samples_list = []  # This is the list storing the sample objects
+        self._id2sample = {}  # given the id, return the sample object
+        self._id2list_index = (
+            {}
+        )  # given the id, return the index of the sample in the list
 
     def __str__(self):
-        return f"Sample Holder: {self.name}, grid size: {self.grid_size}"
+        return f"Sample Holder: {self.name}"
 
-    # Methods definition
+    # Core methods
     def add_sample(self, sample: Sample):
         """
-        This method adds a sample to the sample holder
+        This method adds a sample to the basic sample holder
 
         Args:
         --------------
         sample: Sample
             The sample object to be added to the sample holder
         """
-        index = sample.index
-        self.samples[index[0]][index[1]] = sample  # assign sample to the grid
-        # update the grid true table; 0 -> no sample; 1 -> with sample
-        self.grid[index[0]][index[1]] = 1
-        self._index2id[index[0]][index[1]] = sample.id
-        self._id2index[str(sample.id)] = index
+        self.samples_list.append(sample)
         sample.sample_holder = self
+        self._id2sample[str(sample.id)] = sample
+        self._id2list_index[str(sample.id)] = len(self.samples_list) - 1
 
-        return sample
-
-    def remove_sample(self, id: int):
-        """
-        remove sample by id
-        1. set the index in the grid to zero
-        2. remove the sample from the sample list (set to None)
-        3. remove the id from the id2index dictionary
-        4. remove the index from the index2id list
-        """
-        index = self.id2index(id)
-        self.grid[index[0]][index[1]] = 0
-        self.samples[index[0]][index[1]] = None
-        self._id2index.pop(str(id))
-        self._index2id[index[0]][index[1]] = None
-
+    # ---------------------------------------------
     # helper methods
-    def id2index(self, id):
+    # ---------------------------------------------
+    def id2sample(self, id: int):
         """
-        This method returns the index of the sample given the id
+        This method returns the sample object given the id
 
         Args:
         --------------
@@ -84,26 +65,44 @@ class SampleHolder:
 
         Returns:
         --------------
-        index: tuple
-            The index of the sample on the sample holder
+        sample: Sample
+            The sample object
         """
-        return self._id2index[str(id)]
+        return self._id2sample[str(id)]
 
-    def index2id(self, index):
+    def id2list_index(self, id: int):
         """
-        This method returns the id of the sample given the index
+        This method returns the list index of the sample in the list given the id
 
         Args:
         --------------
-        index: tuple
-            The index of the sample on the sample holder
+        id: int
+            The id of the sample
+
+        Returns:
+        --------------
+        index: int
+            The index of the sample in the list
+        """
+        return self._id2list_index[str(id)]
+
+    def list_index2id(self, index: int):
+        """
+        This method returns the id of the sample given the list index
+
+        Args:
+        --------------
+        index: int
+            The index of the sample in the list
 
         Returns:
         --------------
         id: int
-            The id of the sample
+            The id of the sample, or None if the index is out of range
         """
-        return self._index2id[index[0]][index[1]]
+        if index >= len(self.samples_list):
+            return None
+        return self.samples_list[index].id
 
     def number_samples(self):
         """
@@ -114,15 +113,202 @@ class SampleHolder:
         num_samples: int
             The number of samples on the sample holder
         """
-        return int(np.sum(np.array(self.grid)))
+        return len(self.samples_list)
 
-    def is_sample(self, index: tuple) -> bool:
+
+class FunctionalSampleHolder(SampleHolder):
+    """
+    This class defines the functional sample holder that can perform re-orientation of sample and close packing of samples.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.name = "Functional Sample Holder"
+
+    # ---------------------------------------------
+    # Core methods
+    # - assign_phi_offset: this method assigns the phi offset to the sample and update the sample.phi_offset
+    # - reorient_sample: this method re-orients the sample according to the sample.phi_offset, and update their sample.contour_new
+    # - relocate_samples: this method pack the samples on the same sample holder, leave the contour unchanged but update the sample.position_new
+    # ---------------------------------------------
+
+    def assign_phi_offset(self, sample: Sample, phi_offset: float):
+        """
+        assigns the phi offset to the sample and update the sample.phi_offset
+        """
+        sample.phi_offset = phi_offset
+
+    def assign_phi_offset_by_index(self, index, phi_offset: float, search_type="id"):
+        """
+        assigns the phi offset to the sample given the index.
+
+        keyword arguments:
+        ----------------
+        search_type: str
+            the type of index to search for the sample. choose from "id" or "list_index"
+        """
+        if search_type == "id":
+            sample = self.id2sample(index)
+            self.assign_phi_offset(sample, phi_offset)
+        elif search_type == "list_index":
+            sample = self.samples_list[index]
+            self.assign_phi_offset(sample, phi_offset)
+
+    def reorient_sample(self, sample: Sample):
+        """
+        re-orient the sample according to the phi_offset and update the sample.contour_new
+        """
+        # if phi offset is not assigned, raise an error
+        if sample.phi_offset is None:
+            raise ValueError(f"The phi offset of sample {sample.id} is not assigned")
+        # re-orient the sample
+        # to-do: add the re-orientation code here
+        # - load the contour
+        # - rotate the contour
+        # - save the new contour to sample.contour_new
+        pass
+
+    def reorient_sample_by_index(self, index, search_type="id"):
+        """
+        re-orient the sample given the index
+        """
+        if search_type == "id":
+            sample = self.id2sample(index)
+            self.reorient_sample(sample)
+        elif search_type == "list_index":
+            sample = self.samples_list[index]
+            self.reorient_sample(sample)
+
+    def relocate_sample(self, sample: Sample, position):
+        """
+        relocate the sample to the new position
+        """
+        sample.position_new = position
+
+    def relocate_sample_by_index(self, index, position, search_type="id"):
+        """
+        relocate the sample given the index
+        """
+        if search_type == "id":
+            sample = self.id2sample(index)
+            self.relocate_sample(sample, position)
+        elif search_type == "list_index":
+            sample = self.samples_list[index]
+            self.relocate_sample(sample, position)
+
+
+# Grid sample holder class with grid on
+class GridSampleHolder(FunctionalSampleHolder):
+    """
+    This class defines the grid sample holder with grid on.
+    Samples are labeled by the grid_index, (0,2) for example, in addtion to the list_index defined in the parent class. grid_index is pre-defined in the sample object when constructured. In this class, sample objects are stored both in the samples_list and in the samples_in_grid.
+
+    Enable sample update (re-orientation, close packing) by grid index.
+    """
+
+    def __init__(self, grid_size=(10, 10)):
+        super().__init__()
+        self.name = "Grid Sample Holder"
+        self.grid_size = (
+            grid_size  # This is the index range of the grid on the sample holder
+        )
+        self._is_sample_in_grid = np.zeros(
+            self.grid_size, dtype=np.int8
+        )  # This is the true table of the sample holder: 0 -> no sample; 1 -> with sample
+        self.samples_in_grid = [
+            [None for _ in range(grid_size[1])] for _ in range(grid_size[0])
+        ]  # This is the list storing the sample objects, indexed by the grid index, (0,2) for example
+        self._id2grid_index = (
+            {}
+        )  # given the id, return the grid index of the sample in the grid
+        self._grid_index2id = [
+            [None for _ in range(grid_size[1])] for _ in range(grid_size[0])
+        ]  # given the grid index (in tuple), return the id of the sample
+
+    # ---------------------------------------------
+    # core methods
+    # - add_sample
+    # - reorient_sample
+    # - relocate_sample
+    # ---------------------------------------------
+    def add_sample(self, sample: Sample):
+        """
+        This method adds a sample to the grid sample holder
+
+        Args:
+        --------------
+        sample: Sample
+            The sample object to be added to the sample holder
+        """
+        super().add_sample(sample)
+        grid_index = sample.grid_index
+        self._is_sample_in_grid[grid_index[0]][grid_index[1]] = 1
+        self.samples_in_grid[grid_index[0]][grid_index[1]] = sample
+        # make sure the id does not exist in the dictionary before adding
+        if str(sample.id) in self._id2grid_index:
+            raise ValueError("The id already exists in the dictionary")
+        else:
+            self._id2grid_index[str(sample.id)] = grid_index  # from id to grid index
+        self._grid_index2id[grid_index[0]][
+            grid_index[1]
+        ] = sample.id  # from grid index to id
+
+    def reorient_sample_by_index(self, index, search_type="grid_index"):
+        super().reorient_sample_by_index(index, search_type)
+        if search_type == "grid_index":
+            sample = self.samples_in_grid[index[0]][index[1]]
+            self.reorient_sample(sample)
+
+    def relocate_sample_by_index(self, index, position, search_type="grid_index"):
+        super().relocate_sample_by_index(index, position, search_type)
+        if search_type == "grid_index":
+            sample = self.samples_in_grid[index[0]][index[1]]
+            self.relocate_sample(sample, position)
+
+    # ---------------------------------------------
+    # helper methods
+    # ---------------------------------------------
+    def is_sample_in_grid(self, index: tuple) -> bool:
         """
         given the index, return if there is a sample on the sample holder
         """
-        return self.grid[index[0]][index[1]] == 1
+        return self._is_sample_in_grid[index[0]][index[1]] == 1
 
+    def id2grid_index(self, id: int):
+        """
+        This method returns the grid index of the sample given the id
+
+        Args:
+        --------------
+        id: int
+            The id of the sample
+
+        Returns:
+        --------------
+        grid index: tuple
+            The grid index of the sample on the sample holder
+        """
+        return self._id2grid_index[str(id)]
+
+    def grid_index2id(self, grid_index: tuple):
+        """
+        This method returns the id of the sample given the index
+
+        Args:
+        --------------
+        grid_index: tuple
+            The grid index of the sample on the sample holder. (1,2) for example
+
+        Returns:
+        --------------
+        id: int
+            The id of the sample
+        """
+        return self._grid_index2id[grid_index[0]][grid_index[1]]
+
+    # --------------------------------------------
     # Visualization methods
+    # --------------------------------------------
     def visualize(self, ax=None):
         """
         This method visualizes the sample holder
@@ -150,7 +336,7 @@ class SampleHolder:
         # plot the samples as dots if exists
         for i in range(grid_size[0]):
             for j in range(grid_size[1]):
-                if self.is_sample((i, j)):  # if sample exists
+                if self.is_sample_in_grid((i, j)):  # if sample exists
                     ax.plot(j, i, "ro", markersize=10)
 
         ax.invert_yaxis()  # invert y axis
@@ -160,15 +346,17 @@ class SampleHolder:
         offset = 0.12
         for i in range(grid_size[0]):
             for j in range(grid_size[1]):
-                if self.is_sample((i, j)):  # if sample exists
-                    ax.text(j + offset, i + offset, self._index2id[i][j], fontsize=12)
+                if self.is_sample_in_grid((i, j)):  # if sample exists
+                    ax.text(
+                        j + offset, i + offset, self._grid_index2id[i][j], fontsize=12
+                    )
 
         # plot the phi offset by adding a small line on the sample dot
         line_length = 0.5
         for i in range(grid_size[0]):
             for j in range(grid_size[1]):
-                if self.is_sample((i, j)):  # if sample exists
-                    sample = self.samples[i][j]
+                if self.is_sample_in_grid((i, j)):  # if sample exists
+                    sample = self.samples_in_grid[i][j]
                     if sample.phi_offset is not None:
                         phi_offset = sample.phi_offset
                         x = j - line_length / 2 * np.cos(np.deg2rad(phi_offset))
