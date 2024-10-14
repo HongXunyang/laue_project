@@ -20,6 +20,7 @@ class Sample:
 
         # important properties
         self.phi_offset = None
+        self.is_reoriented = False
 
     def __str__(self):
         return f"Sample {self.id}: {self.name}, grid index: {self.grid_index}, position: {self.position_original}"

@@ -166,6 +166,9 @@ class FunctionalSampleHolder(SampleHolder):
         # - load the contour
         # - rotate the contour
         # - save the new contour to sample.contour_new
+
+        # update the status of the sample (re-oriented)
+        sample.is_reoriented = True
         pass
 
     def reorient_sample_by_index(self, index, search_type="id"):
@@ -359,6 +362,8 @@ class GridSampleHolder(FunctionalSampleHolder):
                     sample = self.samples_in_grid[i][j]
                     if sample.phi_offset is not None:
                         phi_offset = sample.phi_offset
+                        if sample.is_oriented:
+                            phi_offset = 0
                         x = j - line_length / 2 * np.cos(np.deg2rad(phi_offset))
                         x1 = j + line_length / 2 * np.cos(np.deg2rad(phi_offset))
                         y = i - line_length / 2 * np.sin(np.deg2rad(phi_offset))
