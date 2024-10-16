@@ -221,8 +221,6 @@ def visualize_contours(
     image,
     contours,
     hulls,
-    contours_kwargs=None,
-    hulls_kwargs=None,
     is_remove_background_contour=True,
 ):
     """
@@ -333,14 +331,23 @@ def generate_sample_object(id, contour, hull, grid_index=None) -> Sample:
     ---------------
     """
     sample = Sample(id)
-    contour_object = generate_contour_object(contour, hull)
-    contour_object.sample = sample
-    contour_object.id = id
     sample.grid_index = grid_index
-    sample.contour_original = contour_object
 
-    # The position of the sample is the centroid of the hull
-    sample.position_original = _hull2centroid(hull)
+    # Generate the original contour objects
+    contour_object_original = generate_contour_object(contour, hull)
+    contour_object_original.sample = sample
+    contour_object_original.id = id
+    sample.contour_original = contour_object_original
+
+    # Generate the new contour objects, which is the same as the original contour at the beginning
+    contour_new, hull_new = contour.copy(), hull.copy()
+    contour_object_new = generate_contour_object(contour_new, hull_new)
+    contour_object_new.sample = sample
+    contour_object_new.id = id
+    sample.contour_new = contour_object_new
+
+    # The position of the sample is the centroid of the contour
+    sample.position_original = _contour2centroid(contour)
     return sample
 
 
@@ -396,6 +403,18 @@ def _hull2centroid(hull):
         return (cX, cY)
     else:
         print(f"Hull has zero area, returning None.")
+        return None
+
+
+def _contour2centroid(contour):
+    M = cv2.moments(contour)
+    # Ensure the area is not zero before calculating centroid
+    if M["m00"] != 0:
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        return (cX, cY)
+    else:
+        print(f"Contour has zero area, returning None.")
         return None
 
 

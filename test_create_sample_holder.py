@@ -48,18 +48,33 @@ contours, approximated_contours, hulls = image2contours(
 )
 
 # visualize contours
-image_to_visualize = image_to_visualize = visualize_contours(
-    image,
-    approximated_contours,
-    hulls,
-)
-
+# image_to_visualize = image_to_visualize = visualize_contours(
+#    image,
+#    approximated_contours,
+#    hulls,
+# )
+# cv2.waitKey(0)
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
-print(sampleholder)
-sampleholder.print_samples()
-cv2.waitKey(0)
 
-if True:
+
+# assign random phi_offset to samples
+for sample in sampleholder.samples_list:
+    sample.phi_offset = np.random.uniform(0, 180)
+    sample.reorient()
+
+# assign random position offset to the samples
+for sample in sampleholder.samples_list:
+    position_offset = np.random.uniform(-100, 100, 2)
+    sample.position_new = sample.position_original + position_offset
+    sample.relocate()
+
+# visualize the sample holder
+fig, ax = plt.subplots()
+sampleholder.visualize(ax, is_plot_contour=False, is_plot_hull=True)
+plt.show()
+print(sampleholder)
+
+if False:
     cv2.imwrite("../images/fake_holder_with_samples_contours.jpg", image_to_visualize)
