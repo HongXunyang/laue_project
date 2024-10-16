@@ -34,7 +34,13 @@ class SampleHolder:
         )  # given the id, return the index of the sample in the list
 
     def __str__(self):
-        return f"Sample Holder: {self.name}"
+        # return the name of the sample holder
+        # return the number of samples on the sample holder
+        return f"{self.name} with {self.number_samples()} samples"
+
+    def print_samples(self):
+        for sample in self.samples_list:
+            print(sample)
 
     # Core methods
     def add_sample(self, sample: Sample):
@@ -47,7 +53,7 @@ class SampleHolder:
             The sample object to be added to the sample holder
         """
         self.samples_list.append(sample)
-        sample.sample_holder = self
+        sample.sampleholder = self
         self._id2sample[str(sample.id)] = sample
         self._id2list_index[str(sample.id)] = len(self.samples_list) - 1
 

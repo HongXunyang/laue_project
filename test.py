@@ -1,77 +1,104 @@
 import cv2
 import numpy as np
-
-# Load the image in grayscale
-image_path = "../images/first_test.jpg"  # Replace with the path to your image
-image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
-# Display the original grayscale image
-cv2.imshow("Original Grayscale Image", image)
-
-# Apply a Gaussian blur to reduce noise
-blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
-
-# Display the blurred image
-cv2.imshow("Blurred Image", blurred_image)
-
-# Apply Otsu's thresholding to separate the dark samples from the background
-ret, thresh = cv2.threshold(
-    blurred_image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+import matplotlib.pyplot as plt
+from packages import (
+    unify_background,
+    remove_stripes,
+    contours2polygons,
+    image2contours,
+    visualize_contours,
 )
 
-# Display the thresholded image
-cv2.imshow("Thresholded Image", thresh)
 
-
-# Apply morphological operations to remove small noise (e.g., stripes)
-kernel = np.ones((3, 3), np.uint8)
-# Remove noise
-opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=2)
-
-# Display the image after opening
-cv2.imshow("After Opening", opening)
-
-
-# Close small holes inside the foreground objects
-closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel, iterations=2)
-
-# Display the image after closing
-cv2.imshow("After Closing", closing)
-
-
-# Find contours from the processed binary image
-contours, hierarchy = cv2.findContours(
-    closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-)
-
-# Create a copy of the original image to draw all contours
-image_all_contours = cv2.imread(image_path)
-
-# Draw all contours (before filtering)
-cv2.drawContours(image_all_contours, contours, -1, (0, 0, 255), 2)
-
-# Display the image with all contours drawn
-cv2.imshow("All Contours (Before Filtering)", image_all_contours)
-
-
-# Filter contours by area to exclude small contours (like stripes)
-min_area_threshold = 1000  # Adjust this value based on your image
-filtered_contours = [
-    cnt for cnt in contours if cv2.contourArea(cnt) > min_area_threshold
+stripes_vectors = [
+    np.array([95, 86, 167]),
+    np.array([57, 48, 139]),
+    np.array([72, 66, 137]),
+]
+target_background_vector = np.array([202, 209, 206])
+background_vectors = [
+    np.array([202, 209, 206]),
+    np.array([190, 201, 199]),
+    np.array([182, 185, 183]),
 ]
 
-# Load the original image in color to draw the filtered contours on it
-image_filtered_contours = cv2.imread(image_path)
 
-# Draw the filtered contours on the image
-cv2.drawContours(image_filtered_contours, filtered_contours, -1, (0, 255, 0), 2)
+# Callback function to get the BGR value of the clicked pixel
+def get_bgr_value(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:  # If left mouse button is clicked
+        # Get the BGR value at the (x, y) coordinate
+        bgr_value = image[y, x]
+        # Extract the individual blue, green, red values
+        blue = bgr_value[0]
+        green = bgr_value[1]
+        red = bgr_value[2]
+        print(f"BGR Value at ({x}, {y}): Blue={blue}, Green={green}, Red={red}")
+        # Display the value on the image as text (optional)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(
+            image,
+            f"BGR:({blue},{green},{red})",
+            (x, y),
+            font,
+            0.5,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
+        cv2.imshow("Resized Window", image)
 
-# Display the image with filtered contours drawn
-cv2.imshow("Filtered Contours (After Area Filtering)", image_filtered_contours)
 
-# Save the result as a new image
-cv2.imwrite("contours_output.jpg", image_filtered_contours)
+# Load image
+original_image = cv2.imread("../images/fake_holder_with_samples.jpg")
+rows, columns, channels = original_image.shape
+original_image = original_image[
+    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
+]
+if False:
+    cv2.namedWindow("Resized Window", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("Resized Window", 400, 600)
+    cv2.setMouseCallback("Resized Window", get_bgr_value)
+    # Display the image and wait for a key press
+    while True:
+        cv2.imshow("Resized Window", image)
+        if cv2.waitKey(1) & 0xFF == 27:  # Exit on pressing the 'Esc' key
+            break
+    cv2.imshow("Resized Window", image)
+
+orginal_image = cv2.resize(
+    original_image, (rows // 5, columns // 5), interpolation=cv2.INTER_AREA
+)
+rows, columns, channels = orginal_image.shape
+
+contours, approximated_contours, hulls = image2contours(
+    original_image,
+    gaussian_window=(7, 7),
+    stripes_vectors=stripes_vectors,
+    background_vectors=background_vectors,
+    epsilon=2.5,
+    lowercut=100,
+)
+
+
+# Visualize the contours
+contours_kwargs = {
+    "color": (0, 0, 255),
+    "thickness": 4,
+}
+hulls_kwargs = {
+    "color": (0, 255, 0),
+    "thickness": 3,
+}
+image_to_visualize = visualize_contours(
+    original_image,
+    approximated_contours,
+    hulls,
+    contours_kwargs=contours_kwargs,
+    hulls_kwargs=hulls_kwargs,
+)
+cv2.namedWindow("result", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("result", 800, 500)
+cv2.imshow("result", image_to_visualize)
 cv2.waitKey(0)
 
-# Close all OpenCV windows
-cv2.destroyAllWindows()
+print("done")
