@@ -1,9 +1,16 @@
 import cv2
 import numpy as np
 from tqdm import tqdm
+import json
 from .contour_class import Contour
 from .sample_class import Sample
 from .sampleholder_class import FunctionalSampleHolder
+
+# Load the data from the JSON file
+with open("config/config.json", "r") as json_file:
+    config = json.load(json_file)
+with open("config/stylesheet.json", "r") as json_file:
+    stylesheet = json.load(json_file)
 
 
 # --------------------------------
@@ -151,9 +158,7 @@ def image2contours(
     stripes_vectors=None,
     background_vectors=None,
     isprint=True,
-    gaussian_window=None,
-    epsilon=2.5,
-    lowercut=100,
+    is_gaussian_filter=True,
 ):
     """
     This function process the image and return the original contours, approximated contours, and hulls
@@ -164,9 +169,7 @@ def image2contours(
     - stripes_vectors: sampling of vectors that contains the BGR info of the stripes. [np.array([1,2,3]), np.array([255,1,136])] for examples
     - background_vectors: sampling of vectors that contains the BGR info of the background. [np.array([1,2,3]), np.array([255,1,136])] for examples
     - isprint: if True, print the progress bar
-    - gaussian_window: the window size of the Gaussian filter. (7,7) for example. set to None if not needed
-    - epsilon: the approximation accuracy in pixel, default is 2.5
-    - lowercut: the lowercut of the perimeter. If the perimeter of the contour is less than lowercut, we drop this contour. unit in pixel
+    - is_gaussian_filter: if True, apply Gaussian filter to the image
     """
     target_background_vector = np.mean(background_vectors, axis=0)
     if is_preprocess:
@@ -187,8 +190,10 @@ def image2contours(
     # convert to grayscale
     image_gray = cv2.cvtColor(image_preprocessed, cv2.COLOR_BGR2GRAY)
     # apply Gaussian filter
-    if gaussian_window is not None:
-        image_gray = cv2.GaussianBlur(image_gray, gaussian_window, 0)
+    if is_gaussian_filter:
+        image_gray = cv2.GaussianBlur(
+            image_gray, config["image2contours_kwargs"]["gaussian_window"], 0
+        )
     # binarize the image
     _, image_binary = cv2.threshold(image_gray, 127, 255, cv2.THRESH_BINARY)
 
@@ -198,7 +203,9 @@ def image2contours(
     )
     # approximate contours
     approximated_contours = contours2polygons(
-        contours, epsilon=epsilon, lowercut=lowercut
+        contours,
+        epsilon=config["image2contours_kwargs"]["epsilon"],
+        lowercut=config["image2contours_kwargs"]["lowercut"],
     )
     # get hulls
     hulls, hulls_indeces = contours2hulls(approximated_contours)
@@ -231,22 +238,16 @@ def visualize_contours(
     - hulls_kwargs: the kwargs for the hulls (e.g., {"color": (255, 0, 0), "thickness": 2}).
     - is_remove_background_contour: if True, remove the background contour.
     """
-
-    # Default keyword arguments for contours and hulls if not provided
-    if contours_kwargs is None:
-        contours_kwargs = {"color": (0, 255, 0), "thickness": 2}  # Green contours
-    if hulls_kwargs is None:
-        hulls_kwargs = {"color": (255, 0, 0), "thickness": 2}  # Blue hulls
     if is_remove_background_contour:
         contours, hulls = _remove_background_contour(contours, hulls)
 
     image_copy = image.copy()
 
     # Draw contours on the image
-    cv2.drawContours(image_copy, contours, -1, **contours_kwargs)
+    cv2.drawContours(image_copy, contours, -1, **stylesheet["contours_kwargs"])
 
     # Draw hulls on the image
-    cv2.drawContours(image_copy, hulls, -1, **hulls_kwargs)
+    cv2.drawContours(image_copy, hulls, -1, **stylesheet["hulls_kwargs"])
 
     # Label the contours according to their index
     number_contours = len(contours)
