@@ -33,7 +33,8 @@ class MainWindow(QMainWindow):
         self.default_params_contours_finding = {
             "epsilon": 2.5,
             "lowercut": 100,
-            "gaussian_window": (5, 5),
+            "gaussian_window": (7, 7),
+            "area_lowercut": 2000,
         }
 
     def initUI(self):
@@ -69,13 +70,16 @@ class MainWindow(QMainWindow):
         contour_finding_params_layout = QFormLayout()
         self.epsilon_input = QLineEdit()
         self.lowercut_input = QLineEdit()
+        self.area_lowercut_input = QLineEdit()
         self.gaussian_size_input = QLineEdit()
         # Set placeholders or default values
         self.epsilon_input.setPlaceholderText("Default: 2.5")
         self.lowercut_input.setPlaceholderText("Default: 100")
-        self.gaussian_size_input.setPlaceholderText("Default: 5")
+        self.area_lowercut_input.setPlaceholderText("Default: 2000")
+        self.gaussian_size_input.setPlaceholderText("Default: 7")
         contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
         contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
+        contour_finding_params_layout.addRow("Area lowercut:", self.area_lowercut_input)
         contour_finding_params_layout.addRow(
             "Gauss. filter size:", self.gaussian_size_input
         )
@@ -142,6 +146,7 @@ class MainWindow(QMainWindow):
             # Retrieve parameters, use defaults if input is empty
             epsilon_text = self.epsilon_input.text()
             lowercut_text = self.lowercut_input.text()
+            area_lowercut_text = self.area_lowercut_input.text()
             gaussian_size_text = self.gaussian_size_input.text()
 
             # Load the image path
@@ -161,6 +166,11 @@ class MainWindow(QMainWindow):
                 if lowercut_text
                 else self.default_params_contours_finding["lowercut"]
             )
+            area_lowercut = (
+                int(area_lowercut_text)
+                if area_lowercut_text
+                else self.default_params_contours_finding["area_lowercut"]
+            )
             gaussian_window = (
                 (int(gaussian_size_text), int(gaussian_size_text))
                 if gaussian_size_text
@@ -173,13 +183,16 @@ class MainWindow(QMainWindow):
                 background_vectors=self.background_vectors,
                 epsilon=epsilon,
                 lowercut=lowercut,
-                area_lowercut=100,
+                area_lowercut=area_lowercut,
                 gaussian_window=gaussian_window,
                 is_gaussian_filter=True,
             )
             image_to_visualize = visualize_contours(
                 image, approximated_contours, hulls, is_plot=False
             )
+            # detele later
+            min_area = min([cv2.contourArea(hull) for hull in hulls])
+            self.output_log.append(f"Minimum area: {min_area}\n")
             # re-plot the image in image_display
             self.image_display.replot_image_with_contours(image_to_visualize)
 

@@ -115,7 +115,9 @@ def unify_background(
     return filtered_image
 
 
-def contours2approximated_contours(contours, epsilon=2.5, lowercut=100):
+def contours2approximated_contours(
+    contours, epsilon=2.5, lowercut=100, area_lowercut=2000
+):
     """
     This function approximates the contours using the Ramer-Douglas-Peucker algorithm.
 
@@ -123,6 +125,7 @@ def contours2approximated_contours(contours, epsilon=2.5, lowercut=100):
     - contours: list of contours
     - epsilon: the approximation accuracy
     - lowercut: the lowercut of the perimeter. If the perimeter of the contour is less than lowercut, we drop this contour. unit in pixel
+    - area_lowercut: the lowercut of the area. If the area of the contour is less than area_lowercut, we drop this contour. unit in pixel^2
 
     Returns: the list of approximated contours, each contour's perimeter is larger than the lowercut
     ---------------
@@ -131,9 +134,13 @@ def contours2approximated_contours(contours, epsilon=2.5, lowercut=100):
     for i, contour in enumerate(contours):
         temp_contour = cv2.approxPolyDP(contour, epsilon, True)
         perimeter = cv2.arcLength(contour, True)
-
+        area = cv2.contourArea(contour)
         # if the perimeter is too small, or the approximated contour is a simple line, we drop it
-        if (perimeter > lowercut) and (len(temp_contour) > 2):
+        if (
+            (perimeter > lowercut)
+            and (len(temp_contour) > 2)
+            and (area > area_lowercut)
+        ):
             approximated_contours.append(temp_contour)
     return approximated_contours
 
@@ -171,7 +178,7 @@ def image2contours(
     background_vectors=None,
     epsilon=2.5,
     lowercut=100,
-    area_lowercut=100,
+    area_lowercut=2000,
     gaussian_window=(5, 5),
     isprint=True,
     is_gaussian_filter=True,
@@ -224,6 +231,7 @@ def image2contours(
         contours,
         epsilon=epsilon,
         lowercut=lowercut,
+        area_lowercut=area_lowercut,
     )
     # get hulls
     hulls, _ = contours2hulls(approximated_contours)

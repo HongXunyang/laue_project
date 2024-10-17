@@ -42,6 +42,7 @@ contours, approximated_contours, hulls = image2contours(
     background_vectors=background_vectors,
     epsilon=2.5,
     lowercut=100,
+    area_lowercut=2000,
     gaussian_window=(5, 5),
     is_gaussian_filter=True,
 )
@@ -75,6 +76,8 @@ fig, ax = plt.subplots()
 visualize_sampleholder(sampleholder, ax, is_plot_contour=False, is_plot_hull=True)
 plt.show()
 print(sampleholder)
+print(min([cv2.contourArea(hull) for hull in hulls]))
+
 
 if False:
     cv2.imwrite("../images/fake_holder_with_samples_contours.jpg", image_to_visualize)
