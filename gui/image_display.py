@@ -11,7 +11,6 @@ class ImageDisplay(QWidget):
     def __init__(self):
         super().__init__()
         # set the size
-        # self.setFixedSize(400, 300)
 
         self.setObjectName("image_display")
         self.label = QLabel("Drop an image here")
@@ -39,6 +38,7 @@ class ImageDisplay(QWidget):
             filepath = urls[0].toLocalFile()
             self.display_image(filepath)
             self.image_path = filepath  # Store the image path
+            self.setFixedSize(self.width(), self.height())
 
     def display_image(self, filepath):
         image_bgr = cv2.imread(filepath)
@@ -52,7 +52,7 @@ class ImageDisplay(QWidget):
             )
             pixmap = QPixmap.fromImage(qImg)
             # scale the pixmap
-            pixmap = pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio)
+            pixmap = pixmap.scaled(self.width(), self.height())
             self.label.setPixmap(pixmap)
             self.pixmap = pixmap
 
@@ -79,28 +79,10 @@ class ImageDisplay(QWidget):
             pixmap_width = pixmap.width()
             pixmap_height = pixmap.height()
 
-            # Compute scaling factors and offsets
-            if pixmap_width * label_height > pixmap_height * label_width:
-                # Image scaled to fit label width
-                scale = pixmap_width / label_width
-                scaled_width = label_width
-                scaled_height = pixmap_height / scale
-                offset_x = 0
-                offset_y = (label_height - scaled_height) / 2
-            else:
-                # Image scaled to fit label height
-                scale = pixmap_height / label_height
-                scaled_width = pixmap_width / scale
-                scaled_height = label_height
-                offset_x = (label_width - scaled_width) / 2
-                offset_y = 0
-
             # Adjust coordinates to image coordinate system
-            if (offset_x <= x <= offset_x + scaled_width) and (
-                offset_y <= y <= offset_y + scaled_height
-            ):
-                image_x = int((x - offset_x) * (self.image.shape[1] / scaled_width))
-                image_y = int((y - offset_y) * (self.image.shape[0] / scaled_height))
+            if (0 <= x <= label_width) and (0 <= y <= label_height):
+                image_x = int(x * (self.image.shape[1] / label_width))
+                image_y = int(y * (self.image.shape[0] / label_height))
                 # Emit signal with image coordinates
                 self.point_clicked_signal.emit(image_x, image_y)
 
