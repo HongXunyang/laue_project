@@ -7,6 +7,7 @@ import cv2
 class ImageDisplay(QWidget):
     def __init__(self):
         super().__init__()
+        self.setObjectName("imageDisplay")
         self.label = QLabel("Drop an image here")
         self.label.setAlignment(Qt.AlignCenter)
         self.setAcceptDrops(True)

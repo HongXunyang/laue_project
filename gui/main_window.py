@@ -24,24 +24,30 @@ class MainWindow(QMainWindow):
     def initUI(self):
         main_widget = QWidget()
         main_layout = QHBoxLayout()
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
 
         # Panel A
         panelA = QWidget()
+        panelA.setObjectName("panelA")
         panelA_layout = QVBoxLayout()
+        panelA_layout.setSpacing(5)
 
         # A-1: Image Display
         self.image_display = ImageDisplay()
-        panelA_layout.addWidget(self.image_display)
+        panelA_layout.addWidget(self.image_display, stretch=1)
 
         # A-2: Processed Results Display
         self.canvas = MatplotlibCanvas()
-        panelA_layout.addWidget(self.canvas)
+        panelA_layout.addWidget(self.canvas, stretch=1)
 
         panelA.setLayout(panelA_layout)
 
         # Panel B
         panelB = QWidget()
+        panelB.setObjectName("panelB")
         panelB_layout = QVBoxLayout()
+        panelB_layout.setSpacing(10)
 
         # B-1: Contour-finding parameters
         b1_group = QGroupBox("Contour-finding Parameters")
@@ -75,6 +81,7 @@ class MainWindow(QMainWindow):
 
         # Panel C: Output Log
         panelC = QWidget()
+        panelC.setObjectName("panelC")
         panelC_layout = QVBoxLayout()
         self.output_log = QTextEdit()
         self.output_log.setReadOnly(True)
@@ -82,9 +89,9 @@ class MainWindow(QMainWindow):
         panelC.setLayout(panelC_layout)
 
         # Add panels to main layout
-        main_layout.addWidget(panelA)
-        main_layout.addWidget(panelB)
-        main_layout.addWidget(panelC)
+        main_layout.addWidget(panelA, stretch=1)
+        main_layout.addWidget(panelB, stretch=1)
+        main_layout.addWidget(panelC, stretch=1)
 
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
@@ -93,10 +100,14 @@ class MainWindow(QMainWindow):
         self.process_button.clicked.connect(self.process_image)
 
     def process_image(self):
-        # Placeholder for processing
-        self.output_log.append("Processing image...")
-        # Integrate your processing functions here
-
-        data = process_data()
-        self.canvas.plot(data)
-        self.output_log.append("Processing complete.")
+        if self.image_display.image:
+            self.output_log.append("Processing image...")
+            # Load the image path
+            image_path = self.image_display.image
+            # Retrieve parameters
+            param1 = self.param1.text()
+            param2 = self.param2.text()
+            param3 = self.param3.text()
+            param4 = self.param4.text()
+            # Call your processing functions
+            pass
