@@ -18,7 +18,6 @@ Functions:
 import cv2
 import numpy as np
 from tqdm import tqdm
-import json
 from .class_contour import Contour
 from .class_sample import Sample
 from .class_sampleholder import FunctionalSampleHolder
@@ -28,12 +27,6 @@ from .helper_functions import (
     _hull2centroid,
     distance,
 )
-
-# Load the data from the JSON file
-with open("config/config.json", "r") as json_file:
-    config = json.load(json_file)
-with open("config/stylesheet.json", "r") as json_file:
-    stylesheet = json.load(json_file)
 
 
 # --------------------------------
@@ -176,6 +169,10 @@ def image2contours(
     is_preprocess=True,
     stripes_vectors=None,
     background_vectors=None,
+    epsilon=2.5,
+    lowercut=100,
+    area_lowercut=100,
+    gaussian_window=(5, 5),
     isprint=True,
     is_gaussian_filter=True,
 ):
@@ -187,6 +184,10 @@ def image2contours(
     - is_preprocess: if True, remove the stripes and unify the background
     - stripes_vectors: sampling of vectors that contains the BGR info of the stripes. [np.array([1,2,3]), np.array([255,1,136])] for examples
     - background_vectors: sampling of vectors that contains the BGR info of the background. [np.array([1,2,3]), np.array([255,1,136])] for examples
+    - epsilon: the approximation accuracy
+    - lowercut: the lowercut of the perimeter. If the perimeter of the contour is less than lowercut, we drop this contour. unit in pixel
+    - area_lowercut: the lowercut of the area. If the area of the contour is less than area_lowercut, we drop this contour. unit in pixel^2
+    - gaussian_window: the window size of the Gaussian filter
     - isprint: if True, print the progress bar
     - is_gaussian_filter: if True, apply Gaussian filter to the image
     """
@@ -210,9 +211,7 @@ def image2contours(
     image_gray = cv2.cvtColor(image_preprocessed, cv2.COLOR_BGR2GRAY)
     # apply Gaussian filter
     if is_gaussian_filter:
-        image_gray = cv2.GaussianBlur(
-            image_gray, config["image2contours_kwargs"]["gaussian_window"], 0
-        )
+        image_gray = cv2.GaussianBlur(image_gray, gaussian_window, 0)
     # binarize the image
     _, image_binary = cv2.threshold(image_gray, 127, 255, cv2.THRESH_BINARY)
 
@@ -223,11 +222,11 @@ def image2contours(
     # approximate contours
     approximated_contours = contours2approximated_contours(
         contours,
-        epsilon=config["image2contours_kwargs"]["epsilon"],
-        lowercut=config["image2contours_kwargs"]["lowercut"],
+        epsilon=epsilon,
+        lowercut=lowercut,
     )
     # get hulls
-    hulls, hulls_indeces = contours2hulls(approximated_contours)
+    hulls, _ = contours2hulls(approximated_contours)
 
     return (
         contours,

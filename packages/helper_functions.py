@@ -57,14 +57,14 @@ def _remove_background_contour(contours, hulls):
     """
     backgroun_sample_size_ratio = 5
     areas = [cv2.contourArea(hull) for hull in hulls]
-    max_area = max(areas)
-    max_index = areas.index(max_area)
-    areas.pop(max_index)
-    second_max_area = max(areas)
-    print(f" max_area: {max_area}, second_max_area: {second_max_area}")
-    if max_area > backgroun_sample_size_ratio * second_max_area:
-        contours.pop(max_index)
-        hulls.pop(max_index)
+    if len(areas) > 1:
+        max_area = max(areas)
+        max_index = areas.index(max_area)
+        areas.pop(max_index)
+        second_max_area = max(areas)
+        if max_area > backgroun_sample_size_ratio * second_max_area:
+            contours.pop(max_index)
+            hulls.pop(max_index)
     return contours, hulls
 
 

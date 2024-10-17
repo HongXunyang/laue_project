@@ -123,6 +123,7 @@ def visualize_contours(
     contours,
     hulls,
     is_remove_background_contour=True,
+    is_plot=True,
 ):
     """
     Overlay the contours and hulls on the image and label the contours.
@@ -136,6 +137,7 @@ def visualize_contours(
     - contours_kwargs: the kwargs for the contours (e.g., {"color": (0, 255, 0), "thickness": 2}).
     - hulls_kwargs: the kwargs for the hulls (e.g., {"color": (255, 0, 0), "thickness": 2}).
     - is_remove_background_contour: if True, remove the background contour.
+    - is_plot: if True, plot the image.
     """
     if is_remove_background_contour:
         contours, hulls = _remove_background_contour(contours, hulls)
@@ -175,7 +177,8 @@ def visualize_contours(
             )
         else:
             print(f"Contour {i} has zero area, skipping text label.")
-    cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("result", 800, 500)
-    cv2.imshow("result", image_copy)
+    if is_plot:
+        cv2.namedWindow("result", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow("result", 800, 500)
+        cv2.imshow("result", image_copy)
     return image_copy

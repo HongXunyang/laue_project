@@ -1,3 +1,5 @@
+import numpy as np
+import cv2, json
 from PyQt5.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -13,6 +15,7 @@ from .image_display import ImageDisplay
 from .matplotlib_canvas import MatplotlibCanvas
 from .helper_functions import process_data
 from PyQt5.QtCore import Qt
+from packages import image2contours, visualize_contours
 
 
 class MainWindow(QMainWindow):
@@ -24,6 +27,14 @@ class MainWindow(QMainWindow):
         # variables
         self.selection_state = None
         self.selected_points = []
+        self.stripes_vectors = []
+        self.background_vectors = []
+        self.target_background_vector = None
+        self.default_params_contours_finding = {
+            "epsilon": 2.5,
+            "lowercut": 100,
+            "gaussian_window": (5, 5),
+        }
 
     def initUI(self):
         main_widget = QWidget()
@@ -39,11 +50,11 @@ class MainWindow(QMainWindow):
 
         # A-1: Image Display
         self.image_display = ImageDisplay()
-        panelA_layout.addWidget(self.image_display, stretch=1)
+        panelA_layout.addWidget(self.image_display, stretch=3)
 
         # A-2: Processed Results Display
         self.matplotlib_canvas = MatplotlibCanvas()
-        panelA_layout.addWidget(self.matplotlib_canvas, stretch=1)
+        panelA_layout.addWidget(self.matplotlib_canvas, stretch=2)
 
         panelA.setLayout(panelA_layout)
 
@@ -56,10 +67,19 @@ class MainWindow(QMainWindow):
         # B-1: Contour-finding parameters
         contour_finding_params = QGroupBox("contour_finding_params")
         contour_finding_params_layout = QFormLayout()
-        self.param1 = QLineEdit()
-        self.param2 = QLineEdit()
-        contour_finding_params_layout.addRow("Parameter 1:", self.param1)
-        contour_finding_params_layout.addRow("Parameter 2:", self.param2)
+        self.epsilon_input = QLineEdit()
+        self.lowercut_input = QLineEdit()
+        self.gaussian_size_input = QLineEdit()
+        # Set placeholders or default values
+        self.epsilon_input.setPlaceholderText("Default: 2.5")
+        self.lowercut_input.setPlaceholderText("Default: 100")
+        self.gaussian_size_input.setPlaceholderText("Default: 5")
+        contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
+        contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
+        contour_finding_params_layout.addRow(
+            "Gauss. filter size:", self.gaussian_size_input
+        )
+
         contour_finding_params.setLayout(contour_finding_params_layout)
 
         # B-2: Close packing parameters
@@ -100,9 +120,9 @@ class MainWindow(QMainWindow):
         panelC.setLayout(panelC_layout)
 
         # Add panels to main layout
-        main_layout.addWidget(panelA, stretch=1)
-        main_layout.addWidget(panelB, stretch=1)
-        main_layout.addWidget(panelC, stretch=1)
+        main_layout.addWidget(panelA, stretch=3)
+        main_layout.addWidget(panelB, stretch=2)
+        main_layout.addWidget(panelC, stretch=2)
 
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
@@ -117,22 +137,60 @@ class MainWindow(QMainWindow):
         self.image_display.point_clicked_signal.connect(self._on_image_clicked)
 
     def process_image(self):
-        if self.image_display.image:
-            self.output_log.append("Processing image...")
+        if self.image_display.image is not None:
+            self.output_log.append("----------- Processing image -----------\n")
+            # Retrieve parameters, use defaults if input is empty
+            epsilon_text = self.epsilon_input.text()
+            lowercut_text = self.lowercut_input.text()
+            gaussian_size_text = self.gaussian_size_input.text()
+
             # Load the image path
-            image_path = self.image_display.image
-            # Retrieve parameters
-            param1 = self.param1.text()
-            param2 = self.param2.text()
-            param3 = self.param3.text()
-            param4 = self.param4.text()
-            # Call your processing functions
-            pass
+            image_path = self.image_display.image_path
+            image = self.image_display.image
+            rows, columns, channels = image.shape
+            number_pixels = rows * columns
+            estimated_time = int(number_pixels / (1024 * 2048) * 26)
+            self.output_log.append(f"Estimated time: {estimated_time} seconds\n")
+            epsilon = (
+                float(epsilon_text)
+                if epsilon_text
+                else self.default_params_contours_finding["epsilon"]
+            )
+            lowercut = (
+                int(lowercut_text)
+                if lowercut_text
+                else self.default_params_contours_finding["lowercut"]
+            )
+            gaussian_window = (
+                (int(gaussian_size_text), int(gaussian_size_text))
+                if gaussian_size_text
+                else self.default_params_contours_finding["gaussian_window"]
+            )
+            cv2.waitKey(0)
+            contours, approximated_contours, hulls = image2contours(
+                image,
+                stripes_vectors=self.stripes_vectors,
+                background_vectors=self.background_vectors,
+                epsilon=epsilon,
+                lowercut=lowercut,
+                area_lowercut=100,
+                gaussian_window=gaussian_window,
+                is_gaussian_filter=True,
+            )
+            image_to_visualize = visualize_contours(
+                image, approximated_contours, hulls, is_plot=False
+            )
+            # re-plot the image in image_display
+            self.image_display.replot_image_with_contours(image_to_visualize)
+
+            # output the minmum perimeter of the contours
+            self.output_log.append("----------- Image processed -----------\n")
 
     def start_point_selection(self):
         if self.image_display.image is not None:
             self.selection_state = "selecting_stripe_points"
             self.selected_points = []
+            self.output_log.append("################################################")
             self.output_log.append("Please select three stripe points on the image.")
         else:
             self.output_log.append("Please load an image first.")
@@ -142,7 +200,7 @@ class MainWindow(QMainWindow):
     # -----------------------
 
     def _on_image_loaded(self):
-        self.output_log.append("Image loaded successfully")
+        self.output_log.append("----------- Image loaded -----------\n")
 
     def _on_image_clicked(self, x, y):
         if self.selection_state == "selecting_stripe_points":
@@ -151,9 +209,7 @@ class MainWindow(QMainWindow):
                 self.selected_points.append(
                     {"type": "stripe", "position": (x, y), "bgr": bgr}
                 )
-                self.output_log.append(
-                    f"Selected stripe point at ({x}, {y}), BGR: {bgr}"
-                )
+                self.output_log.append(f"stripe point ({x}, {y}), BGR: {bgr}")
                 if len([p for p in self.selected_points if p["type"] == "stripe"]) == 3:
                     self.selection_state = "selecting_background_points"
                     self.output_log.append(
@@ -167,15 +223,16 @@ class MainWindow(QMainWindow):
                 self.selected_points.append(
                     {"type": "background", "position": (x, y), "bgr": bgr}
                 )
-                self.output_log.append(
-                    f"Selected background point at ({x}, {y}), BGR: {bgr}"
-                )
+                self.output_log.append(f"background point ({x}, {y}), BGR: {bgr}")
                 if (
                     len([p for p in self.selected_points if p["type"] == "background"])
                     == 3
                 ):
                     self.selection_state = None
                     self.output_log.append("Point selection completed.")
+                    self.output_log.append(
+                        "################################################\n"
+                    )
                     self.handle_selected_points()
             else:
                 self.output_log.append("Invalid point selected.")
@@ -186,10 +243,8 @@ class MainWindow(QMainWindow):
         background_points = [
             p for p in self.selected_points if p["type"] == "background"
         ]
-        self.output_log.append("Stripe points:")
-        for p in stripe_points:
-            self.output_log.append(f"Position: {p['position']}, BGR: {p['bgr']}")
-        self.output_log.append("Background points:")
-        for p in background_points:
-            self.output_log.append(f"Position: {p['position']}, BGR: {p['bgr']}")
-        # You can now use these points for further processing
+
+        # store the BGR values of the selected points
+        self.stripes_vectors = [np.array(p["bgr"]) for p in stripe_points]
+        self.background_vectors = [np.array(p["bgr"]) for p in background_points]
+        self.target_background_vector = np.mean(self.background_vectors, axis=0)

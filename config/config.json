@@ -1,8 +1,10 @@
 {
-"image2contours_kwargs": {
-    "epsilon": 2.5,
-    "lowercut": 100,
-    "gaussian_window": [7,7]
-}
-
+    "image2contours_kwargs": {
+        "epsilon": 2.5,
+        "lowercut": 100,
+        "gaussian_window": [
+            7,
+            7
+        ]
+    }
 }

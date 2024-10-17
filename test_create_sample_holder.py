@@ -40,6 +40,9 @@ contours, approximated_contours, hulls = image2contours(
     image,
     stripes_vectors=stripes_vectors,
     background_vectors=background_vectors,
+    epsilon=2.5,
+    lowercut=100,
+    gaussian_window=(5, 5),
     is_gaussian_filter=True,
 )
 

@@ -61,6 +61,17 @@ class ImageDisplay(QWidget):
         else:
             self.label.setText("Failed to load image")
 
+    def replot_image_with_contours(self, image):
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        height, width, channel = image_rgb.shape
+        bytesPerLine = 3 * width
+        qImg = QImage(image_rgb.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(qImg)
+        # scale the pixmap
+        pixmap = pixmap.scaled(self.width(), self.height())
+        self.label.setPixmap(pixmap)
+        self.pixmap = pixmap
+
     def eventFilter(self, source, event):
         if source == self.label and event.type() == Qt.MouseButtonPress:
             self.mousePressEvent(event)
