@@ -6,7 +6,7 @@ class MatplotlibCanvas(FigureCanvas):
     def __init__(self):
         self.fig = Figure()
         super().__init__(self.fig)
-        self.setObjectName("matplotlibCanvas")
+        self.setObjectName("matplotlib_canvas")
         self.axes = self.fig.add_subplot(111)
 
     def plot(self, data):

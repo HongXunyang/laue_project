@@ -84,13 +84,13 @@ QScrollBar::handle:hover {
 
 
 /* element-specific styling*/
-#imageDisplay {
+#image_display {
     border: 1px solid #cccccc;
     background-color: #ffffff;
 }
 
 /* Matplotlib Canvas Styling */
-#matplotlibCanvas {
+#matplotlib_canvas {
     border: 1px solid #cccccc;
     background-color: #ffffff;
 }
