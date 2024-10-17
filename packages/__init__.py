@@ -14,3 +14,4 @@ from .image_processing import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
+from .visualization import visualize_sampleholder

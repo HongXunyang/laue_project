@@ -5,6 +5,12 @@ import json
 from .contour_class import Contour
 from .sample_class import Sample
 from .sampleholder_class import FunctionalSampleHolder
+from .helper_functions import (
+    _center_of_mass,
+    _remove_background_contour,
+    _hull2centroid,
+)
+
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -346,8 +352,8 @@ def generate_sample_object(id, contour, hull, grid_index=None) -> Sample:
     contour_object_new.id = id
     sample.contour_new = contour_object_new
 
-    # The position of the sample is the centroid of the contour
-    sample.position_original = _contour2centroid(contour)
+    # The position of the sample is the centroid of the hull
+    sample.position_original = _hull2centroid(hull)
     return sample
 
 
@@ -385,54 +391,3 @@ def generate_sampleholder_object(samples) -> FunctionalSampleHolder:
     for sample in samples:
         sampleholder.add_sample(sample)
     return sampleholder
-
-
-# ----------------------
-#  Helper functions
-# ----------------------
-def _center_of_mass(stripes_vectors):
-    return np.mean(stripes_vectors, axis=0)
-
-
-def _hull2centroid(hull):
-    M = cv2.moments(hull)
-    # Ensure the area is not zero before calculating centroid
-    if M["m00"] != 0:
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-        return (cX, cY)
-    else:
-        print(f"Hull has zero area, returning None.")
-        return None
-
-
-def _contour2centroid(contour):
-    M = cv2.moments(contour)
-    # Ensure the area is not zero before calculating centroid
-    if M["m00"] != 0:
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-        return (cX, cY)
-    else:
-        print(f"Contour has zero area, returning None.")
-        return None
-
-
-def _remove_background_contour(contours, hulls):
-    """
-    Remove the background contour from the list
-
-    Mechanism:
-    if the largest area of contour is `backgroun_sample_size_ratio` times larger than the second largest, it is the background
-    """
-    backgroun_sample_size_ratio = 5
-    areas = [cv2.contourArea(hull) for hull in hulls]
-    max_area = max(areas)
-    max_index = areas.index(max_area)
-    areas.pop(max_index)
-    second_max_area = max(areas)
-    print(f" max_area: {max_area}, second_max_area: {second_max_area}")
-    if max_area > backgroun_sample_size_ratio * second_max_area:
-        contours.pop(max_index)
-        hulls.pop(max_index)
-    return contours, hulls

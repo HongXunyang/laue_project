@@ -11,6 +11,7 @@ from packages import (
     generate_sample_object,
     generate_sample_objects,
     generate_sampleholder_object,
+    visualize_sampleholder,
 )
 
 # pre-defined parameters
@@ -72,7 +73,8 @@ for sample in sampleholder.samples_list:
 
 # visualize the sample holder
 fig, ax = plt.subplots()
-sampleholder.visualize(ax, is_plot_contour=False, is_plot_hull=True)
+
+visualize_sampleholder(sampleholder, ax, is_plot_contour=False, is_plot_hull=True)
 plt.show()
 print(sampleholder)
 
