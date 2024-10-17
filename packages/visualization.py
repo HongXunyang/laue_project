@@ -4,7 +4,9 @@ This package is for visualization
 
 import numpy as np
 import json
+import cv2
 import matplotlib.pyplot as plt
+from .helper_functions import _remove_background_contour
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -17,7 +19,18 @@ def visualize_sampleholder(
     sampleholder, ax=None, is_plot_contour=False, is_plot_hull=True
 ):
     """
-    This method visualizes the sample holder
+    This method visualizes the sample holder.
+    - Plot the original contours with dashed lines
+    - Plot the new contours after reorientation or relocation with solid lines
+    - indicate the movement of the samples with arrows
+
+    Keyword arguments:
+    - ax: the axis to plot the sample holder.
+    - is_plot_contour: if True, plot the contours.
+    - is_plot_hull: if True, plot the hulls.
+
+    Returns:
+    - ax: the axis with the sample holder plotted.
     """
     for i, sample in enumerate(sampleholder.samples_list):
         contour_original = sample.contour_original.contour
@@ -103,3 +116,66 @@ def visualize_sampleholder(
         )
 
     return ax
+
+
+def visualize_contours(
+    image,
+    contours,
+    hulls,
+    is_remove_background_contour=True,
+):
+    """
+    Overlay the contours and hulls on the image and label the contours.
+
+    Args:
+    - image: cv2 image (the image on which to draw the contours and hulls).
+    - contours: list of contours.
+    - hulls: list of hulls.
+
+    Keyword arguments:
+    - contours_kwargs: the kwargs for the contours (e.g., {"color": (0, 255, 0), "thickness": 2}).
+    - hulls_kwargs: the kwargs for the hulls (e.g., {"color": (255, 0, 0), "thickness": 2}).
+    - is_remove_background_contour: if True, remove the background contour.
+    """
+    if is_remove_background_contour:
+        contours, hulls = _remove_background_contour(contours, hulls)
+
+    image_copy = image.copy()
+
+    # Draw contours on the image
+    cv2.drawContours(image_copy, contours, -1, **stylesheet["contours_kwargs"])
+
+    # Draw hulls on the image
+    cv2.drawContours(image_copy, hulls, -1, **stylesheet["hulls_kwargs"])
+
+    # Label the contours according to their index
+    number_contours = len(contours)
+    for i, contour in enumerate(contours):
+        M = cv2.moments(contour)
+        # Ensure the area is not zero before calculating centroid
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            # the color of the font depends on the i value: (255,255,255) while for i=0, and linearly decreases down to (150,150,150) gray
+            font_color = (
+                int(255 - 105 * i / number_contours),
+                int(255 - 105 * i / number_contours),
+                int(255 - 105 * i / number_contours),
+            )
+            # the font size depends on the i value: 1.8 while for i=0, and linearly decreases down to 1.0
+            font_size = 1.8 - 0.8 * i / number_contours
+            cv2.putText(
+                image_copy,
+                str(i),  # Label with contour index
+                (cX, cY),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_size,  # Font scale
+                font_color,
+                3,  # Thickness
+            )
+        else:
+            print(f"Contour {i} has zero area, skipping text label.")
+    cv2.namedWindow("result", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("result", 800, 500)
+    cv2.imshow("result", image_copy)
+    return image_copy

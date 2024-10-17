@@ -1,16 +1,33 @@
+""" 
+Package for processing image of samples and sample holder
+
+Functions:
+- remove_stripes: remove the underlying stripes from the image
+- unify_background: unify the background color of the image
+- contours2approximated_contours: approximate the contours using the Ramer-Douglas-Peucker algorithm
+- contours2hulls: convert the contours to convex hulls
+- image2contours: process the image and return the contours, approximated contours, and hulls
+- generate_contour_object: generate a Contour object from the contour and hull
+- generate_contour_objects: generate a list of Contour objects from the contours and hulls
+- generate_sample_object: generate a Sample object from the contour and hull
+- generate_sample_objects: generate a list of Sample objects from the contours and hulls
+- generate_sampleholder_object: generate a SampleHolder object from the list of Sample objects
+
+"""
+
 import cv2
 import numpy as np
 from tqdm import tqdm
 import json
-from .contour_class import Contour
-from .sample_class import Sample
-from .sampleholder_class import FunctionalSampleHolder
+from .class_contour import Contour
+from .class_sample import Sample
+from .class_sampleholder import FunctionalSampleHolder
 from .helper_functions import (
     _center_of_mass,
     _remove_background_contour,
     _hull2centroid,
+    distance,
 )
-
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -22,10 +39,6 @@ with open("config/stylesheet.json", "r") as json_file:
 # --------------------------------
 #  Main functions for processing
 # --------------------------------
-def distance(a, b):
-    return np.linalg.norm(a - b)
-
-
 def remove_stripes(image, stripes_vectors, background_vector, isprint=False):
     """
     This function filters out the stripes from the image.
@@ -109,7 +122,7 @@ def unify_background(
     return filtered_image
 
 
-def contours2polygons(contours, epsilon=2.5, lowercut=100):
+def contours2approximated_contours(contours, epsilon=2.5, lowercut=100):
     """
     This function approximates the contours using the Ramer-Douglas-Peucker algorithm.
 
@@ -208,7 +221,7 @@ def image2contours(
         image_binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
     )
     # approximate contours
-    approximated_contours = contours2polygons(
+    approximated_contours = contours2approximated_contours(
         contours,
         epsilon=config["image2contours_kwargs"]["epsilon"],
         lowercut=config["image2contours_kwargs"]["lowercut"],
@@ -221,69 +234,6 @@ def image2contours(
         approximated_contours,
         hulls,
     )
-
-
-def visualize_contours(
-    image,
-    contours,
-    hulls,
-    is_remove_background_contour=True,
-):
-    """
-    Overlay the contours and hulls on the image and label the contours.
-
-    Args:
-    - image: cv2 image (the image on which to draw the contours and hulls).
-    - contours: list of contours.
-    - hulls: list of hulls.
-
-    Keyword arguments:
-    - contours_kwargs: the kwargs for the contours (e.g., {"color": (0, 255, 0), "thickness": 2}).
-    - hulls_kwargs: the kwargs for the hulls (e.g., {"color": (255, 0, 0), "thickness": 2}).
-    - is_remove_background_contour: if True, remove the background contour.
-    """
-    if is_remove_background_contour:
-        contours, hulls = _remove_background_contour(contours, hulls)
-
-    image_copy = image.copy()
-
-    # Draw contours on the image
-    cv2.drawContours(image_copy, contours, -1, **stylesheet["contours_kwargs"])
-
-    # Draw hulls on the image
-    cv2.drawContours(image_copy, hulls, -1, **stylesheet["hulls_kwargs"])
-
-    # Label the contours according to their index
-    number_contours = len(contours)
-    for i, contour in enumerate(contours):
-        M = cv2.moments(contour)
-        # Ensure the area is not zero before calculating centroid
-        if M["m00"] != 0:
-            cX = int(M["m10"] / M["m00"])
-            cY = int(M["m01"] / M["m00"])
-            # the color of the font depends on the i value: (255,255,255) while for i=0, and linearly decreases down to (150,150,150) gray
-            font_color = (
-                int(255 - 105 * i / number_contours),
-                int(255 - 105 * i / number_contours),
-                int(255 - 105 * i / number_contours),
-            )
-            # the font size depends on the i value: 1.8 while for i=0, and linearly decreases down to 1.0
-            font_size = 1.8 - 0.8 * i / number_contours
-            cv2.putText(
-                image_copy,
-                str(i),  # Label with contour index
-                (cX, cY),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                font_size,  # Font scale
-                font_color,
-                3,  # Thickness
-            )
-        else:
-            print(f"Contour {i} has zero area, skipping text label.")
-    cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("result", 800, 500)
-    cv2.imshow("result", image_copy)
-    return image_copy
 
 
 # -------------------------------------

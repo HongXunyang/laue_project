@@ -2,16 +2,11 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from packages import (
-    unify_background,
-    remove_stripes,
-    contours2polygons,
     image2contours,
-    visualize_contours,
-    generate_contour_object,
-    generate_sample_object,
     generate_sample_objects,
     generate_sampleholder_object,
     visualize_sampleholder,
+    visualize_contours,
 )
 
 # pre-defined parameters
@@ -49,12 +44,12 @@ contours, approximated_contours, hulls = image2contours(
 )
 
 # visualize contours
-# image_to_visualize = image_to_visualize = visualize_contours(
-#    image,
-#    approximated_contours,
-#    hulls,
-# )
-# cv2.waitKey(0)
+image_to_visualize = visualize_contours(
+    image,
+    approximated_contours,
+    hulls,
+)
+cv2.waitKey(0)
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)

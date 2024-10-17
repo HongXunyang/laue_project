@@ -14,7 +14,7 @@ This module defines the class of the sample holder. There are two types of sampl
 import numpy as np
 import json
 import matplotlib.pyplot as plt
-from .sample_class import Sample
+from .class_sample import Sample
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:

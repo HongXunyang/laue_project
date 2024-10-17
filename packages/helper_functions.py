@@ -66,3 +66,7 @@ def _remove_background_contour(contours, hulls):
         contours.pop(max_index)
         hulls.pop(max_index)
     return contours, hulls
+
+
+def distance(a, b):
+    return np.linalg.norm(a - b)
