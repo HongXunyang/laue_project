@@ -32,11 +32,11 @@ image = cv2.imread("../images/fake_holder_with_samples.jpg")
 rows, columns, channels = image.shape
 
 # crop image
-image = image[
-    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
-]
+# image = image[
+#    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
+# ]
 # compress image
-image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
+# image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
 rows, columns, channels = image.shape
 
 # finding contours and hulls
