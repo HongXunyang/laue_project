@@ -17,7 +17,7 @@ Functions:
 
 import cv2
 import numpy as np
-from tqdm import tqdm
+import time
 from .class_contour import Contour
 from .class_sample import Sample
 from .class_sampleholder import FunctionalSampleHolder
@@ -178,6 +178,7 @@ def image2contours(
     - isprint: if True, print the progress bar
     - is_gaussian_filter: if True, apply Gaussian filter to the image
     """
+    start = time.time()
     target_background_vector = np.mean(background_vectors, axis=0)
     target_background_vector = target_background_vector.astype(np.uint8)
     if is_preprocess:
@@ -215,7 +216,8 @@ def image2contours(
     )
     # get hulls
     hulls, _ = contours2hulls(approximated_contours)
-
+    end = time.time()
+    print(f"Image processed in {end-start:.1f} seconds")
     return (
         contours,
         approximated_contours,

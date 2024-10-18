@@ -101,7 +101,6 @@ class ImageDisplay(QWidget):
         # Get BGR value from image at position (x, y)
         if self.image is not None:
             h, w, _ = self.image.shape
-            print(h, w)
             if 0 <= y < h and 0 <= x < w:
                 bgr = self.image[y, x]
                 return bgr.tolist()  # Convert to list for easier handling

@@ -99,13 +99,13 @@ class MainWindow(QMainWindow):
         controls = QGroupBox("controls")
         controls_layout = QVBoxLayout()
 
-        # Process Button
-        self.process_button = QPushButton("Process Image")
-        controls_layout.addWidget(self.process_button)
-
         # select-points button
         self.select_points_button = QPushButton("Select Points")
         controls_layout.addWidget(self.select_points_button)
+
+        # Process Button
+        self.process_button = QPushButton("Process Image")
+        controls_layout.addWidget(self.process_button)
 
         controls.setLayout(controls_layout)
 
@@ -154,7 +154,7 @@ class MainWindow(QMainWindow):
             image = self.image_display.image
             rows, columns, channels = image.shape
             number_pixels = rows * columns
-            estimated_time = int(number_pixels / (1024 * 2048) * 26)
+            estimated_time = int(number_pixels / (1024 * 2048) * 0.25)
             self.output_log.append(f"Estimated time: {estimated_time} seconds\n")
             epsilon = (
                 float(epsilon_text)
