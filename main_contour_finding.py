@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+
 from packages import (
     image2contours,
     generate_sample_objects,
@@ -9,6 +11,8 @@ from packages import (
     visualize_contours,
 )
 
+
+start_time = time.time()
 # pre-defined parameters
 stripes_vectors = [
     np.array([95, 86, 167]),
@@ -45,6 +49,7 @@ contours, approximated_contours, hulls = image2contours(
     area_lowercut=2000,
     gaussian_window=(5, 5),
     is_gaussian_filter=True,
+    isprint=False,
 )
 
 # visualize contours
@@ -53,6 +58,8 @@ image_to_visualize = visualize_contours(
     approximated_contours,
     hulls,
 )
+end_time = time.time()
+print(f"Time elapsed: {end_time - start_time} seconds")
 cv2.waitKey(0)
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)

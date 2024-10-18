@@ -32,14 +32,14 @@ from .helper_functions import (
 # --------------------------------
 #  Main functions for processing
 # --------------------------------
-def remove_stripes(image, stripes_vectors, background_vector, isprint=False):
+def remove_stripes(image, stripes_vectors, target_background_vector, isprint=False):
     """
     This function filters out the stripes from the image.
 
     Args:
     - image: cv2 image
     - (list) stripes_vectors: sampling of vectors that contains the BGR info of the stripes. [np.array([1,2,3]), np.array([255,1,136])] for examples
-    - background_vector: np.array([1,2,3]) for example
+    - target_background_vector: np.array([1,2,3]) for example
     - isprint: if True, print the progress bar
     Returns: filtered_image
     ---------------
@@ -50,24 +50,14 @@ def remove_stripes(image, stripes_vectors, background_vector, isprint=False):
     - For each pixel in the image, we calculate the distance to the v, denoted as r
     - If r < R, we replace the pixel with the background_vector
     """
-    rows, columns, channels = image.shape
-    filtered_image = np.zeros((rows, columns, channels), dtype=np.uint8)
-    center_of_mass = _center_of_mass(stripes_vectors)
-    R = max([distance(center_of_mass, v) for v in stripes_vectors])
+    filtered_image = image.copy()
+    mean_stripe_vector = _center_of_mass(stripes_vectors)
+    R = max([distance(mean_stripe_vector, v) for v in stripes_vectors])
 
-    # loop through the pixels
-    if isprint:
-        row_loop = tqdm(range(rows), desc="Removing stripes", unit=" step")
-    else:
-        row_loop = range(rows)
-
-    for i in row_loop:
-        for j in range(columns):
-            pixel = image[i, j]
-            r = distance(center_of_mass, pixel)
-            if r < 2 * R:
-                pixel = background_vector
-            filtered_image[i, j] = pixel
+    diff_image = image - mean_stripe_vector
+    diff_image_norm = np.linalg.norm(diff_image, axis=2)
+    mask = diff_image_norm < 2 * R
+    filtered_image[mask] = target_background_vector
 
     return filtered_image
 
@@ -94,24 +84,14 @@ def unify_background(
     - If r < R, we replace the pixel with the target_background_vector
     """
 
-    rows, columns, channels = image.shape
-    filtered_image = np.zeros((rows, columns, channels), dtype=np.uint8)
-    center_of_mass = _center_of_mass(background_vectors)
-    R = max([distance(center_of_mass, v) for v in background_vectors])
+    filtered_image = image.copy()
+    mean_background_vector = _center_of_mass(background_vectors)
+    R = max([distance(mean_background_vector, v) for v in background_vectors])
+    diff_image = image - mean_background_vector
+    diff_image_norm = np.linalg.norm(diff_image, axis=2)
+    mask = diff_image_norm < 2 * R
+    filtered_image[mask] = target_background_vector
 
-    # loop through the pixels
-    if isprint:
-        row_loop = tqdm(range(rows), desc="Unifying background", unit=" step")
-    else:
-        row_loop = range(rows)
-
-    for i in row_loop:
-        for j in range(columns):
-            pixel = image[i, j]
-            r = distance(center_of_mass, pixel)
-            if r < 2 * R:
-                pixel = target_background_vector
-            filtered_image[i, j] = pixel
     return filtered_image
 
 
@@ -199,6 +179,7 @@ def image2contours(
     - is_gaussian_filter: if True, apply Gaussian filter to the image
     """
     target_background_vector = np.mean(background_vectors, axis=0)
+    target_background_vector = target_background_vector.astype(np.uint8)
     if is_preprocess:
         # raise error if stripes_vectors or background_vectors is None
         if stripes_vectors is None or background_vectors is None:
@@ -213,7 +194,6 @@ def image2contours(
         image_preprocessed = image_unfied_background
     else:
         image_preprocessed = image
-
     # convert to grayscale
     image_gray = cv2.cvtColor(image_preprocessed, cv2.COLOR_BGR2GRAY)
     # apply Gaussian filter

@@ -33,7 +33,12 @@ def _contour2centroid(contour):
 
 
 def _center_of_mass(stripes_vectors):
-    return np.mean(stripes_vectors, axis=0)
+    # the stripes vectors are list of numpy array of data type uint16, keep the data structure
+    center_of_mass = stripes_vectors[0].copy()
+    for stripe_vector in stripes_vectors[1:]:
+        center_of_mass += stripe_vector
+    center_of_mass = center_of_mass // len(stripes_vectors)
+    return center_of_mass
 
 
 def _hull2centroid(hull):
