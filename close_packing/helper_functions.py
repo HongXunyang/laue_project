@@ -20,5 +20,12 @@ def sample2polygon(sample: Sample):
     return sample.contour_new.polygon
 
 
-def is_polygons_overlap(polygon1: Polygon, polygon2: Polygon):
+def is_two_polygons_overlap(polygon1: Polygon, polygon2: Polygon):
     return polygon1.intersects(polygon2)
+
+
+def is_polygon_overlap_with_polygons(polygon: Polygon, polygons: list):
+    for polygon_ in polygons:
+        if is_two_polygons_overlap(polygon, polygon_):
+            return True
+    return False
