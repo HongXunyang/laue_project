@@ -1,15 +1,161 @@
-from shapely.geometry import Polygon
-from shapely.affinity import translate
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Create a sample polygon
-original_polygon = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
+p = np.array(
+    [
+        [796, 986],
+        [802, 1032],
+        [797, 1065],
+        [779, 1092],
+        [754, 1111],
+        [759, 1042],
+        [796, 986],
+        [906, 1007],
+        [914, 1019],
+        [890, 1090],
+        [870, 1092],
+        [829, 1088],
+        [832, 1075],
+        [873, 998],
+        [906, 1007],
+        [799, 935],
+        [809, 962],
+        [809, 979],
+        [678, 1037],
+        [645, 1045],
+        [701, 874],
+        [711, 873],
+        [799, 935],
+        [1046, 713],
+        [1044, 728],
+        [986, 797],
+        [972, 808],
+        [983, 709],
+        [996, 697],
+        [1002, 697],
+        [1046, 713],
+        [1201, 726],
+        [1205, 731],
+        [1204, 740],
+        [1174, 801],
+        [1110, 836],
+        [1107, 829],
+        [1108, 793],
+        [1123, 704],
+        [1127, 700],
+        [1142, 702],
+        [1182, 715],
+        [1201, 726],
+        [939, 865],
+        [1001, 902],
+        [1024, 1021],
+        [961, 928],
+        [930, 874],
+        [939, 865],
+        [976, 741],
+        [978, 745],
+        [936, 861],
+        [886, 815],
+        [881, 810],
+        [894, 778],
+        [912, 749],
+        [942, 740],
+        [976, 741],
+        [930, 860],
+        [928, 916],
+        [916, 969],
+        [899, 992],
+        [864, 999],
+        [858, 995],
+        [841, 962],
+        [857, 887],
+        [879, 874],
+        [930, 860],
+        [1136, 650],
+        [1138, 657],
+        [1130, 684],
+        [1090, 781],
+        [1081, 790],
+        [1020, 815],
+        [1009, 817],
+        [1012, 789],
+        [1066, 687],
+        [1136, 650],
+        [704, 595],
+        [764, 639],
+        [707, 688],
+        [663, 717],
+        [698, 600],
+        [704, 595],
+        [1003, 262],
+        [1005, 265],
+        [917, 377],
+        [883, 261],
+        [887, 246],
+        [892, 243],
+        [945, 248],
+        [1003, 262],
+        [950, 596],
+        [965, 704],
+        [964, 712],
+        [933, 735],
+        [884, 763],
+        [883, 751],
+        [897, 698],
+        [950, 596],
+        [902, 616],
+        [904, 620],
+        [899, 661],
+        [881, 753],
+        [734, 791],
+        [783, 576],
+        [902, 616],
+        [546, 386],
+        [546, 397],
+        [524, 472],
+        [400, 592],
+        [369, 614],
+        [302, 546],
+        [355, 454],
+        [413, 379],
+        [489, 376],
+        [546, 386],
+        [883, 197],
+        [885, 343],
+        [840, 403],
+        [797, 423],
+        [783, 348],
+        [784, 324],
+        [796, 287],
+        [820, 246],
+        [839, 228],
+        [883, 197],
+    ],
+    dtype=np.int32,
+)
 
-# Specify the translation offsets
-dx = 2  # Offset in x-direction
-dy = 3  # Offset in y-direction
 
-# Translate the polygon
-translated_polygon = translate(original_polygon, xoff=dx, yoff=dy)
+fig, ax = plt.subplots()
+ax.scatter(p[:, 0], p[:, 1])
+rect = cv2.minAreaRect(p)
+# plot the rectangle
+box = cv2.boxPoints(rect)
+box = np.int0(box)
+print(box)
+ax.plot(box[:, 0], box[:, 1], "r-")
 
-# Output the coordinates of the translated polygon
-print(list(translated_polygon.exterior.coords))
+hull = cv2.convexHull(p)
+
+# Convert the hull to a 2D array for plotting
+hull_points = hull[:, 0, :]  # cv2.convexHull adds extra dimension
+hull_points = np.append(hull_points, [hull_points[0]], axis=0)  # Close the polygon
+ax.plot(hull_points[:, 0], hull_points[:, 1], "g-")
+hull_area = cv2.contourArea(hull)
+print(hull_area)
+# calculate the area of the rectangle
+area = cv2.contourArea(box)
+
+
+ax.set_aspect("equal")
+plt.show()

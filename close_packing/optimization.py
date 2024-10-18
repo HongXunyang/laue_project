@@ -140,5 +140,4 @@ def calculate_area(vertices_list):
     # Extract all points
     points = np.array([point for vertices in vertices_list for point in vertices])
     points = points.astype(np.int32)
-    center, radius = cv2.minEnclosingCircle(points)
-    return np.pi * radius**2
+    return cv2.contourArea(cv2.convexHull(points))

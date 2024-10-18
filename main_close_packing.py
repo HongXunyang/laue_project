@@ -69,5 +69,5 @@ samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
 
 
-vertices_list = optimization(sampleholder, number_of_iteration=10000)
+vertices_list = optimization(sampleholder, number_of_iteration=300000, temperature=25)
 plt.show()

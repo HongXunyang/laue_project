@@ -21,10 +21,10 @@ def visualize_vertices_list(vertices_list: list, ax=None):
             points = to_add_points
         else:
             points = np.append(points, to_add_points, axis=0)
-    # draw min circle
-
-    center, radius = cv2.minEnclosingCircle(points)
-
-    ax.add_patch(plt.Circle(center, radius, color="red", fill=False))
+    hull = cv2.convexHull(points)
+    # Convert the hull to a 2D array for plotting
+    hull_points = hull[:, 0, :]  # cv2.convexHull adds extra dimension
+    hull_points = np.append(hull_points, [hull_points[0]], axis=0)  # Close the polygon
+    ax.plot(hull_points[:, 0], hull_points[:, 1], "g-")
 
     return ax
