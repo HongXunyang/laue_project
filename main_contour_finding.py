@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-from packages import (
+from classes import (
     image2contours,
     generate_sample_objects,
     generate_sampleholder_object,

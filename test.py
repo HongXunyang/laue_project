@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import cProfile
-from packages import (
+from classes import (
     image2contours,
     generate_sample_objects,
     generate_sampleholder_object,
@@ -55,6 +55,3 @@ def your_function():
         isprint=False,
     )
     return contours, approximated_contours, hulls
-
-
-cProfile.run("your_function()")

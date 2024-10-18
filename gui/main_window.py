@@ -15,7 +15,7 @@ from .image_display import ImageDisplay
 from .matplotlib_canvas import MatplotlibCanvas
 from .helper_functions import process_data
 from PyQt5.QtCore import Qt
-from packages import image2contours, visualize_contours
+from classes import image2contours, visualize_contours
 
 
 class MainWindow(QMainWindow):
