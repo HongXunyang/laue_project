@@ -22,6 +22,7 @@ def visualize_vertices_list(vertices_list: list, ax=None):
         else:
             points = np.append(points, to_add_points, axis=0)
     # draw min circle
+
     center, radius = cv2.minEnclosingCircle(points)
 
     ax.add_patch(plt.Circle(center, radius, color="red", fill=False))
