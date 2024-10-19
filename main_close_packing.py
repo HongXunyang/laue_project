@@ -52,7 +52,7 @@ contours, approximated_contours, hulls = image2contours(
 
 # visualize contours
 image_to_visualize = visualize_contours(
-    image, approximated_contours, hulls, is_plot=True
+    image, approximated_contours, hulls, is_plot=False
 )
 end_time = time.time()
 print(f"image processed time: {end_time - start_time} seconds\n")
@@ -60,16 +60,15 @@ print(f"image processed time: {end_time - start_time} seconds\n")
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
-visualize_sampleholder(sampleholder, is_plot_contour=False, is_plot_hull=True)
 
-if False:
+if True:
     start_time = time.time()
     batch_optimization(
         sampleholder,
-        number_system=9,
+        number_system=30,
         step_size=10,
-        number_of_iteration=10000,
-        temperature=1000,
+        number_of_iteration=30000,
+        temperature=1500,
         is_gravity=True,
         is_update_sampleholder=False,
     )
