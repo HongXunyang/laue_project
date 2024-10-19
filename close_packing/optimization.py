@@ -43,12 +43,11 @@ def optimization(
     - is_plot: if True, plot out the initial and final configuration
     - is_rearrange_vertices: if true, the positions of the samples will be rearranged for a better optimization.
     """
-    area = 10000000  # area of the container, we wanna minimize this.
     # read polygons
     vertices_list = sampleholder2vertices_list(sampleholder)
     if is_rearrange_vertices:
         rearranged_vertices_list = rearrange_vertices_list(vertices_list)
-
+    area = calculate_area(rearranged_vertices_list)
     temp_vertices_list = (
         rearranged_vertices_list.copy()
     )  # this is to stored the temporary movement of the samples
@@ -156,7 +155,7 @@ def check_configuration(temp_vertices_list, area, temperature):
 
 def calculate_area(vertices_list):
     """
-    calculate the area of the smallest circle-shape container that contains the vertices_list
+    calculate the area of the convex hull of the given vertices list
     """
     # Extract all points
     points = np.array([point for vertices in vertices_list for point in vertices])
