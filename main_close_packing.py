@@ -57,17 +57,25 @@ contours, approximated_contours, hulls = image2contours(
 
 # visualize contours
 image_to_visualize = visualize_contours(
-    image,
-    approximated_contours,
-    hulls,
+    image, approximated_contours, hulls, is_plot=False
 )
 end_time = time.time()
 print(f"Time elapsed: {end_time - start_time} seconds")
-cv2.waitKey(0)
+# cv2.waitKey(0)
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
 
 
-vertices_list = optimization(sampleholder, number_of_iteration=300000, temperature=25)
+vertices_list = optimization(sampleholder, number_of_iteration=100000, temperature=30)
+
+fig, ax = plt.subplots()
+visualize_sampleholder(
+    sampleholder,
+    ax=ax,
+    is_plot_contour=False,
+    is_plot_hull=True,
+    is_relocation_arrow=True,
+)
+
 plt.show()

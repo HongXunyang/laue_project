@@ -292,7 +292,7 @@ def generate_sample_object(id, contour, hull, grid_index=None) -> Sample:
     sample.contour_new = contour_object_new
 
     # The position of the sample is the centroid of the hull
-    sample.position_original = _hull2centroid(hull)
+    sample.position_original = np.array(_hull2centroid(hull))
     return sample
 
 

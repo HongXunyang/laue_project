@@ -15,6 +15,14 @@ def sampleholder2polygons(sampleholder: FunctionalSampleHolder):
     return [sample.contour_new.polygon for sample in samples_list]
 
 
+def sampleholder2vertices_list(sampleholder: FunctionalSampleHolder):
+    """
+    given a sample holder, return a list of vertices. A vertices is a (N, 2) numpy array, dtype=int32
+    """
+    samples_list = sampleholder.samples_list
+    return [sample.contour_new.vertices for sample in samples_list]
+
+
 def sample2polygon(sample: Sample):
     """given a sample, return the polygon"""
     return sample.contour_new.polygon

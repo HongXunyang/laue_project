@@ -16,7 +16,12 @@ with open("config/stylesheet.json", "r") as json_file:
 
 
 def visualize_sampleholder(
-    sampleholder, ax=None, is_plot_contour=False, is_plot_hull=True
+    sampleholder,
+    ax=None,
+    is_plot_contour=False,
+    is_plot_hull=True,
+    is_fill_new_polygon=True,
+    is_relocation_arrow=False,
 ):
     """
     This method visualizes the sample holder.
@@ -26,8 +31,10 @@ def visualize_sampleholder(
 
     Keyword arguments:
     - ax: the axis to plot the sample holder.
-    - is_plot_contour: if True, plot the contours.
-    - is_plot_hull: if True, plot the hulls.
+    - is_plot_contour: if True, plot the contours of each samples
+    - is_plot_hull: if True, plot the hulls of each samples
+    - is_fill_new_polygon: if True, fill the new polygon with color
+    - is_relocation_arrow: if True, an arrow pointing from the original position to the new position will be ploted for each sample
 
     Returns:
     - ax: the axis with the sample holder plotted.
@@ -54,6 +61,11 @@ def visualize_sampleholder(
             fig, ax = plt.subplots()
 
         if is_plot_contour:
+            ax.fill(x_contour_new, y_contour_new, edgecolor=None)
+        if is_plot_hull:
+            ax.fill(x_hull_new, y_hull_new, edgecolor=None)
+
+        if is_plot_contour:
             ax.plot(
                 np.append(x_contour_original, x_contour_original[0]),
                 np.append(y_contour_original, y_contour_original[0]),
@@ -67,44 +79,31 @@ def visualize_sampleholder(
                 linestyle="--",
                 color=np.array(stylesheet["hulls_kwargs"]["color"])[::-1] / 255,
             )
-        if is_plot_contour:
-            ax.plot(
-                np.append(x_contour_new, x_contour_new[0]),
-                np.append(y_contour_new, y_contour_new[0]),
-                linestyle="-",
-                color=np.array(stylesheet["contours_kwargs"]["color"])[::-1] / 255,
-            )
-        if is_plot_hull:
-            ax.plot(
-                np.append(x_hull_new, x_hull_new[0]),
-                np.append(y_hull_new, y_hull_new[0]),
-                linestyle="-",
-                color=np.array(stylesheet["hulls_kwargs"]["color"])[::-1] / 255,
-            )
         ax.invert_yaxis()
         # add the id of the sample at the position of the sample
         if sample.is_relocated:
             text_position = sample.position_new
 
             # draw a link between the original position and the new position
-            ax.arrow(
-                sample.position_original[0],
-                sample.position_original[1],
-                sample.position_new[0] - sample.position_original[0],
-                sample.position_new[1] - sample.position_original[1],
-                head_width=10,
-                head_length=10,
-                fc="gray",
-                ec="gray",
-            )
-            ax.scatter(
-                sample.position_original[0],
-                sample.position_original[1],
-                marker="o",
-                facecolors="gray",
-                edgecolors="gray",
-                s=7,
-            )
+            if is_relocation_arrow:
+                ax.arrow(
+                    sample.position_original[0],
+                    sample.position_original[1],
+                    sample.position_new[0] - sample.position_original[0],
+                    sample.position_new[1] - sample.position_original[1],
+                    head_width=10,
+                    head_length=10,
+                    fc="gray",
+                    ec="gray",
+                )
+                ax.scatter(
+                    sample.position_original[0],
+                    sample.position_original[1],
+                    marker="o",
+                    facecolors="gray",
+                    edgecolors="gray",
+                    s=7,
+                )
         else:
             text_position = sample.position_original
         ax.text(

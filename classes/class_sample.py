@@ -19,8 +19,12 @@ class Sample:
         self.sampleholder = None  # This link to the sample holder object
         self.contour_original = None  # This is the original contour of the sample (before re-orientation), found by CV
         self.contour_new = None  # new contour after re-orientation
-        self.posiition_original = None  # Absolute position of the sample, currently defined as the centroid of the hull
-        self.position_new = None  # New position after close packing.
+        self.position_original: np.ndarray = (
+            None  # (np.ndarray) Absolute position of the sample, currently defined as the centroid of the hull,
+        )
+        self.position_new: np.ndarray = (
+            None  # (np.ndarray) New position after close packing.
+        )
 
         # important properties
         self.phi_offset = None  # phi_offset of the sample, in degree, counter-clockwise
@@ -75,9 +79,7 @@ class Sample:
 
         # if the sample is not reoriented, raise an error
         if not self.is_reoriented:
-            raise ValueError(
-                f"Sample {self.id} is not reoriented, plz reorient it first"
-            )
+            print(f"sample {self.id} is not re-oriented yet")
         # if the position_new is not assigned, raise an error
         if self.position_new is None:
             raise ValueError(
@@ -88,11 +90,14 @@ class Sample:
         # - move the contour and the hull to the new position
         x_offset = self.position_new[0] - _contour2centroid(self.contour_new.contour)[0]
         y_offset = self.position_new[1] - _contour2centroid(self.contour_new.contour)[1]
-        for i in range(len(self.contour_new.contour)):
-            self.contour_new.contour[i][0][0] += x_offset
-            self.contour_new.contour[i][0][1] += y_offset
-        for i in range(len(self.contour_new.hull)):
-            self.contour_new.hull[i][0][0] += x_offset
-            self.contour_new.hull[i][0][1] += y_offset
+        # for i in range(len(self.contour_new.contour)):
+        #    self.contour_new.contour[i][0][0] += x_offset
+        #    self.contour_new.contour[i][0][1] += y_offset
+        # for i in range(len(self.contour_new.hull)):
+        #    self.contour_new.hull[i][0][0] += x_offset
+        #    self.contour_new.hull[i][0][1] += y_offset
 
+        # - also need to move the vertices
+        translation = np.array([x_offset, y_offset])
+        self.contour_new.relocate(translation)
         self.is_relocated = True
