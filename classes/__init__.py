@@ -14,3 +14,4 @@ from .image_processing import (
     generate_sampleholder_object,
 )
 from .visualization import visualize_sampleholder, visualize_contours
+from .helper_functions import _remove_background_contour

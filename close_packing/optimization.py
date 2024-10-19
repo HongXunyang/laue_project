@@ -10,17 +10,12 @@ TO-DO
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from shapely.affinity import translate
 from shapely.geometry import Polygon
 from classes import FunctionalSampleHolder
 from .helper_functions import (
-    is_contours_overlap,
-    sampleholder2polygons,
     sampleholder2vertices_list,
-    sample2polygon,
-    is_polygon_overlap_with_polygons,
 )
-from .visualization import visualize_vertices_list
+from utils import visualize_vertices_list
 
 
 def optimization(
@@ -28,9 +23,10 @@ def optimization(
     number_of_iteration: int = 1000,
     step_size: int = 5,
     fluctuation: float = 0.1,
-    temperature: float = 25,
+    temperature: float = 300,
     is_plot: bool = True,
     is_rearrange_vertices=True,
+    is_print=True,
 ):
     """
     Args:
@@ -41,64 +37,84 @@ def optimization(
     - fluctuation: currently doing nothing
     - temperature: controling the posibilities of accepting inferior configuration
     - is_plot: if True, plot out the initial and final configuration
-    - is_rearrange_vertices: if true, the positions of the samples will be rearranged for a better optimization.
+    - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
+    - is_print: if True, print out everything for debugging purpose
     """
-    # read polygons
+    # preset annealing parameters
+    initial_temperature = temperature
+    current_temperature = temperature
+    final_temperature = temperature * 0.01
+    # temperature decays linearly
+    temperature_decay = (initial_temperature - final_temperature) / number_of_iteration
+
+    # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
+    # rearrange the vertices_list for a better optimization (if is_rearrange_vertices is True)
     if is_rearrange_vertices:
         rearranged_vertices_list = rearrange_vertices_list(vertices_list)
-    area = calculate_area(rearranged_vertices_list)
-    temp_vertices_list = (
-        rearranged_vertices_list.copy()
-    )  # this is to stored the temporary movement of the samples
+
+    area = calculate_area(rearranged_vertices_list)  # initial area
+    scale_hull = np.sqrt(area)  # the scale of the convex hull
+    ideal_temperature = (
+        scale_hull * step_size
+    )  # the order of magnitude of the initial temperature
+    if is_print:
+        print(
+            f"the ideal order of temperature is around {ideal_temperature/1.5:.1f}\nthe initial temperature is {initial_temperature}"
+        )
+
+    # create a temporary vertices_list to store the temporary new vetices
+    temp_vertices_list = rearranged_vertices_list.copy()
     number_polygons = len(vertices_list)
 
     if is_plot:
+        # initial configuraion
         visualize_vertices_list(vertices_list)
-
-    # Record the vertices_list before it gets updated
-    old_vertices_list = vertices_list.copy()
 
     for iteration in range(number_of_iteration):
         # randomly select a polygon
         index = np.random.randint(0, number_polygons)
-        vertices = rearranged_vertices_list[index]
+        vertices = rearranged_vertices_list[index]  # the vertices of the select polygon
         # create a movement vector
         movement_vector = _create_movement_vector(
             rearranged_vertices_list, index, step_size
         )
-        # try to move the polygon
+        # try to move the polygon, stored it in the temporary vertices
         temp_vertices = vertices + movement_vector
 
         # check if we accept the new configuration
-        # - check if there's overlap
-        # - check if the new configuration is better than the previous one, with temperature effect of course
+        # (1) if there's overlap
+        # (2) new configuration better than the previous one? with temperature effect
         if check_movement(temp_vertices, index, temp_vertices_list):
+            # if no overlap, update temp_vertices_list
             temp_vertices_list[index] = temp_vertices
-
+            # check if the new configuration is better than the previous one
             temp_area, is_accept = check_configuration(
-                temp_vertices_list, area, temperature
+                temp_vertices_list, area, current_temperature
             )
             if is_accept:
+                # new configuration is accepted, update the configuration
                 area = temp_area
                 rearranged_vertices_list[index] = temp_vertices
             else:
+                # if not accepted, revert the temp_vertices_list
                 temp_vertices_list[index] = vertices
 
-    # for now, return the new vertices_list
+        current_temperature -= temperature_decay  # linearly decrease the temperature
+
     if is_plot:
         visualize_vertices_list(rearranged_vertices_list)
 
-    # update the sample contour_new
-    # - get translation of each sample
-    # - update the position_new of each sample
-    # - run sample.relocate
+    # at the end of the optimization, update the sample position by doing relocate()
     for i, vertices in enumerate(rearranged_vertices_list):
+        # determine the translation offset between the original and new vertices
         translation = get_translation(vertices_list[i], rearranged_vertices_list[i])
         sample = sampleholder.samples_list[i]
+        # update the sample.position_new before applying sample.relocate()
         sample.position_new = sample.position_original + translation
-        sample.relocate()
+        sample.relocate(is_print=is_print)
 
+    print(f"area = {area}")
     return rearranged_vertices_list
 
 
@@ -111,7 +127,7 @@ def _create_movement_vector(vertices_list: list, index: int, step_size: int):
     - index: the index of the sample you wanna move
     - step_size: how much the sample can move in both direction maximum. the actual movement will be a random number lying in the range (-step_size, +stepsize)
     """
-    # at the moment it's just random
+
     return np.random.randint(-step_size, step_size, 2)
 
 

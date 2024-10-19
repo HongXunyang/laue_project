@@ -1,19 +1,14 @@
 from close_packing import optimization, visualize_vertices_list
 from matplotlib import pyplot as plt
-
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-
+import time, cv2
 from classes import (
     image2contours,
     generate_sample_objects,
     generate_sampleholder_object,
-    visualize_sampleholder,
-    visualize_contours,
 )
-
+from utils import visualize_sampleholder, visualize_contours
 
 start_time = time.time()
 # pre-defined parameters
@@ -67,7 +62,7 @@ samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
 
 
-vertices_list = optimization(sampleholder, number_of_iteration=100000, temperature=30)
+vertices_list = optimization(sampleholder, number_of_iteration=10000, temperature=1000)
 
 fig, ax = plt.subplots()
 visualize_sampleholder(

@@ -72,13 +72,13 @@ class Sample:
         # update the status of the sample (re-oriented)
         self.is_reoriented = True
 
-    def relocate(self):
+    def relocate(self, is_print=False):
         """
         relocate the sample once the reorientation is done
         """
 
         # if the sample is not reoriented, raise an error
-        if not self.is_reoriented:
+        if (not self.is_reoriented) and is_print:
             print(f"sample {self.id} is not re-oriented yet")
         # if the position_new is not assigned, raise an error
         if self.position_new is None:
