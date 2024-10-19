@@ -37,3 +37,10 @@ def is_polygon_overlap_with_polygons(polygon: Polygon, polygons: list):
         if is_two_polygons_overlap(polygon, polygon_):
             return True
     return False
+
+
+def vertices_area(vertices: np.ndarray):
+    """
+    given a vertices, return the area of the polygon
+    """
+    return Polygon(vertices.tolist()).area

@@ -14,6 +14,7 @@ from shapely.geometry import Polygon
 from classes import FunctionalSampleHolder
 from .helper_functions import (
     sampleholder2vertices_list,
+    vertices_area,
 )
 from utils import visualize_vertices_list
 
@@ -27,6 +28,7 @@ def optimization(
     is_plot: bool = True,
     is_rearrange_vertices=True,
     is_print=True,
+    is_gravity=True,
 ):
     """
     Args:
@@ -39,13 +41,14 @@ def optimization(
     - is_plot: if True, plot out the initial and final configuration
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
     - is_print: if True, print out everything for debugging purpose
+    - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     """
     # preset annealing parameters
     initial_temperature = temperature
     current_temperature = temperature
     final_temperature = temperature * 0.01
-    # temperature decays linearly
     temperature_decay = (initial_temperature - final_temperature) / number_of_iteration
+    step_size_decay = 0.5 * step_size / number_of_iteration
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
@@ -75,21 +78,42 @@ def optimization(
         # randomly select a polygon
         index = np.random.randint(0, number_polygons)
         vertices = rearranged_vertices_list[index]  # the vertices of the select polygon
-        # create a movement vector
-        movement_vector = _create_movement_vector(
-            rearranged_vertices_list, index, step_size
-        )
-        # try to move the polygon, stored it in the temporary vertices
-        temp_vertices = vertices + movement_vector
 
+        # create a movement vector
         # check if we accept the new configuration
         # (1) if there's overlap
         # (2) new configuration better than the previous one? with temperature effect
-        if check_movement(temp_vertices, index, temp_vertices_list):
+        # try to move the polygon, stored it in the temporary vertices
+        movement_vector, direction_gravity = _create_movement_vector(
+            rearranged_vertices_list,
+            index,
+            step_size,
+            is_gravity,
+            direction_gravity=None,
+        )
+        temp_vertices = vertices + movement_vector
+        is_movement_allowed = _check_movement(temp_vertices, index, temp_vertices_list)
+        attempt_counter = 0
+        # even if not allowed, try 3 times
+        while (not is_movement_allowed) and (attempt_counter < 3):
+            movement_vector, gravity_direction = _create_movement_vector(
+                rearranged_vertices_list,
+                index,
+                step_size // 2,
+                is_gravity,
+                direction_gravity=direction_gravity,
+            )
+            temp_vertices = vertices + movement_vector
+            is_movement_allowed = _check_movement(
+                temp_vertices, index, temp_vertices_list
+            )
+            attempt_counter += 1
+
+        if is_movement_allowed:
             # if no overlap, update temp_vertices_list
             temp_vertices_list[index] = temp_vertices
             # check if the new configuration is better than the previous one
-            temp_area, is_accept = check_configuration(
+            temp_area, is_accept = _check_configuration(
                 temp_vertices_list, area, current_temperature
             )
             if is_accept:
@@ -101,7 +125,7 @@ def optimization(
                 temp_vertices_list[index] = vertices
 
         current_temperature -= temperature_decay  # linearly decrease the temperature
-
+        step_size -= step_size_decay  # linearly decrease the step_size
     if is_plot:
         visualize_vertices_list(rearranged_vertices_list)
 
@@ -118,7 +142,13 @@ def optimization(
     return rearranged_vertices_list
 
 
-def _create_movement_vector(vertices_list: list, index: int, step_size: int):
+def _create_movement_vector(
+    vertices_list: list,
+    index: int,
+    step_size: int,
+    is_gravity=True,
+    direction_gravity=None,
+):
     """
     selection a direction and step size based on the configuration of polygons and also the temperature (randomness)
 
@@ -126,12 +156,35 @@ def _create_movement_vector(vertices_list: list, index: int, step_size: int):
     - vertices_list: list of (Nx2) np array, dtype= int32. This is the current configuration
     - index: the index of the sample you wanna move
     - step_size: how much the sample can move in both direction maximum. the actual movement will be a random number lying in the range (-step_size, +stepsize)
+    - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     """
+    # the array of areas of the polygons in the vertices_list
+    if is_gravity and direction_gravity is None:
+        areas = np.array([vertices_area(vertices) for vertices in vertices_list])
+        centers = np.array([np.mean(vertices, axis=0) for vertices in vertices_list])
+        area_this, center_this = areas[index], centers[index]
+        centers = centers - center_this
+        distances_squared = np.sum(centers**2, axis=1)
+        areas[index], distances_squared[index] = 0, 1
+        gravities = centers / distances_squared[:, np.newaxis] * areas[:, np.newaxis]
+        # select the direction based on the gravity
+        direction_gravity = np.sum(gravities, axis=0)
+        direction_gravity = direction_gravity / np.linalg.norm(
+            direction_gravity
+        )  # normalize the direction
+    elif is_gravity and direction_gravity is not None:
+        direction_gravity = direction_gravity
+    else:
+        direction_gravity = np.array([0, 0])
+    # create a final movement vector
+    movement_vector = direction_gravity * step_size + np.random.randint(
+        -step_size, step_size, 2
+    )
 
-    return np.random.randint(-step_size, step_size, 2)
+    return movement_vector, direction_gravity
 
 
-def check_movement(temp_vertices, index: int, vertices_list: list):
+def _check_movement(temp_vertices, index: int, vertices_list: list):
     """
     a function check if the movement is valid or not
     """
@@ -148,7 +201,7 @@ def check_movement(temp_vertices, index: int, vertices_list: list):
     return True
 
 
-def check_configuration(temp_vertices_list, area, temperature):
+def _check_configuration(temp_vertices_list, area, temperature):
     """
     a function check if the configuration is better than the previous one
 

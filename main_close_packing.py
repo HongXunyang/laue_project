@@ -55,15 +55,23 @@ image_to_visualize = visualize_contours(
     image, approximated_contours, hulls, is_plot=False
 )
 end_time = time.time()
-print(f"Time elapsed: {end_time - start_time} seconds")
+print(f"image processed time: {end_time - start_time} seconds\n")
 # cv2.waitKey(0)
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
 
 
-vertices_list = optimization(sampleholder, number_of_iteration=10000, temperature=1000)
-
+start_time = time.time()
+vertices_list = optimization(
+    sampleholder,
+    step_size=10,
+    number_of_iteration=6000,
+    temperature=1000,
+    is_gravity=True,
+)
+end_time = time.time()
+print(f"optimization time: {end_time - start_time} seconds\n")
 fig, ax = plt.subplots()
 visualize_sampleholder(
     sampleholder,
