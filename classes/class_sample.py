@@ -88,16 +88,6 @@ class Sample:
 
         # relocate the sample
         # - move the contour and the hull to the new position
-        x_offset = self.position_new[0] - _contour2centroid(self.contour_new.contour)[0]
-        y_offset = self.position_new[1] - _contour2centroid(self.contour_new.contour)[1]
-        # for i in range(len(self.contour_new.contour)):
-        #    self.contour_new.contour[i][0][0] += x_offset
-        #    self.contour_new.contour[i][0][1] += y_offset
-        # for i in range(len(self.contour_new.hull)):
-        #    self.contour_new.hull[i][0][0] += x_offset
-        #    self.contour_new.hull[i][0][1] += y_offset
-
-        # - also need to move the vertices
-        translation = np.array([x_offset, y_offset])
+        translation = self.position_new - self.position_original
         self.contour_new.relocate(translation)
         self.is_relocated = True

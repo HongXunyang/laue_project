@@ -153,7 +153,7 @@ def _create_movement_vector(
     selection a direction and step size based on the configuration of polygons and also the temperature (randomness)
 
     Args:
-    - vertices_list: list of (Nx2) np array, dtype= int32. This is the current configuration
+    - vertices_list: list of (Nx2) np array, dtype= float32. This is the current configuration
     - index: the index of the sample you wanna move
     - step_size: how much the sample can move in both direction maximum. the actual movement will be a random number lying in the range (-step_size, +stepsize)
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
