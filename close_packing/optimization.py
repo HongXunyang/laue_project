@@ -2,7 +2,6 @@
 This package is for optizing the confirguation of polygons.
 
 TO-DO
-- slowly decrease the temperature
 - create a emsable with multiple system running at the same time 
 - adjustable step_size, step_size also depends on the mass of the sample: the smaller the faster
 """
@@ -19,16 +18,95 @@ from .helper_functions import (
 from utils import visualize_vertices_list
 
 
-def optimization(
+def batch_optimization(
     sampleholder: FunctionalSampleHolder,
-    number_of_iteration: int = 1000,
+    number_system: int,
+    is_plot=True,
+    max_configurations: int = 9,
+    number_of_iteration: int = 3000,
     step_size: int = 5,
     fluctuation: float = 0.1,
-    temperature: float = 300,
-    is_plot: bool = True,
+    temperature: float = 1000,
     is_rearrange_vertices=True,
     is_print=True,
     is_gravity=True,
+    is_update_sampleholder=False,
+):
+    """
+    Args:
+    - number_system: number of system to run in parallel
+
+    Kwargs:
+    - is_plot: if True, plot the optimized configuration
+    - max_configurations: the maximum number of configurations to plot
+    - kwargs: the kwargs for optimization()
+    """
+    optimized_configuration_list = [None] * number_system
+    area_list = np.zeros(number_system)
+    for batch_index in range(number_system):
+        optimized_configuration, area = optimization(
+            sampleholder,
+            number_of_iteration,
+            step_size,
+            fluctuation,
+            temperature,
+            is_rearrange_vertices,
+            is_print,
+            is_gravity,
+            is_update_sampleholder,
+        )
+        optimized_configuration_list[batch_index] = optimized_configuration
+        area_list[batch_index] = area
+
+    if is_plot:
+        if number_system == 1:
+            fig, ax = plt.subplots()
+            visualize_vertices_list(optimized_configuration_list[0], ax=ax)
+        elif number_system > max_configurations:
+            fig, axs = plt.subplots(3, 3, figsize=(20, 14))
+            # sorted based on the area
+            sorted_indices = np.argsort(area_list)
+            for i, index in enumerate(sorted_indices[:max_configurations]):
+                ax = axs[i // 3, i % 3]
+                visualize_vertices_list(optimized_configuration_list[index], ax=ax)
+                # on the left top corner, put the area of the configuration
+                ax.text(
+                    0.05,
+                    0.95,
+                    f"area:{area_list[index]:.3g}, index={index}",
+                    transform=ax.transAxes,
+                )
+                ax.set(xticks=[], yticks=[])
+
+        else:
+            rows = int(np.ceil(np.sqrt(number_system)))
+            columns = int(np.ceil(number_system / rows))
+            fig, axs = plt.subplots(columns, rows, figsize=(20, 14))
+            sorted_indices = np.argsort(area_list)
+            for i, index in enumerate(sorted_indices):
+                ax = axs[i % columns, i // columns]
+                visualize_vertices_list(optimized_configuration_list[index], ax=ax)
+                ax.text(
+                    0.05,
+                    0.95,
+                    f"area:{area_list[index]:.3g}, index={index}",
+                    transform=ax.transAxes,
+                )
+                ax.set(xticks=[], yticks=[])
+    # ax setting: remove space between axes
+    plt.subplots_adjust(wspace=0, hspace=0)
+
+
+def optimization(
+    sampleholder: FunctionalSampleHolder,
+    number_of_iteration: int = 3000,
+    step_size: int = 5,
+    fluctuation: float = 0.1,
+    temperature: float = 1000,
+    is_rearrange_vertices=True,
+    is_print=True,
+    is_gravity=True,
+    is_update_sampleholder=False,
 ):
     """
     Args:
@@ -38,25 +116,29 @@ def optimization(
     - step_size: in pixel. How much a sample can move each step at max.
     - fluctuation: currently doing nothing
     - temperature: controling the posibilities of accepting inferior configuration
-    - is_plot: if True, plot out the initial and final configuration
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
     - is_print: if True, print out everything for debugging purpose
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
+    - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
+
+    Returns:
+    - rearranged_vertices_list: the optimized configuration of the samples
+    - area: the area of the convex hull of the optimized configuration
     """
     # preset annealing parameters
     initial_temperature = temperature
     current_temperature = temperature
     final_temperature = temperature * 0.01
     temperature_decay = (initial_temperature - final_temperature) / number_of_iteration
-    step_size_decay = 0.5 * step_size / number_of_iteration
+    step_size_decay = 0.8 * step_size / number_of_iteration
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
     # rearrange the vertices_list for a better optimization (if is_rearrange_vertices is True)
     if is_rearrange_vertices:
-        rearranged_vertices_list = rearrange_vertices_list(vertices_list)
+        rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
 
-    area = calculate_area(rearranged_vertices_list)  # initial area
+    area = _calculate_area(rearranged_vertices_list)  # initial area
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
         scale_hull * step_size
@@ -69,10 +151,6 @@ def optimization(
     # create a temporary vertices_list to store the temporary new vetices
     temp_vertices_list = rearranged_vertices_list.copy()
     number_polygons = len(vertices_list)
-
-    if is_plot:
-        # initial configuraion
-        visualize_vertices_list(vertices_list)
 
     for iteration in range(number_of_iteration):
         # randomly select a polygon
@@ -126,20 +204,28 @@ def optimization(
 
         current_temperature -= temperature_decay  # linearly decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
-    if is_plot:
-        visualize_vertices_list(rearranged_vertices_list)
 
-    # at the end of the optimization, update the sample position by doing relocate()
-    for i, vertices in enumerate(rearranged_vertices_list):
+    if is_update_sampleholder:
+        # at the end of the optimization, update the sample position by doing relocate()
+        _update_sampleholder(sampleholder, vertices_list, rearranged_vertices_list)
+
+    print(f"area = {area}")
+    return rearranged_vertices_list, area
+
+
+def _update_sampleholder(
+    sampleholder: FunctionalSampleHolder, old_vertices_list, new_vertices_list: list
+):
+    """
+    update the sampleholder with the new configuration
+    """
+    for i, vertices in enumerate(new_vertices_list):
         # determine the translation offset between the original and new vertices
-        translation = get_translation(vertices_list[i], rearranged_vertices_list[i])
+        translation = _get_translation(old_vertices_list[i], new_vertices_list[i])
         sample = sampleholder.samples_list[i]
         # update the sample.position_new before applying sample.relocate()
         sample.position_new = sample.position_original + translation
-        sample.relocate(is_print=is_print)
-
-    print(f"area = {area}")
-    return rearranged_vertices_list
+        sample.relocate()
 
 
 def _create_movement_vector(
@@ -210,7 +296,7 @@ def _check_configuration(temp_vertices_list, area, temperature):
     - if the new area is smaller than the previous one, accept the new configuration
     - if the new area is larger than the previous one, accept the new configuration with a probability of exp(-(new_area - area)/temperature)
     """
-    new_area = calculate_area(temp_vertices_list)
+    new_area = _calculate_area(temp_vertices_list)
     if new_area < area:
         is_accept = True
     else:
@@ -222,7 +308,7 @@ def _check_configuration(temp_vertices_list, area, temperature):
     return new_area, is_accept
 
 
-def calculate_area(vertices_list):
+def _calculate_area(vertices_list):
     """
     calculate the area of the convex hull of the given vertices list
     """
@@ -232,7 +318,7 @@ def calculate_area(vertices_list):
     return cv2.contourArea(cv2.convexHull(points))
 
 
-def get_translation(old_vertices: np.ndarray, new_vertices: np.ndarray) -> np.ndarray:
+def _get_translation(old_vertices: np.ndarray, new_vertices: np.ndarray) -> np.ndarray:
     """get the translation vector by comparing the center of mass of the old and new vertices"""
 
     old_center = np.mean(old_vertices, axis=0)
@@ -241,7 +327,7 @@ def get_translation(old_vertices: np.ndarray, new_vertices: np.ndarray) -> np.nd
     return new_center - old_center
 
 
-def rearrange_vertices_list(
+def _rearrange_vertices_list(
     vertices_list: list, block_size_multiplier: int = 1.5
 ) -> list:
     """
