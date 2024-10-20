@@ -27,6 +27,11 @@ class Contour:
         self.sample = None  # This link to the sample object
         self.id = None  # this should be the same as the sample id
 
+    def reorient(self, phi_offset: float):
+        self.contour = self.contour.astype(np.float32)
+        self.hull = self.hull.astype(np.float32)
+        pass
+
     def relocate(self, translation: np.ndarray):
         # change the contour, hull, and vertices
         # convert all the int32 to float32 for better accuracy
@@ -37,3 +42,4 @@ class Contour:
         self.hull = self.hull + translation
         self.vertices = self.vertices + translation
         self.center = self.center + translation
+        self.polygon = Polygon(self.hull.squeeze().tolist())

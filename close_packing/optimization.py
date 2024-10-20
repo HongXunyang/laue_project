@@ -2,7 +2,6 @@
 This package is for optizing the confirguation of polygons.
 
 TO-DO
-- create a emsable with multiple system running at the same time 
 - adjustable step_size, step_size also depends on the mass of the sample: the smaller the faster
 """
 
@@ -233,6 +232,7 @@ def _create_movement_vector(
     index: int,
     step_size: int,
     is_gravity=True,
+    graivity_multiplier: float = 0.7,
     direction_gravity=None,
 ):
     """
@@ -243,6 +243,8 @@ def _create_movement_vector(
     - index: the index of the sample you wanna move
     - step_size: how much the sample can move in both direction maximum. the actual movement will be a random number lying in the range (-step_size, +stepsize)
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
+    - graivity_multiplier: the multiplier of the gravity strength. 1 means the created movement vector is always somewhat along the gravity direction (inner product > 0); 0.5 means weaker gravity effect (inner product could < 0); 1.5 means strong gravity effect (more along the gravit direction)
+    -  direction_gravity: the direction of the gravity. If None, the direction will be calculated based on the configuration of the polygons.
     """
     # the array of areas of the polygons in the vertices_list
     if is_gravity and direction_gravity is None:
@@ -263,9 +265,9 @@ def _create_movement_vector(
     else:
         direction_gravity = np.array([0, 0])
     # create a final movement vector
-    movement_vector = direction_gravity * step_size + np.random.randint(
-        -step_size, step_size, 2
-    )
+    movement_vector = (
+        direction_gravity * step_size
+    ) * graivity_multiplier + np.random.randint(-step_size, step_size, 2)
 
     return movement_vector, direction_gravity
 

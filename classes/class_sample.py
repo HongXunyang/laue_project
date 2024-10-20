@@ -7,6 +7,7 @@ import cv2
 from .helper_functions import _rotate, _contour2centroid
 
 # To-do list:
+# 0.  check the `reorient` function!!!
 # 1.  origin of the coordinate system should be defined;
 # 2.  the origin of the sample itself should be defined
 

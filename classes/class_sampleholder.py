@@ -6,8 +6,8 @@ This module defines the class of the sample holder. There are two types of sampl
 
 # setup of the class definition
 1. Basic sample holder class that share the same properties between the two types
-2. grid sample holder class that inherits from the functional sample holder class
 3. Functional sample holder class that inherits from the basic sample holder class. 
+2. grid sample holder class that inherits from the functional sample holder class
 4. Engraved sample holder class that inherits from the functional sample holder class
 """
 
@@ -213,6 +213,8 @@ class FunctionalSampleHolder(SampleHolder):
             self.relocate_sample(sample, position)
 
 
+# (Currently not used!!!)
+# (Under development!!!)
 # Grid sample holder class with grid on
 class GridSampleHolder(FunctionalSampleHolder):
     """
