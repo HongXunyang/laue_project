@@ -3,14 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-from classes import (
+from contour_finding import (
     image2contours,
     generate_sample_objects,
     generate_sampleholder_object,
-    visualize_sampleholder,
-    visualize_contours,
 )
 
+from utils import visualize_contours, visualize_sampleholder
 
 start_time = time.time()
 # pre-defined parameters

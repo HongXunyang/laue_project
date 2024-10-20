@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 import time, cv2
-from classes import (
+from contour_finding import (
     image2contours,
     generate_sample_objects,
     generate_sampleholder_object,
@@ -65,9 +65,9 @@ if True:
     start_time = time.time()
     batch_optimization(
         sampleholder,
-        number_system=30,
+        number_system=1,
         step_size=10,
-        number_of_iteration=30000,
+        number_of_iteration=3000,
         temperature=1500,
         is_gravity=True,
         is_update_sampleholder=False,

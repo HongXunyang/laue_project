@@ -18,13 +18,10 @@ Functions:
 import cv2
 import numpy as np
 import time
-from .class_contour import Contour
-from .class_sample import Sample
-from .class_sampleholder import FunctionalSampleHolder
-from .helper_functions import (
+from classes import FunctionalSampleHolder, Sample, Contour
+from classes import (
     _center_of_mass,
     _remove_background_contour,
-    _hull2centroid,
     distance,
 )
 

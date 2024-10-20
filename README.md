@@ -1,44 +1,61 @@
-# Contour finding, Sample re-orientation and all that
+# Overview
 This is a sub-project of the larger project *Automizing Sample re-orientation for Neutron Scattering*. The main focus of this subproject is: 
-1. Digitalizing Samples and sample holder (assuming there are ~ 100 samples on the holder)
-2. Determining the Orientation of each sample (asssuming only phi offset, this is a orientation-finding project)
-3. Finding the countour of each sample using open CV (Jasmin's project)
-4. Generating the sample contour after re-orientation (Jasmin's project)
-5. Finding the most compact configuration of samples on the holder (Sissi's project)
-6. If possible, generate a CAD file of the sample holder engraved with the re-oriented sample contours. 
+1. [ **Finished** ] Digitalizing Samples and sample holder (assuming there are ~ 100 samples on the holder). This is done in the `classes/` packages. contour, sample, and sample holder are defined as classes. 
+2. [ **To-do** ] Determining the Orientation of each sample (asssuming only phi offset, this is a orientation-finding project) by sweeping through the samples on the sample holder using Laue diffraction. This involves: (1) Automatic control of the robot arm to sweep through the samples, involving coordinate transformation; (2) Auto control of the Laue machine, involving both taking X-ray image and saving images; (3) Auto detection of the orientation of the sample based on the Laue images; (4) Based on everything above, assigning the orientation to each sample, re-oriente the sample contour.
+3. [ **Finished** ] Finding the countour of each sample using open CV (Post Jasmin's project). This is done in the `contour_finding/` package. It loads the image and generate sample holder, samples, and contours objects.
+5. [ **Finished** ] Finding the most compact configuration of samples on the holder (Post Sissi's project). Currently this is done in the `close_packing/` package. Simulated annealing + gravity effect is used to find the compact configuration.
+6. [ **To-do** ] If possible, generate a CAD file of the sample holder engraved with the re-oriented sample contours. 
+7. [ **In progress** ] Create a GUI to unify all the above. This is under construction in the `gui/` package. 
 
-The expected outcome of this project would be with a GUI where the user can upload:
-1. sample holder image
-2. Laue image of each sample 
-
-the program will automaticall detect the contour of each sample using the sample holder image (open cv library); and determine the offset of each sample using the Laue image of each sample (orientation-finding project). and then produce the re-oriented sample contour. 
-
-After this, the program will find the most compact configuration, and ideally generate a CAD file of the engraved sample holder (if that's possibl).
+**Expected workflow**: 
+- The User upload only the image of the sample holder (with samples on).
+- The program will detect the contour and the position of each sample using the sample holder image; it tells the Laue machine and robot arm how to work out the orientation of each sample. Then it produces the *re-oriented* sample contours. 
+- After this, the program will find the most compact configuration
+- Ideally it willgenerate a CAD file of the engraved sample holder.
 
 **Assumptions to simplify the prolem**
 - Samples are flakes and c-axis is well-aligned. The only offset is in phi.
+- Sample contour is approimated by its convex hull. 
 
 
-## Overview
-
-This project provides a Python implementation for managing samples and their placement on a sample holder, a critical part of experiments involving multiple crystal samples. It defines two primary classes:
-- `Sample`: Represents a single sample with its attributes such as position, contour, and orientation.
-- `SampleHolder`: Manages a collection of `Sample` objects on a grid, allowing for visualization and manipulation of samples.
-
+# Detailed Dig-in
 ## Project Structure
-
 The project is structured as follows:
-
 ```
 workspace/
-   ├── packages/
-   │   ├── __init__.py                # Package-level initialization for the 'packages' module
-   │   ├── sample_class.py             # Defines the Sample class
-   │   ├── sampleholder_class.py       # Defines the SampleHolder class
-   ├── scripts/
-   ├── __init__.py                     # Root-level package initialization (empty)
-   ├── main.py                         # main file
-   └── README.md                       # Project documentation (this file)
+   ├── classes/
+   │   ├── __init__.py           # Package-level initialization
+   │   ├── class_contour.py      # Defines the Contour class
+   │   ├── class_sample.py       # Defines the Sample class
+   │   ├── class_sampleholder.py # Defines the SampleHolder class
+   │   ├── helper_functions.py   # internal helper functions
+   │   ├── visualization.py      # internal visualization functions
+   ├── close_packing/
+   │   ├── __init__.py           # Package-level initialization
+   │   ├── optimization.py       # close packing optimization
+   │   ├── helper_functions.py   # internal helper functions
+   │   ├── visualization.py      # internal visualization functions
+   ├── contour_finding/
+   │   ├── __init__.py           # Package-level initialization
+   │   ├── image_processing.py   # image processing functions
+   ├── config/
+   │ ├── config.json             # parameters: image processing or close packing
+   │ ├── gui_styles.css          # CSS for the GUI
+   │ ├── stylesheet.json         # plot setting parameters
+   ├── gui/
+   │   ├── __init__.py           # Package-level initialization
+   │   ├── main_window.py        # main window widget
+   │   ├── image_display.py      # image drop-in and display widget
+   │   ├── matplotlib_canvas.py  # results display panel widget
+   │   ├── helper_functions.py   # helper functions only for internal use
+   ├── utils/
+   │   ├── __init__.py           # Package-level initialization 
+   │   ├── visualization.py      # general visualization tools/functions
+   ├── main_close _packing.py    # run this to test close packing
+   ├── main_contour _finding.py  # run this to test contour finding
+   ├── main_gui.py               # run this to create a GUI
+   ├── requirements.txt          # required libraries
+   └── README.md                 # Project documentation (this file)
 ```
 
 ### Main Components
