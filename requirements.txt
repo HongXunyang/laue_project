@@ -2,3 +2,5 @@ numpy
 matplotlib
 shapely
 cv2
+ezdxf
+trimesh
