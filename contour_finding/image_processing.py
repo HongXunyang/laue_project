@@ -156,7 +156,7 @@ def image2contours(
     epsilon=2.5,
     lowercut=100,
     area_lowercut=2000,
-    gaussian_window=(5, 5),
+    gaussian_window=(7, 7),
     isprint=True,
     is_gaussian_filter=True,
 ):

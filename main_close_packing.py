@@ -51,7 +51,7 @@ contours, approximated_contours, hulls = image2contours(
 
 # visualize contours
 image_to_visualize = visualize_contours(
-    image, approximated_contours, hulls, is_plot=False
+    image, approximated_contours, hulls, is_plot=True
 )
 end_time = time.time()
 print(f"image processed time: {end_time - start_time} seconds\n")
