@@ -41,9 +41,9 @@ workspace/
    │   ├── __init__.py           # Package-level initialization
    │   ├── image_processing.py   # image processing functions
    ├── config/
-   │   ├── config.json             # parameters: image processing or close packing
-   │   ├── gui_styles.css          # CSS for the GUI
-   │   ├── stylesheet.json         # plot setting parameters
+   │   ├── config.json           # parameters: image processing or close packing
+   │   ├── gui_styles.css        # CSS for the GUI
+   │   ├── stylesheet.json       # plot setting parameters
    ├── gui/
    │   ├── __init__.py           # Package-level initialization
    │   ├── main_window.py        # main window widget

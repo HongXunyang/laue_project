@@ -63,7 +63,7 @@ sampleholder = generate_sampleholder_object(samples_list)
 
 if True:
     start_time = time.time()
-    batch_optimization(
+    optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
         number_system=1,
         step_size=10,

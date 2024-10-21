@@ -1,8 +1,8 @@
 """ 
-This package is for optizing the confirguation of polygons.
+This package is for optizing the confirguation of polygons. 
 
-TO-DO
-- adjustable step_size, step_size also depends on the mass of the sample: the smaller the faster
+Algorithm: Simulated Annealing
+Object function: the area of the convex hull of the configuration. The smaller the bertter.
 """
 
 import numpy as np
@@ -21,7 +21,6 @@ def batch_optimization(
     sampleholder: FunctionalSampleHolder,
     number_system: int,
     is_plot=True,
-    max_configurations: int = 9,
     number_of_iteration: int = 3000,
     step_size: int = 5,
     fluctuation: float = 0.1,
@@ -37,9 +36,14 @@ def batch_optimization(
 
     Kwargs:
     - is_plot: if True, plot the optimized configuration
-    - max_configurations: the maximum number of configurations to plot
     - kwargs: the kwargs for optimization()
+
+    Returns:
+    - optimized_configuration_list: a list of optimized vertices_list
+    - area_list: a list of the area of the convex hull of the optimized configuration
+    - sorted_indices: the indices of the optimized_configuration_list sorted based on the area
     """
+    max_configurations = 9  # the maximum number of configurations to plot
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
     for batch_index in range(number_system):
@@ -94,6 +98,8 @@ def batch_optimization(
                 ax.set(xticks=[], yticks=[])
     # ax setting: remove space between axes
     plt.subplots_adjust(wspace=0, hspace=0)
+
+    return optimized_configuration_list, area_list, sorted_indices
 
 
 def optimization(
