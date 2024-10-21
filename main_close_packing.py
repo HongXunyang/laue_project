@@ -11,7 +11,7 @@ from contour_finding import (
 from utils import visualize_sampleholder, visualize_contours
 
 start_time = time.time()
-# pre-defined parameters
+# ----------- image pre=processing ----------- #
 stripes_vectors = [
     np.array([95, 86, 167]),
     np.array([57, 48, 139]),
@@ -23,8 +23,6 @@ background_vectors = [
     np.array([190, 201, 199]),
     np.array([182, 185, 183]),
 ]
-
-
 # Load image
 image = cv2.imread("../images/fake_holder_with_samples.jpg")
 rows, columns, channels = image.shape
@@ -36,8 +34,9 @@ image = image[
 # compress image
 image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
 rows, columns, channels = image.shape
+# ----------- end of image pre-processing ----------- #
 
-# finding contours and hulls
+# ----------- contour finding ----------- #
 contours, approximated_contours, hulls = image2contours(
     image,
     stripes_vectors=stripes_vectors,
@@ -60,17 +59,21 @@ print(f"image processed time: {end_time - start_time} seconds\n")
 # create samples objects and sample holder object
 samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
+# ----------- end of contour finding ----------- #
 
+# ----------- optimization ----------- #
 if True:
     start_time = time.time()
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
-        number_system=1,
+        number_system=4,
         step_size=10,
-        number_of_iteration=3000,
+        number_of_iteration=6000,
         temperature=1500,
+        contour_buffer_multiplier=1.05,
         is_gravity=True,
         is_update_sampleholder=False,
+        is_contour_buffer=True,
     )
     end_time = time.time()
 
@@ -87,3 +90,4 @@ if True:
     print("done")
 
 plt.show()
+# ----------- end of optimization ----------- #

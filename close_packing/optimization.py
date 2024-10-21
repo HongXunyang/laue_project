@@ -25,10 +25,12 @@ def batch_optimization(
     step_size: int = 5,
     fluctuation: float = 0.1,
     temperature: float = 1000,
+    contour_buffer_multiplier: float = 1.01,
     is_rearrange_vertices=True,
     is_print=True,
     is_gravity=True,
     is_update_sampleholder=False,
+    is_contour_buffer=True,
 ):
     """
     Args:
@@ -50,13 +52,15 @@ def batch_optimization(
         optimized_configuration, area = optimization(
             sampleholder,
             number_of_iteration,
-            step_size,
-            fluctuation,
-            temperature,
-            is_rearrange_vertices,
-            is_print,
-            is_gravity,
-            is_update_sampleholder,
+            step_size=step_size,
+            fluctuation=fluctuation,
+            temperature=temperature,
+            contour_buffer_multiplier=contour_buffer_multiplier,
+            is_rearrange_vertices=is_rearrange_vertices,
+            is_print=is_print,
+            is_gravity=is_gravity,
+            is_update_sampleholder=is_update_sampleholder,
+            is_contour_buffer=is_contour_buffer,
         )
         optimized_configuration_list[batch_index] = optimized_configuration
         area_list[batch_index] = area
@@ -108,10 +112,12 @@ def optimization(
     step_size: int = 5,
     fluctuation: float = 0.1,
     temperature: float = 1000,
+    contour_buffer_multiplier: float = 1.01,
     is_rearrange_vertices=True,
     is_print=True,
     is_gravity=True,
     is_update_sampleholder=False,
+    is_contour_buffer=True,
 ):
     """
     Args:
@@ -121,10 +127,12 @@ def optimization(
     - step_size: in pixel. How much a sample can move each step at max.
     - fluctuation: currently doing nothing
     - temperature: controling the posibilities of accepting inferior configuration
+    - contour_buffer_multiplier: The contour buffer is a buffer around the convex hull of each sample. The buffer is used to avoid edge touching of samples. 1.01 means the convex hull of the samples will be 1% percent larger than its actual size. The larger the buffer, the larger the space between the samples.
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
     - is_print: if True, print out everything for debugging purpose
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
+    - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
 
     Returns:
     - rearranged_vertices_list: the optimized configuration of the samples
@@ -139,6 +147,12 @@ def optimization(
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
+
+    # inflate the vertices to leave buffer area between samples.
+    if is_contour_buffer:
+        vertices_list = _inflate_vertices_list(
+            vertices_list=vertices_list, multiplier=contour_buffer_multiplier
+        )
     # rearrange the vertices_list for a better optimization (if is_rearrange_vertices is True)
     if is_rearrange_vertices:
         rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
@@ -157,6 +171,7 @@ def optimization(
     temp_vertices_list = rearranged_vertices_list.copy()
     number_polygons = len(vertices_list)
 
+    # -------- Start of the optimization -------- #
     for iteration in range(number_of_iteration):
         # randomly select a polygon
         index = np.random.randint(0, number_polygons)
@@ -209,6 +224,17 @@ def optimization(
 
         current_temperature -= temperature_decay  # linearly decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
+    # -------- End of the optimization -------- #
+
+    if is_contour_buffer:
+        # remove the buffer area by deflating the vertices again
+        vertices_list = _inflate_vertices_list(
+            vertices_list=vertices_list, multiplier=1 / contour_buffer_multiplier
+        )
+        rearranged_vertices_list = _inflate_vertices_list(
+            vertices_list=rearranged_vertices_list,
+            multiplier=1 / contour_buffer_multiplier,
+        )
 
     if is_update_sampleholder:
         # at the end of the optimization, update the sample position by doing relocate()
@@ -409,3 +435,29 @@ def _randomly_rearrange(vertices_list: list, block_size: int):
         new_vertices_list[index] = vertices_list[index] + translation
 
     return new_vertices_list
+
+
+def _inflate_vertices(vertices: np.ndarray, multiplier: float = 1.01):
+    """
+    inflate the vertices by a small amount
+
+    Mechanism:
+    - calculate the center of the vertices
+    - move the vertices away from the center by (1-multiplier)
+    """
+
+    center = np.mean(vertices, axis=0)
+    return center + (vertices - center) * multiplier
+
+
+def _inflate_vertices_list(vertices_list: list, multiplier: float = 1.01):
+    """
+    inflate each vertices in the vertices list by a small amount
+
+    Args:
+    - vertices_list: a list of (Nx2) np array, dtype=float32
+
+    Kwarg:
+    - multiplier: the multiplier of the inflation. 1.01 means the vertices will be inflated by 1%
+    """
+    return [_inflate_vertices(vertices, multiplier) for vertices in vertices_list]
