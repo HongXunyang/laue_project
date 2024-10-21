@@ -98,7 +98,7 @@ vertices_list = optimized_configuration_list[sorted_indices[0]]
 vertices_list_to_cad(
     vertices_list,
     "3d_optimized_configuration.stl",
-    cad_folder="data/",
+    cad_folder="../data/",
     is_3d=True,
     thickness=30,
 )
