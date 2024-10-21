@@ -3,6 +3,11 @@ This package is for optizing the confirguation of polygons.
 
 Algorithm: Simulated Annealing
 Object function: the area of the convex hull of the configuration. The smaller the bertter.
+
+TO-DO:
+----------
+- make sample rotatable during the optimization process, based on the symmetry of the sample
+- enable absolute buffer area setting between samples. Currently, the buffer area is relative to the size of the samples.
 """
 
 import numpy as np
@@ -21,13 +26,13 @@ def batch_optimization(
     sampleholder: FunctionalSampleHolder,
     number_system: int,
     is_plot=True,
+    is_print=True,
     number_of_iteration: int = 3000,
     step_size: int = 5,
     fluctuation: float = 0.1,
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
     is_rearrange_vertices=True,
-    is_print=True,
     is_gravity=True,
     is_update_sampleholder=False,
     is_contour_buffer=True,
@@ -38,6 +43,7 @@ def batch_optimization(
 
     Kwargs:
     - is_plot: if True, plot the optimized configuration
+    - is_print: if True, print stuff for debugging
     - kwargs: the kwargs for optimization()
 
     Returns:
@@ -49,6 +55,8 @@ def batch_optimization(
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
     for batch_index in range(number_system):
+        if is_print:
+            print(f"NO.{batch_index+1} out of {number_system} started")
         optimized_configuration, area = optimization(
             sampleholder,
             number_of_iteration,
@@ -57,7 +65,6 @@ def batch_optimization(
             temperature=temperature,
             contour_buffer_multiplier=contour_buffer_multiplier,
             is_rearrange_vertices=is_rearrange_vertices,
-            is_print=is_print,
             is_gravity=is_gravity,
             is_update_sampleholder=is_update_sampleholder,
             is_contour_buffer=is_contour_buffer,
@@ -114,7 +121,6 @@ def optimization(
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
     is_rearrange_vertices=True,
-    is_print=True,
     is_gravity=True,
     is_update_sampleholder=False,
     is_contour_buffer=True,
@@ -129,7 +135,6 @@ def optimization(
     - temperature: controling the posibilities of accepting inferior configuration
     - contour_buffer_multiplier: The contour buffer is a buffer around the convex hull of each sample. The buffer is used to avoid edge touching of samples. 1.01 means the convex hull of the samples will be 1% percent larger than its actual size. The larger the buffer, the larger the space between the samples.
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
-    - is_print: if True, print out everything for debugging purpose
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
@@ -162,10 +167,6 @@ def optimization(
     ideal_temperature = (
         scale_hull * step_size
     )  # the order of magnitude of the initial temperature
-    if is_print:
-        print(
-            f"the ideal order of temperature is around {ideal_temperature/1.5:.1f}\nthe initial temperature is {initial_temperature}"
-        )
 
     # create a temporary vertices_list to store the temporary new vetices
     temp_vertices_list = rearranged_vertices_list.copy()
@@ -240,7 +241,6 @@ def optimization(
         # at the end of the optimization, update the sample position by doing relocate()
         _update_sampleholder(sampleholder, vertices_list, rearranged_vertices_list)
 
-    print(f"area = {area}")
     return rearranged_vertices_list, area
 
 

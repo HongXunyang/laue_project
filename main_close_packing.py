@@ -67,8 +67,10 @@ if True:
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
         number_system=4,
+        is_plot=True,
+        is_print=True,
         step_size=10,
-        number_of_iteration=6000,
+        number_of_iteration=4000,
         temperature=1500,
         contour_buffer_multiplier=1.05,
         is_gravity=True,
@@ -86,8 +88,6 @@ if True:
         is_plot_hull=True,
         is_relocation_arrow=True,
     )
-
-    print("done")
 
 plt.show()
 # ----------- end of optimization ----------- #
