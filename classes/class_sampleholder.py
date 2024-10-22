@@ -31,9 +31,13 @@ class SampleHolder:
 
     def __init__(self):
         self.name = "Sample Holder"
-        self.size = (
-            None  # This is the actual dimension/size of the sample holder, in mm
+        self.shape: str = None  # choose from "ciecle", "rectangle"
+        self.size: list = (
+            None  # This is the actual dimension/size [width, height] of the sample holder, in mm, [100, 100] for example
         )
+        self.radius: float = None  # the radius of the sample holder if it is a circle
+        self.thickness: float = None  # the thickness of the sample holder
+        self.center: np.ndarray = None  # the center position of the sample holder
         self.samples_list = []  # This is the list storing the sample objects
         self._id2sample = {}  # given the id, return the sample object
         self._id2list_index = (
@@ -211,6 +215,14 @@ class FunctionalSampleHolder(SampleHolder):
         elif search_type == "list_index":
             sample = self.samples_list[index]
             self.relocate_sample(sample, position)
+
+    def rescale(self):
+        """
+        rescale the size of everything
+        - rescale the sample holder size, radius, thickness
+        - rescale the sample position, contour size
+        """
+        pass
 
 
 # (Currently not used!!!)

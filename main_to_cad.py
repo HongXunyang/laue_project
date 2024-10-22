@@ -67,11 +67,11 @@ if True:
     start_time = time.time()
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
-        number_system=4,
+        number_system=3,
         is_plot=True,
         is_print=True,
         step_size=10,
-        number_of_iteration=4000,
+        number_of_iteration=1000,
         temperature=1500,
         contour_buffer_multiplier=1.05,
         is_gravity=True,
@@ -108,9 +108,12 @@ vertices_list_to_cad(
 # ----------- convert Sample holder to CAD ----------- #
 # adjust the size of the sample holder
 sampleholder.size = [1000, 1000]
+sampleholder.radius = 600
+sampleholder.shape = "circle"
+sampleholder.thickness = 60
+sampleholder.center = np.array([500, 500])
 sampleholder_to_cad(
     sampleholder,
-    sampleholder_thickness=60,
     sample_thickness=30,
     cad_folder="../data/",
     cad_file="engraved_sampleholder.stl",

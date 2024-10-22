@@ -89,44 +89,81 @@ def sample_list_to_dxf(sample_list: list, dxf_file):
 
 def sampleholder_to_cad(
     sampleholder: FunctionalSampleHolder,
-    sampleholder_thickness=60,
     sample_thickness=30,
     cad_folder="../data/",
     cad_file="engraved_sampleholder.stl",
 ):
-    # Define the holder rectangle
-    holder_rectangle = _size_to_rectangle(sampleholder.size)
+    if sampleholder.shape == "rectangle":
+        # Define the holder rectangle
+        holder_rectangle = _size_to_rectangle(sampleholder.size)
+        sampeholder_thickness = sampleholder.thickness
+        # Extrude the holder rectangle to create a cuboid
+        holder_thickness = 60.0  # Adjust as needed
+        holder_mesh = _extrude_polygon(
+            holder_rectangle, height=sampleholder_thickness
+        )  # convert it to a 3D shape by extruding the rectangle
+        engrave_meshes = []
 
-    # Extrude the holder rectangle to create a cuboid
-    holder_thickness = 60.0  # Adjust as needed
-    holder_mesh = _extrude_polygon(
-        holder_rectangle, height=sampleholder_thickness
-    )  # convert it to a 3D shape by extruding the rectangle
-    engrave_meshes = []
+        vertices_list = sampleholder2vertices_list(sampleholder)
 
-    vertices_list = sampleholder2vertices_list(sampleholder)
+        for idx, poly_points in enumerate(vertices_list):
+            engrave_mesh = _extrude_polygon(poly_points, height=sample_thickness)
+            engrave_meshes.append(engrave_mesh)
 
-    for idx, poly_points in enumerate(vertices_list):
-        engrave_mesh = _extrude_polygon(poly_points, height=sample_thickness)
-        engrave_meshes.append(engrave_mesh)
+            # Optional: Save individual engrave meshes for debugging
+            # engrave_mesh.export(f'engrave_{idx}.stl')
 
-        # Optional: Save individual engrave meshes for debugging
-        # engrave_mesh.export(f'engrave_{idx}.stl')
+        # Combine all engrave meshes into one
+        combined_engrave_mesh = trimesh.util.concatenate(engrave_meshes)
 
-    # Combine all engrave meshes into one
-    combined_engrave_mesh = trimesh.util.concatenate(engrave_meshes)
+        # Perform boolean subtraction to engrave the holder
+        final_mesh = holder_mesh.difference(combined_engrave_mesh)
 
-    # Perform boolean subtraction to engrave the holder
-    final_mesh = holder_mesh.difference(combined_engrave_mesh)
+        # Check if the boolean operation was successful
+        if final_mesh is None or final_mesh.is_empty:
+            raise ValueError(
+                "Boolean operation failed. Ensure that OpenSCAD is installed and accessible."
+            )
+        # Export the final engraved holder as an STL file
+        final_mesh.export(cad_folder + cad_file)
 
-    # Check if the boolean operation was successful
-    if final_mesh is None or final_mesh.is_empty:
-        raise ValueError(
-            "Boolean operation failed. Ensure that OpenSCAD is installed and accessible."
+    elif sampleholder.shape == "circle":
+        radius = sampleholder.radius
+        sampleholder_thickness = sampleholder.thickness
+        center = sampleholder.center
+        # Create a mesh of a cylinder along Z centered at the origin.
+        holder_mesh = trimesh.creation.cylinder(
+            radius=radius, height=sampleholder_thickness, sections=64
         )
-    # Export the final engraved holder as an STL file
-    final_mesh.export(cad_folder + cad_file)
-    print("Engraved holder STL exported successfully as 'engraved_holder.stl'.")
+        translation = np.append(center, 0) + np.array(
+            [0, 0, sampleholder_thickness / 2]
+        )
+        holder_mesh.apply_translation(translation)
+        engrave_meshes = []
+
+        vertices_list = sampleholder2vertices_list(sampleholder)
+
+        for idx, poly_points in enumerate(vertices_list):
+            engrave_mesh = _extrude_polygon(poly_points, height=sample_thickness)
+            engrave_meshes.append(engrave_mesh)
+
+            # Optional: Save individual engrave meshes for debugging
+            # engrave_mesh.export(f'engrave_{idx}.stl')
+
+        # Combine all engrave meshes into one
+        combined_engrave_mesh = trimesh.util.concatenate(engrave_meshes)
+
+        # Perform boolean subtraction to engrave the holder
+        final_mesh = holder_mesh.difference(combined_engrave_mesh)
+
+        # Check if the boolean operation was successful
+        if final_mesh is None or final_mesh.is_empty:
+            raise ValueError(
+                "Boolean operation failed. Ensure that OpenSCAD is installed and accessible."
+            )
+        # Export the final engraved holder as an STL file
+        final_mesh.export(cad_folder + cad_file)
+    print("done generating CAD file")
 
 
 def _extrude_polygon(polygon_points, height):
