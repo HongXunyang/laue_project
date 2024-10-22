@@ -80,7 +80,7 @@ if True:
         ax=ax,
         is_plot_contour=False,
         is_plot_hull=True,
-        is_relocation_arrow=True,
+        is_relocation_arrow=False,
     )
 
 # ----------- end of optimization ----------- #

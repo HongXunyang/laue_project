@@ -66,13 +66,14 @@ if True:
     start_time = time.time()
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
-        number_system=3,
+        number_system=13,
         is_plot=True,
         is_print=True,
         step_size=10,
-        number_of_iteration=6000,
+        number_of_iteration=20000,
         temperature=1500,
         contour_buffer_multiplier=1.05,
+        optimize_shape="min_circle",
         is_gravity=True,
         is_update_sampleholder=True,
         is_contour_buffer=True,

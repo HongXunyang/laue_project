@@ -33,6 +33,7 @@ def batch_optimization(
     fluctuation: float = 0.1,
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
+    optimize_shape="convex_hull",
     is_rearrange_vertices=True,
     is_gravity=True,
     is_update_sampleholder=False,
@@ -65,6 +66,7 @@ def batch_optimization(
             fluctuation=fluctuation,
             temperature=temperature,
             contour_buffer_multiplier=contour_buffer_multiplier,
+            optimize_shape=optimize_shape,
             is_rearrange_vertices=is_rearrange_vertices,
             is_gravity=is_gravity,
             is_update_sampleholder=False,
@@ -126,6 +128,7 @@ def optimization(
     fluctuation: float = 0.1,
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
+    optimize_shape="convex_hull",
     is_rearrange_vertices=True,
     is_gravity=True,
     is_update_sampleholder=False,
@@ -140,6 +143,7 @@ def optimization(
     - fluctuation: currently doing nothing
     - temperature: controling the posibilities of accepting inferior configuration
     - contour_buffer_multiplier: The contour buffer is a buffer around the convex hull of each sample. The buffer is used to avoid edge touching of samples. 1.01 means the convex hull of the samples will be 1% percent larger than its actual size. The larger the buffer, the larger the space between the samples.
+    - optimize_shape: the shape of the area to optimize. Choose from "convex_hull" or "min_circle"
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
@@ -168,7 +172,9 @@ def optimization(
     if is_rearrange_vertices:
         rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
 
-    area = _calculate_area(rearranged_vertices_list)  # initial area
+    area = _calculate_area(
+        rearranged_vertices_list, shape=optimize_shape
+    )  # initial area
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
         scale_hull * step_size
@@ -219,7 +225,7 @@ def optimization(
             temp_vertices_list[index] = temp_vertices
             # check if the new configuration is better than the previous one
             temp_area, is_accept = _check_configuration(
-                temp_vertices_list, area, current_temperature
+                temp_vertices_list, area, current_temperature, shape=optimize_shape
             )
             if is_accept:
                 # new configuration is accepted, update the configuration
@@ -312,7 +318,7 @@ def _check_movement(temp_vertices, index: int, vertices_list: list):
     return True
 
 
-def _check_configuration(temp_vertices_list, area, temperature):
+def _check_configuration(temp_vertices_list, area, temperature, shape="convex_hull"):
     """
     a function check if the configuration is better than the previous one
 
@@ -321,7 +327,7 @@ def _check_configuration(temp_vertices_list, area, temperature):
     - if the new area is smaller than the previous one, accept the new configuration
     - if the new area is larger than the previous one, accept the new configuration with a probability of exp(-(new_area - area)/temperature)
     """
-    new_area = _calculate_area(temp_vertices_list)
+    new_area = _calculate_area(temp_vertices_list, shape=shape)
     if new_area < area:
         is_accept = True
     else:
@@ -333,14 +339,27 @@ def _check_configuration(temp_vertices_list, area, temperature):
     return new_area, is_accept
 
 
-def _calculate_area(vertices_list):
+def _calculate_area(vertices_list, shape="convex_hull"):
     """
     calculate the area of the convex hull of the given vertices list
+
+    kwargs:
+    - shape: the shape of the area to calculate. Choose from "convex_hull" or "min_circle"
+
     """
     # Extract all points
     points = np.array([point for vertices in vertices_list for point in vertices])
     points = points.astype(np.int32)
-    return cv2.contourArea(cv2.convexHull(points))
+    convex_hull = cv2.convexHull(points)
+    if shape == "convex_hull":
+        return cv2.contourArea(convex_hull)
+    elif shape == "min_circle":
+        # calculate the minimum enclosing circle of the convex hull
+        _, radius = cv2.minEnclosingCircle(convex_hull)
+        return np.pi * radius**2
+
+    else:
+        raise ValueError(f"please choose shape from 'convex_hull' or 'min_circle'.")
 
 
 def _rearrange_vertices_list(
