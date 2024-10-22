@@ -66,7 +66,7 @@ if True:
     start_time = time.time()
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
-        number_system=4,
+        number_system=3,
         is_plot=True,
         is_print=True,
         step_size=10,
@@ -74,7 +74,7 @@ if True:
         temperature=1500,
         contour_buffer_multiplier=1.05,
         is_gravity=True,
-        is_update_sampleholder=False,
+        is_update_sampleholder=True,
         is_contour_buffer=True,
     )
     end_time = time.time()

@@ -4,3 +4,4 @@ shapely
 cv2
 ezdxf
 trimesh
+manifold3d

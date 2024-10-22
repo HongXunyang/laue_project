@@ -93,6 +93,7 @@ def visualize_sampleholder(
                     head_length=10,
                     fc="gray",
                     ec="gray",
+                    zorder=1000,
                 )
                 ax.scatter(
                     sample.position_original[0],

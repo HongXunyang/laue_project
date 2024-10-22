@@ -1,4 +1,4 @@
-from to_cad import vertices_list_to_cad
+from to_cad import vertices_list_to_cad, sampleholder_to_cad
 from close_packing import optimization, visualize_vertices_list, batch_optimization
 from matplotlib import pyplot as plt
 import numpy as np
@@ -93,7 +93,7 @@ if True:
 # ----------- end of optimization ----------- #
 
 
-# ----------- convert to dxf (CAD) ----------- #
+# ----------- convert Samples to CAD ----------- #
 vertices_list = optimized_configuration_list[sorted_indices[0]]
 vertices_list_to_cad(
     vertices_list,
@@ -102,5 +102,20 @@ vertices_list_to_cad(
     is_3d=True,
     thickness=30,
 )
+# ----------- end  ----------- #
+
+
+# ----------- convert Sample holder to CAD ----------- #
+# adjust the size of the sample holder
+sampleholder.size = [1000, 1000]
+sampleholder_to_cad(
+    sampleholder,
+    sampleholder_thickness=60,
+    sample_thickness=30,
+    cad_folder="../data/",
+    cad_file="engraved_sampleholder.stl",
+)
+
+# ----------- end  ----------- #
 
 plt.show()

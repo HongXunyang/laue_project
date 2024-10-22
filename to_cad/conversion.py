@@ -5,6 +5,7 @@ This is a package focusing on converting sample to DXF file
 import numpy as np
 import ezdxf
 from classes import Sample, FunctionalSampleHolder, Contour
+from close_packing import sampleholder2vertices_list
 from shapely.geometry import Polygon
 import trimesh
 
@@ -86,8 +87,46 @@ def sample_list_to_dxf(sample_list: list, dxf_file):
     pass
 
 
-def sampleholder_to_dxf(sampleholder: FunctionalSampleHolder, dxf_file):
-    pass
+def sampleholder_to_cad(
+    sampleholder: FunctionalSampleHolder,
+    sampleholder_thickness=60,
+    sample_thickness=30,
+    cad_folder="../data/",
+    cad_file="engraved_sampleholder.stl",
+):
+    # Define the holder rectangle
+    holder_rectangle = _size_to_rectangle(sampleholder.size)
+
+    # Extrude the holder rectangle to create a cuboid
+    holder_thickness = 60.0  # Adjust as needed
+    holder_mesh = _extrude_polygon(
+        holder_rectangle, height=sampleholder_thickness
+    )  # convert it to a 3D shape by extruding the rectangle
+    engrave_meshes = []
+
+    vertices_list = sampleholder2vertices_list(sampleholder)
+
+    for idx, poly_points in enumerate(vertices_list):
+        engrave_mesh = _extrude_polygon(poly_points, height=sample_thickness)
+        engrave_meshes.append(engrave_mesh)
+
+        # Optional: Save individual engrave meshes for debugging
+        # engrave_mesh.export(f'engrave_{idx}.stl')
+
+    # Combine all engrave meshes into one
+    combined_engrave_mesh = trimesh.util.concatenate(engrave_meshes)
+
+    # Perform boolean subtraction to engrave the holder
+    final_mesh = holder_mesh.difference(combined_engrave_mesh)
+
+    # Check if the boolean operation was successful
+    if final_mesh is None or final_mesh.is_empty:
+        raise ValueError(
+            "Boolean operation failed. Ensure that OpenSCAD is installed and accessible."
+        )
+    # Export the final engraved holder as an STL file
+    final_mesh.export(cad_folder + cad_file)
+    print("Engraved holder STL exported successfully as 'engraved_holder.stl'.")
 
 
 def _extrude_polygon(polygon_points, height):
@@ -100,5 +139,12 @@ def _extrude_polygon(polygon_points, height):
 
     # Extrude the polygon to create a 3D mesh
     mesh = trimesh.creation.extrude_polygon(poly, height)
-
     return mesh
+
+
+def _size_to_rectangle(size):
+    # convert a 2x1 tuple to a rectangle points
+    width, height = size
+
+    rectangle = np.array([[0, 0], [width, 0], [width, height], [0, height]])
+    return rectangle

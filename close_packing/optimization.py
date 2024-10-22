@@ -18,6 +18,7 @@ from classes import FunctionalSampleHolder
 from .helper_functions import (
     sampleholder2vertices_list,
     vertices_area,
+    update_sampleholder,
 )
 from utils import visualize_vertices_list
 
@@ -66,7 +67,7 @@ def batch_optimization(
             contour_buffer_multiplier=contour_buffer_multiplier,
             is_rearrange_vertices=is_rearrange_vertices,
             is_gravity=is_gravity,
-            is_update_sampleholder=is_update_sampleholder,
+            is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
         )
         optimized_configuration_list[batch_index] = optimized_configuration
@@ -109,6 +110,11 @@ def batch_optimization(
                 ax.set(xticks=[], yticks=[])
     # ax setting: remove space between axes
     plt.subplots_adjust(wspace=0, hspace=0)
+
+    # update the sample holder if is_update_sampleholder is True
+    if is_update_sampleholder:
+        new_vertices_list = optimized_configuration_list[sorted_indices[0]]
+        update_sampleholder(sampleholder, new_vertices_list)
 
     return optimized_configuration_list, area_list, sorted_indices
 
@@ -239,24 +245,9 @@ def optimization(
 
     if is_update_sampleholder:
         # at the end of the optimization, update the sample position by doing relocate()
-        _update_sampleholder(sampleholder, vertices_list, rearranged_vertices_list)
+        update_sampleholder(sampleholder, rearranged_vertices_list)
 
     return rearranged_vertices_list, area
-
-
-def _update_sampleholder(
-    sampleholder: FunctionalSampleHolder, old_vertices_list, new_vertices_list: list
-):
-    """
-    update the sampleholder with the new configuration
-    """
-    for i, vertices in enumerate(new_vertices_list):
-        # determine the translation offset between the original and new vertices
-        translation = _get_translation(old_vertices_list[i], new_vertices_list[i])
-        sample = sampleholder.samples_list[i]
-        # update the sample.position_new before applying sample.relocate()
-        sample.position_new = sample.position_original + translation
-        sample.relocate()
 
 
 def _create_movement_vector(
@@ -350,15 +341,6 @@ def _calculate_area(vertices_list):
     points = np.array([point for vertices in vertices_list for point in vertices])
     points = points.astype(np.int32)
     return cv2.contourArea(cv2.convexHull(points))
-
-
-def _get_translation(old_vertices: np.ndarray, new_vertices: np.ndarray) -> np.ndarray:
-    """get the translation vector by comparing the center of mass of the old and new vertices"""
-
-    old_center = np.mean(old_vertices, axis=0)
-    new_center = np.mean(new_vertices, axis=0)
-
-    return new_center - old_center
 
 
 def _rearrange_vertices_list(
