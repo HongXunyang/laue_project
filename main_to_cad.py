@@ -75,7 +75,7 @@ if True:
         temperature=1500,
         contour_buffer_multiplier=1.05,
         is_gravity=True,
-        is_update_sampleholder=False,
+        is_update_sampleholder=True,
         is_contour_buffer=True,
     )
     end_time = time.time()

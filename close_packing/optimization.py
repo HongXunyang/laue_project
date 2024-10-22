@@ -15,12 +15,12 @@ import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
 from classes import FunctionalSampleHolder
-from .helper_functions import (
+from utils import (
     sampleholder2vertices_list,
     vertices_area,
     update_sampleholder,
+    visualize_vertices_list,
 )
-from utils import visualize_vertices_list
 
 
 def batch_optimization(
