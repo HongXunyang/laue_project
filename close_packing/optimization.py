@@ -161,7 +161,7 @@ def optimization(
     - contour_buffer_multiplier: The contour buffer is a buffer around the convex hull of each sample. The buffer is used to avoid edge touching of samples. 1.01 means the convex hull of the samples will be 1% percent larger than its actual size. The larger the buffer, the larger the space between the samples.
     - optimize_shape: the shape of the area to optimize. Choose from "convex_hull" or "min_circle"
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
-    - is_gravity: if True, the movement vector will be affected by the gravity of the samples
+    - is_gravity: if True, the movement vector will be affected by the gravity of the samples. This will increase the running time by roughly 50%.
     - gravity_multiplier: controling the strength of the gravity. 1 means the movement vector is always along the gravity direction; 0.5 means the movement vector is somewhat along the gravity direction; 1.5 means the movement vector is more along the gravity direction.
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
@@ -192,7 +192,10 @@ def optimization(
     # rearrange the vertices_list for a better optimization (if is_rearrange_vertices is True)
     if is_rearrange_vertices:
         rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
-
+    # the area of each sample
+    sample_areas_list = np.array(
+        [vertices_area(vertices) for vertices in vertices_list]
+    )
     # the initial area of the convex hull
     area = _calculate_area(
         rearranged_vertices_list, shape=optimize_shape
@@ -208,9 +211,7 @@ def optimization(
     # create a temporary vertices_list to store the temporary new vetices
     temp_vertices_list = rearranged_vertices_list.copy()
     number_polygons = len(vertices_list)
-    sample_areas_list = np.array(
-        [vertices_area(vertices) for vertices in vertices_list]
-    )
+
     # -------- Start of the optimization -------- #
     for iteration in range(number_of_iteration):
         # randomly select a polygon
@@ -317,18 +318,16 @@ def _create_movement_vector(
         if areas is None:
             areas = np.array([vertices_area(vertices) for vertices in vertices_list])
         centers = np.array([np.mean(vertices, axis=0) for vertices in vertices_list])
-        area_this, center_this = areas[index], centers[index]
+        center_this = centers[index]
         centers = centers - center_this
         distances_squared = np.sum(centers**2, axis=1)
-        this_area = areas[index]
-        areas[index], distances_squared[index] = 0.0, 1
+        distances_squared[index] = 1000.0
         gravities = centers / distances_squared[:, np.newaxis] * areas[:, np.newaxis]
         # select the direction based on the gravity
         direction_gravity = np.sum(gravities, axis=0)
         direction_gravity = direction_gravity / np.linalg.norm(
             direction_gravity
         )  # normalize the direction
-        areas[index] = this_area
     elif is_gravity and direction_gravity is not None:
         direction_gravity = direction_gravity
     else:
@@ -391,7 +390,6 @@ def _calculate_area(vertices_list, shape="convex_hull"):
     """
     # Extract all points
     points = np.array([point for vertices in vertices_list for point in vertices])
-    points = points.astype(np.int32)
     convex_hull = cv2.convexHull(points)
     if shape == "convex_hull":
         return cv2.contourArea(convex_hull)

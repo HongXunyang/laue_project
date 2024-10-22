@@ -74,7 +74,7 @@ def func_to_profile():
         temperature=500,
         contour_buffer_multiplier=1.05,
         optimize_shape="min_circle",
-        is_gravity=True,
+        is_gravity=False,
         is_update_sampleholder=True,
         is_contour_buffer=True,
     )
