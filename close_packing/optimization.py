@@ -36,6 +36,7 @@ def batch_optimization(
     optimize_shape="convex_hull",
     is_rearrange_vertices=True,
     is_gravity=True,
+    gravity_multiplier: float = 0.5,
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_area=False,
@@ -78,6 +79,7 @@ def batch_optimization(
             optimize_shape=optimize_shape,
             is_rearrange_vertices=is_rearrange_vertices,
             is_gravity=is_gravity,
+            gravity_multiplier=gravity_multiplier,
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
             is_plot_area=is_plot_area,
@@ -142,6 +144,7 @@ def optimization(
     optimize_shape="convex_hull",
     is_rearrange_vertices=True,
     is_gravity=True,
+    gravity_multiplier: float = 0.5,
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_area=False,
@@ -159,6 +162,7 @@ def optimization(
     - optimize_shape: the shape of the area to optimize. Choose from "convex_hull" or "min_circle"
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
+    - gravity_multiplier: controling the strength of the gravity. 1 means the movement vector is always along the gravity direction; 0.5 means the movement vector is somewhat along the gravity direction; 1.5 means the movement vector is more along the gravity direction.
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
     - is_plot_area: if True, plot out the area evolution during the optimization process
@@ -220,6 +224,7 @@ def optimization(
             index,
             step_size,
             is_gravity,
+            gravity_multiplier=gravity_multiplier,
             direction_gravity=None,
         )
         temp_vertices = vertices + movement_vector
@@ -232,6 +237,7 @@ def optimization(
                 index,
                 step_size // 2,
                 is_gravity,
+                gravity_multiplier=gravity_multiplier,
                 direction_gravity=direction_gravity,
             )
             temp_vertices = vertices + movement_vector
@@ -285,7 +291,7 @@ def _create_movement_vector(
     index: int,
     step_size: int,
     is_gravity=True,
-    graivity_multiplier: float = 0.7,
+    gravity_multiplier: float = 0.7,
     direction_gravity=None,
 ):
     """
@@ -320,7 +326,7 @@ def _create_movement_vector(
     # create a final movement vector
     movement_vector = (
         direction_gravity * step_size
-    ) * graivity_multiplier + np.random.randint(-step_size, step_size, 2)
+    ) * gravity_multiplier + np.random.randint(-step_size, step_size, 2)
 
     return movement_vector, direction_gravity
 
@@ -370,6 +376,8 @@ def _calculate_area(vertices_list, shape="convex_hull"):
     kwargs:
     - shape: the shape of the area to calculate. Choose from "convex_hull" or "min_circle"
 
+    Note:
+    - if shape == "min_ciecle", the are is not the real area, but is replaced by the radius of the minimum enclosing circle
     """
     # Extract all points
     points = np.array([point for vertices in vertices_list for point in vertices])
@@ -380,7 +388,7 @@ def _calculate_area(vertices_list, shape="convex_hull"):
     elif shape == "min_circle":
         # calculate the minimum enclosing circle of the convex hull
         _, radius = cv2.minEnclosingCircle(convex_hull)
-        return np.pi * radius**2
+        return radius
 
     else:
         raise ValueError(f"please choose shape from 'convex_hull' or 'min_circle'.")
