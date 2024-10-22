@@ -38,6 +38,8 @@ def batch_optimization(
     is_gravity=True,
     is_update_sampleholder=False,
     is_contour_buffer=True,
+    is_plot_area=False,
+    ax_area=None,
 ):
     """
     Args:
@@ -53,9 +55,16 @@ def batch_optimization(
     - area_list: a list of the area of the convex hull of the optimized configuration
     - sorted_indices: the indices of the optimized_configuration_list sorted based on the area
     """
+    # initialization
     max_configurations = 9  # the maximum number of configurations to plot
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
+    if is_plot_area:
+        fig, ax_area = plt.subplots()
+        ax_area.set_title("Area Evolution")
+        ax_area.set_xlabel("Iteration")
+        ax_area.set_ylabel("area")
+    # start the optimization
     for batch_index in range(number_system):
         if is_print:
             print(f"NO.{batch_index+1} out of {number_system} started")
@@ -71,6 +80,8 @@ def batch_optimization(
             is_gravity=is_gravity,
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
+            is_plot_area=is_plot_area,
+            ax_area=ax_area,
         )
         optimized_configuration_list[batch_index] = optimized_configuration
         area_list[batch_index] = area
@@ -133,6 +144,8 @@ def optimization(
     is_gravity=True,
     is_update_sampleholder=False,
     is_contour_buffer=True,
+    is_plot_area=False,
+    ax_area=None,
 ):
     """
     Args:
@@ -148,11 +161,15 @@ def optimization(
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
+    - is_plot_area: if True, plot out the area evolution during the optimization process
+    - ax_area: the axis to plot the area evolution
 
     Returns:
     - rearranged_vertices_list: the optimized configuration of the samples
     - area: the area of the convex hull of the optimized configuration
     """
+    # initialization
+
     # preset annealing parameters
     initial_temperature = temperature
     current_temperature = temperature
@@ -175,6 +192,9 @@ def optimization(
     area = _calculate_area(
         rearranged_vertices_list, shape=optimize_shape
     )  # initial area
+    if is_plot_area:
+        area_evolution = np.zeros(number_of_iteration)
+        area_evolution[0] = area
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
         scale_hull * step_size
@@ -237,6 +257,8 @@ def optimization(
 
         current_temperature -= temperature_decay  # linearly decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
+        if is_plot_area:
+            area_evolution[iteration] = area
     # -------- End of the optimization -------- #
 
     if is_contour_buffer:
@@ -253,6 +275,8 @@ def optimization(
         # at the end of the optimization, update the sample position by doing relocate()
         update_sampleholder(sampleholder, rearranged_vertices_list)
 
+    if is_plot_area:
+        ax_area.plot(area_evolution)
     return rearranged_vertices_list, area
 
 

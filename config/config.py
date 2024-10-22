@@ -17,8 +17,9 @@ batch_optimization_kwargs = dict(
     number_of_iteration=20000,
     temperature=1500,
     contour_buffer_multiplier=1.05,
-    optimize_shape="convex_hull",
+    optimize_shape="min_circle",
     is_gravity=True,
     is_update_sampleholder=True,
     is_contour_buffer=True,
+    is_plot_area=True,
 )
