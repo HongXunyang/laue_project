@@ -102,3 +102,4 @@ if True:
     ax.plot(hull_squeeze[:, 0], hull_squeeze[:, 1], "r")
 plt.show()
 # ----------- end of optimization ----------- #
+print("done")

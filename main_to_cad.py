@@ -10,6 +10,8 @@ from contour_finding import (
     generate_sampleholder_object,
 )
 from utils import visualize_sampleholder, visualize_contours
+from config.config import physical_size, batch_optimization_kwargs
+
 
 start_time = time.time()
 # ----------- image pre=processing ----------- #
@@ -67,16 +69,7 @@ if True:
     start_time = time.time()
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
-        number_system=3,
-        is_plot=True,
-        is_print=True,
-        step_size=10,
-        number_of_iteration=1000,
-        temperature=1500,
-        contour_buffer_multiplier=1.05,
-        is_gravity=True,
-        is_update_sampleholder=True,
-        is_contour_buffer=True,
+        **batch_optimization_kwargs,
     )
     end_time = time.time()
 
@@ -107,11 +100,13 @@ vertices_list_to_cad(
 
 # ----------- convert Sample holder to CAD ----------- #
 # adjust the size of the sample holder
-sampleholder.size = [1000, 1000]
-sampleholder.radius = 600
+sampleholder.size = physical_size["sampleholder_size"]
 sampleholder.shape = "circle"
-sampleholder.thickness = 60
-sampleholder.center = np.array([500, 500])
+sampleholder.thickness = physical_size["sampleholder_thickness"]
+# get the minimum enclosing circle
+sampleholder.update_min_circle()
+sampleholder.radius = sampleholder.radius * 1.1
+
 sampleholder_to_cad(
     sampleholder,
     sample_thickness=30,

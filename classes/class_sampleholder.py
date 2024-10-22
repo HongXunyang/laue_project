@@ -95,6 +95,9 @@ class SampleHolder:
         self.radius = radius
         return center, radius
 
+    def vertices_list(self):
+        return _sampleholder2vertices_list(self)
+
     def id2sample(self, id: int):
         """
         This method returns the sample object given the id
