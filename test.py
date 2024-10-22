@@ -70,7 +70,7 @@ if True:
         is_plot=True,
         is_print=True,
         step_size=10,
-        number_of_iteration=1000,
+        number_of_iteration=6000,
         temperature=1500,
         contour_buffer_multiplier=1.05,
         is_gravity=True,
@@ -90,5 +90,15 @@ if True:
     )
 
     sampleholder.update_convex_hull()
+    sampleholder.update_min_circle()
+
+    # plot the min circle on ax
+    center, radius = sampleholder.center, sampleholder.radius
+    circle = plt.Circle(center, radius, color="r", fill=False)
+    ax.add_artist(circle)
+
+    # plot the convex hull on ax
+    hull_squeeze = sampleholder.convex_hull.squeeze()
+    ax.plot(hull_squeeze[:, 0], hull_squeeze[:, 1], "r")
 plt.show()
 # ----------- end of optimization ----------- #

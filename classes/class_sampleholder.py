@@ -82,7 +82,18 @@ class SampleHolder:
         vertices_list = _sampleholder2vertices_list(self)
         points = np.array([point for vertices in vertices_list for point in vertices])
         points = points.astype(np.float32)
-        return cv2.convexHull(points)
+        self.convex_hull = cv2.convexHull(points)
+
+    def update_min_circle(self):
+        """
+        update the minimum enclosing circle based on the current convex hull
+        """
+        if self.convex_hull is None:
+            self.update_convex_hull()
+        center, radius = cv2.minEnclosingCircle(self.convex_hull)
+        self.center = np.array(center)
+        self.radius = radius
+        return center, radius
 
     def id2sample(self, id: int):
         """
