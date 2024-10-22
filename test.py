@@ -1,88 +1,94 @@
+from close_packing import optimization, visualize_vertices_list, batch_optimization
+from matplotlib import pyplot as plt
 import numpy as np
-from shapely.geometry import Polygon
-import trimesh
+import matplotlib.pyplot as plt
+import time, cv2
+from contour_finding import (
+    image2contours,
+    generate_sample_objects,
+    generate_sampleholder_object,
+)
+from utils import visualize_sampleholder, visualize_contours
 
+start_time = time.time()
+# ----------- image pre=processing ----------- #
+stripes_vectors = [
+    np.array([95, 86, 167]),
+    np.array([57, 48, 139]),
+    np.array([72, 66, 137]),
+]
+target_background_vector = np.array([202, 209, 206])
+background_vectors = [
+    np.array([202, 209, 206]),
+    np.array([190, 201, 199]),
+    np.array([182, 185, 183]),
+]
+# Load image
+image = cv2.imread("../images/fake_holder_with_samples.jpg")
+rows, columns, channels = image.shape
 
-def extrude_polygon(polygon_points, height, direction="up"):
-    """
-    Extrude a 2D polygon into a 3D mesh with the given height.
+# crop image
+image = image[
+    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
+]
+# compress image
+image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
+rows, columns, channels = image.shape
+# ----------- end of image pre-processing ----------- #
 
-    Parameters:
-    - polygon_points: (Nx2) numpy array of polygon vertices.
-    - height: Thickness to extrude.
-    - direction: 'up' or 'down' extrusion along Z-axis.
+# ----------- contour finding ----------- #
+contours, approximated_contours, hulls = image2contours(
+    image,
+    stripes_vectors=stripes_vectors,
+    background_vectors=background_vectors,
+    epsilon=2.5,
+    lowercut=100,
+    area_lowercut=2000,
+    gaussian_window=(5, 5),
+    is_gaussian_filter=True,
+    isprint=False,
+)
 
-    Returns:
-    - extruded_mesh: trimesh.Trimesh object.
-    """
-    poly = Polygon(polygon_points)
+# visualize contours
+image_to_visualize = visualize_contours(
+    image, approximated_contours, hulls, is_plot=True
+)
+end_time = time.time()
+print(f"image processed time: {end_time - start_time} seconds\n")
+# cv2.waitKey(0)
+# create samples objects and sample holder object
+samples_list = generate_sample_objects(approximated_contours, hulls)
+sampleholder = generate_sampleholder_object(samples_list)
+# ----------- end of contour finding ----------- #
 
-    if not poly.is_valid:
-        poly = poly.buffer(0)
-        if not poly.is_valid:
-            raise ValueError("Invalid polygon. Cannot be fixed with buffer(0).")
+# ----------- optimization ----------- #
+if True:
+    start_time = time.time()
+    optimized_configuration_list, area_list, sorted_indices = batch_optimization(
+        sampleholder,
+        number_system=3,
+        is_plot=True,
+        is_print=True,
+        step_size=10,
+        number_of_iteration=1000,
+        temperature=1500,
+        contour_buffer_multiplier=1.05,
+        is_gravity=True,
+        is_update_sampleholder=True,
+        is_contour_buffer=True,
+    )
+    end_time = time.time()
 
-    # Extrude the polygon
-    extruded_mesh = trimesh.creation.extrude_polygon(poly, height)
-
-    if direction == "down":
-        # Invert the extrusion along Z-axis
-        extruded_mesh.apply_translation([0, 0, -height])
-
-    return extruded_mesh
-
-
-def main():
-    # Define the holder rectangle (example: 100x100 units)
-    holder_rectangle = np.array([[0, 0], [100, 0], [100, 100], [0, 100]])
-
-    # Extrude the holder rectangle to create a cuboid
-    holder_thickness = 60.0  # Adjust as needed
-    holder_mesh = extrude_polygon(
-        holder_rectangle, height=holder_thickness, direction="up"
+    print(f"optimization time: {end_time - start_time} seconds\n")
+    fig, ax = plt.subplots()
+    visualize_sampleholder(
+        sampleholder,
+        ax=ax,
+        is_plot_contour=False,
+        is_plot_hull=True,
+        is_relocation_arrow=True,
     )
 
-    # Example list of sample polygons
-    sample_polygons = [
-        np.array([[10, 10], [30, 10], [30, 30], [10, 30]]),  # Square
-        np.array([[40, 40], [60, 40], [50, 60]]),  # Triangle
-        # Add more polygons as needed
-    ]
-
-    # Thickness for engraving
-    engrave_thickness = 30.0  # Adjust as needed
-
-    # List to store extruded sample meshes
-    engrave_meshes = []
-
-    for idx, poly_points in enumerate(sample_polygons):
-        engrave_mesh = extrude_polygon(
-            poly_points, height=engrave_thickness, direction="up"
-        )
-        engrave_meshes.append(engrave_mesh)
-
-        # Optional: Save individual engrave meshes for debugging
-        # engrave_mesh.export(f'engrave_{idx}.stl')
-
-    # Combine all engrave meshes into one
-    combined_engrave_mesh = trimesh.util.concatenate(engrave_meshes)
-
-    # Perform boolean subtraction to engrave the holder
-    final_mesh = holder_mesh.difference(combined_engrave_mesh)
-
-    # Check if the boolean operation was successful
-    if final_mesh is None or final_mesh.is_empty:
-        raise ValueError(
-            "Boolean operation failed. Ensure that OpenSCAD is installed and accessible."
-        )
-
-    # Optional: Visualize the final mesh
-    # final_mesh.show()
-
-    # Export the final engraved holder as an STL file
-    final_mesh.export("engraved_holder.stl")
-    print("Engraved holder STL exported successfully as 'engraved_holder.stl'.")
-
-
-if __name__ == "__main__":
-    main()
+    sampleholder.update_convex_hull()
+plt.show()
+# ----------- end of optimization ----------- #

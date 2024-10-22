@@ -12,9 +12,11 @@ This module defines the class of the sample holder. There are two types of sampl
 """
 
 import numpy as np
-import json
+import json, cv2
 import matplotlib.pyplot as plt
 from .class_sample import Sample
+from utils import sampleholder2vertices_list
+
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -38,6 +40,8 @@ class SampleHolder:
         self.radius: float = None  # the radius of the sample holder if it is a circle
         self.thickness: float = None  # the thickness of the sample holder
         self.center: np.ndarray = None  # the center position of the sample holder
+        self.convex_hull = None  # the cv2 convex hull of the sample holder
+        self.min_circle = None  # the minimum enclosing circle of the convex hull
         self.samples_list = []  # This is the list storing the sample objects
         self._id2sample = {}  # given the id, return the sample object
         self._id2list_index = (
@@ -71,6 +75,16 @@ class SampleHolder:
     # ---------------------------------------------
     # helper methods
     # ---------------------------------------------
+    def update_convex_hull(self):
+        """
+        update the convex hull based on the current sample configuration
+        """
+        # vertices_list = sampleholder2vertices_list(self)
+        # points = np.array([point for vertices in vertices_list for point in vertices])
+        # points = points.astype(np.float32)
+        # return cv2.convexHull(points)
+        pass
+
     def id2sample(self, id: int):
         """
         This method returns the sample object given the id
