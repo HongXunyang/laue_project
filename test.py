@@ -1,5 +1,7 @@
 from close_packing import optimization, visualize_vertices_list, batch_optimization
 from matplotlib import pyplot as plt
+import cProfile
+import pstats
 import numpy as np
 import matplotlib.pyplot as plt
 import time, cv2
@@ -51,7 +53,7 @@ contours, approximated_contours, hulls = image2contours(
 
 # visualize contours
 image_to_visualize = visualize_contours(
-    image, approximated_contours, hulls, is_plot=True
+    image, approximated_contours, hulls, is_plot=False
 )
 end_time = time.time()
 print(f"image processed time: {end_time - start_time} seconds\n")
@@ -62,45 +64,28 @@ sampleholder = generate_sampleholder_object(samples_list)
 # ----------- end of contour finding ----------- #
 
 # ----------- optimization ----------- #
-if True:
-    start_time = time.time()
-    optimized_configuration_list, area_list, sorted_indices = batch_optimization(
+
+
+def func_to_profile():
+    optimization(
         sampleholder,
-        number_system=13,
-        is_plot=True,
-        is_print=True,
         step_size=10,
-        number_of_iteration=20000,
-        temperature=1500,
+        number_of_iteration=1000,
+        temperature=500,
         contour_buffer_multiplier=1.05,
         optimize_shape="min_circle",
         is_gravity=True,
         is_update_sampleholder=True,
         is_contour_buffer=True,
     )
-    end_time = time.time()
 
-    print(f"optimization time: {end_time - start_time} seconds\n")
-    fig, ax = plt.subplots()
-    visualize_sampleholder(
-        sampleholder,
-        ax=ax,
-        is_plot_contour=False,
-        is_plot_hull=True,
-        is_relocation_arrow=True,
-    )
 
-    sampleholder.update_convex_hull()
-    sampleholder.update_min_circle()
+# Profile the function and save the stats to a file
+cProfile.run("func_to_profile()", "profiling_output.prof")
 
-    # plot the min circle on ax
-    center, radius = sampleholder.center, sampleholder.radius
-    circle = plt.Circle(center, radius, color="r", fill=False)
-    ax.add_artist(circle)
+# Load the profiling results from the file
+with open("profiling_output.prof", "r") as f:
+    stats = pstats.Stats("profiling_output.prof")
 
-    # plot the convex hull on ax
-    hull_squeeze = sampleholder.convex_hull.squeeze()
-    ax.plot(hull_squeeze[:, 0], hull_squeeze[:, 1], "r")
-plt.show()
-# ----------- end of optimization ----------- #
-print("done")
+# Sort by cumulative time (cumulative time is the time spent in a function and all sub-functions)
+stats.sort_stats("cumulative").print_stats(30)  # Print top 10 results

@@ -193,6 +193,7 @@ def optimization(
     if is_rearrange_vertices:
         rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
 
+    # the initial area of the convex hull
     area = _calculate_area(
         rearranged_vertices_list, shape=optimize_shape
     )  # initial area
@@ -207,7 +208,9 @@ def optimization(
     # create a temporary vertices_list to store the temporary new vetices
     temp_vertices_list = rearranged_vertices_list.copy()
     number_polygons = len(vertices_list)
-
+    sample_areas_list = np.array(
+        [vertices_area(vertices) for vertices in vertices_list]
+    )
     # -------- Start of the optimization -------- #
     for iteration in range(number_of_iteration):
         # randomly select a polygon
@@ -226,6 +229,7 @@ def optimization(
             is_gravity,
             gravity_multiplier=gravity_multiplier,
             direction_gravity=None,
+            areas=sample_areas_list,
         )
         temp_vertices = vertices + movement_vector
         is_movement_allowed = _check_movement(temp_vertices, index, temp_vertices_list)
@@ -239,6 +243,7 @@ def optimization(
                 is_gravity,
                 gravity_multiplier=gravity_multiplier,
                 direction_gravity=direction_gravity,
+                areas=sample_areas_list,
             )
             temp_vertices = vertices + movement_vector
             is_movement_allowed = _check_movement(
@@ -293,6 +298,7 @@ def _create_movement_vector(
     is_gravity=True,
     gravity_multiplier: float = 0.7,
     direction_gravity=None,
+    areas=None,
 ):
     """
     selection a direction and step size based on the configuration of polygons and also the temperature (randomness)
@@ -304,21 +310,25 @@ def _create_movement_vector(
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples
     - graivity_multiplier: the multiplier of the gravity strength. 1 means the created movement vector is always somewhat along the gravity direction (inner product > 0); 0.5 means weaker gravity effect (inner product could < 0); 1.5 means strong gravity effect (more along the gravit direction)
     -  direction_gravity: the direction of the gravity. If None, the direction will be calculated based on the configuration of the polygons.
+    - areas: the areas of the polygons in the vertices_list. If None, the areas will be calculated based on the vertices_list
     """
     # the array of areas of the polygons in the vertices_list
     if is_gravity and direction_gravity is None:
-        areas = np.array([vertices_area(vertices) for vertices in vertices_list])
+        if areas is None:
+            areas = np.array([vertices_area(vertices) for vertices in vertices_list])
         centers = np.array([np.mean(vertices, axis=0) for vertices in vertices_list])
         area_this, center_this = areas[index], centers[index]
         centers = centers - center_this
         distances_squared = np.sum(centers**2, axis=1)
-        areas[index], distances_squared[index] = 0, 1
+        this_area = areas[index]
+        areas[index], distances_squared[index] = 0.0, 1
         gravities = centers / distances_squared[:, np.newaxis] * areas[:, np.newaxis]
         # select the direction based on the gravity
         direction_gravity = np.sum(gravities, axis=0)
         direction_gravity = direction_gravity / np.linalg.norm(
             direction_gravity
         )  # normalize the direction
+        areas[index] = this_area
     elif is_gravity and direction_gravity is not None:
         direction_gravity = direction_gravity
     else:
