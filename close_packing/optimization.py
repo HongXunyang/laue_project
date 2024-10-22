@@ -276,7 +276,7 @@ def optimization(
         update_sampleholder(sampleholder, rearranged_vertices_list)
 
     if is_plot_area:
-        ax_area.plot(area_evolution)
+        ax_area.plot(np.array(range(number_of_iteration)), np.log(area_evolution))
     return rearranged_vertices_list, area
 
 
