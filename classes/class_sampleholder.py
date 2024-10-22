@@ -15,7 +15,7 @@ import numpy as np
 import json, cv2
 import matplotlib.pyplot as plt
 from .class_sample import Sample
-from utils import sampleholder2vertices_list
+from .helper_functions import _sampleholder2vertices_list
 
 
 # Load the data from the JSON file
@@ -79,11 +79,10 @@ class SampleHolder:
         """
         update the convex hull based on the current sample configuration
         """
-        # vertices_list = sampleholder2vertices_list(self)
-        # points = np.array([point for vertices in vertices_list for point in vertices])
-        # points = points.astype(np.float32)
-        # return cv2.convexHull(points)
-        pass
+        vertices_list = _sampleholder2vertices_list(self)
+        points = np.array([point for vertices in vertices_list for point in vertices])
+        points = points.astype(np.float32)
+        return cv2.convexHull(points)
 
     def id2sample(self, id: int):
         """

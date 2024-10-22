@@ -75,3 +75,11 @@ def _remove_background_contour(contours, hulls):
 
 def distance(a, b):
     return np.linalg.norm(a - b)
+
+
+def _sampleholder2vertices_list(sampleholder):
+    """
+    given a sample holder, return a list of vertices. A vertices is a (N, 2) numpy array, dtype=int32
+    """
+    samples_list = sampleholder.samples_list
+    return [sample.contour_new.vertices for sample in samples_list]
