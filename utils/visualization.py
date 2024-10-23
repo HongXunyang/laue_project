@@ -20,7 +20,6 @@ def visualize_sampleholder(
     is_plot_contour=False,
     is_plot_hull=True,
     is_fill_new_polygon=True,
-    is_relocation_arrow=False,
     is_min_circle=True,
 ):
     """
@@ -35,7 +34,6 @@ def visualize_sampleholder(
     - is_plot_contour: if True, plot the contours of each samples
     - is_plot_hull: if True, plot the hulls of each samples
     - is_fill_new_polygon: if True, fill the new polygon with color
-    - is_relocation_arrow: if True, an arrow pointing from the original position to the new position will be ploted for each sample
     - is_min_circle: if True, plot the minimum enclosing circle
 
     Returns:
@@ -97,28 +95,6 @@ def visualize_sampleholder(
         # add the id of the sample at the position of the sample
         if sample.is_relocated:
             text_position = sample.position_new
-
-            # draw a link between the original position and the new position
-            if is_relocation_arrow:
-                ax.arrow(
-                    sample.position_original[0],
-                    sample.position_original[1],
-                    sample.position_new[0] - sample.position_original[0],
-                    sample.position_new[1] - sample.position_original[1],
-                    head_width=10,
-                    head_length=10,
-                    fc="gray",
-                    ec="gray",
-                    zorder=1000,
-                )
-                ax.scatter(
-                    sample.position_original[0],
-                    sample.position_original[1],
-                    marker="o",
-                    facecolors="gray",
-                    edgecolors="gray",
-                    s=7,
-                )
         else:
             text_position = sample.position_original
         ax.text(

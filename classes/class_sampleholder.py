@@ -88,12 +88,24 @@ class SampleHolder:
         """
         update the minimum enclosing circle based on the current convex hull
         """
-        if self.convex_hull is None:
-            self.update_convex_hull()
+        self.update_convex_hull()
         center, radius = cv2.minEnclosingCircle(self.convex_hull)
         self.center = np.array(center)
         self.radius = radius
         return center, radius
+
+    def ratio_of_samples(self):
+        """
+        calcualte the total area of the samples' contour divided by the total area of the sample holder
+        """
+        sample_area = 0
+        for sample in self.samples_list:
+            contour = sample.contour_new.contour
+            sample_area += cv2.contourArea(contour)
+
+        self.update_min_circle()
+        sampleholder_area = np.pi * self.radius**2
+        return sample_area / sampleholder_area
 
     def vertices_list(self):
         return _sampleholder2vertices_list(self)

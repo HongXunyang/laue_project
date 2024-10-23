@@ -61,6 +61,8 @@ def _update_sampleholder(
         # determine the translation offset between the original and new vertices
         translation = _get_translation(old_vertices_list[i], new_vertices_list[i])
         sample = sampleholder.samples_list[i]
+        # update the sample.position_original based on the old_vertices
+        sample.position_original = np.mean(old_vertices_list[i], axis=0)
         # update the sample.position_new before applying sample.relocate()
         sample.position_new = sample.position_original + translation
         sample.relocate()

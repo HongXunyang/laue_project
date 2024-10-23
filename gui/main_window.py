@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         self.stripes_vectors = []
         self.background_vectors = []
         self.target_background_vector = None
+        self.area_evolution_list = None
         self.default_params_contours_finding = {
             "epsilon": 2.5,
             "lowercut": 100,
@@ -320,7 +321,7 @@ class MainWindow(QMainWindow):
         """
         self.output_log.append("----------- 🏃‍ Start [close packing] -----------\n")
         local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
-        optimized_configuration_list, area_list, sorted_indices = batch_optimization(
+        _, _, _, self.area_evolution_list = batch_optimization(
             self.sampleholder,
             **local_batch_optimization_kwargs,
         )
@@ -328,10 +329,26 @@ class MainWindow(QMainWindow):
 
     def plot_close_packing_results(self):
         """plot this on the matplotlib canvas"""
-        # clear the canvas
-        self.matplotlib_canvas.axes.clear()
-        visualize_sampleholder(self.sampleholder, self.matplotlib_canvas.axes)
-        self.matplotlib_canvas.axes.set(xticks=[], yticks=[])
+        # get kwargs
+        local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
+        # plot the sampleholder
+        self.matplotlib_canvas.ax_sampleholder.clear()
+        visualize_sampleholder(
+            self.sampleholder, self.matplotlib_canvas.ax_sampleholder
+        )
+        self.matplotlib_canvas.ax_sampleholder.set(xticks=[], yticks=[])
+
+        if local_batch_optimization_kwargs["is_plot_area"]:
+            self.matplotlib_canvas.ax_evolution.clear()
+            x = np.array(range(local_batch_optimization_kwargs["number_of_iterations"]))
+            for i, area_evolution in enumerate(self.area_evolution_list):
+                self.matplotlib_canvas.ax_evolution.plot(
+                    x, area_evolution, label=f"{i}"
+                )
+            self.matplotlib_canvas.ax_evolution.set(
+                xlabel="Iteration", ylabel="Area", yticks=[]
+            )
+
         self.matplotlib_canvas.draw()
 
     # -----------------------

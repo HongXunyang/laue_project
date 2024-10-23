@@ -60,16 +60,18 @@ def batch_optimization(
     max_configurations = 9  # the maximum number of configurations to plot
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
-    if is_plot_area:
+    if is_plot_area and ax_area is None:
         fig, ax_area = plt.subplots()
         ax_area.set_title("Area Evolution")
         ax_area.set_xlabel("Iteration")
         ax_area.set_ylabel("area")
+
+    area_evolution_list = [None] * number_system
     # start the optimization
     for batch_index in range(number_system):
         if is_print:
             print(f"NO.{batch_index+1} out of {number_system} started")
-        optimized_configuration, area = optimization(
+        optimized_configuration, area, area_evolution_list[batch_index] = optimization(
             sampleholder,
             number_of_iterations,
             step_size=step_size,
@@ -131,7 +133,7 @@ def batch_optimization(
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
 
-    return optimized_configuration_list, area_list, sorted_indices
+    return optimized_configuration_list, area_list, sorted_indices, area_evolution_list
 
 
 def optimization(
@@ -203,6 +205,8 @@ def optimization(
     if is_plot_area:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
+    else:
+        area_evolution = None
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
         scale_hull * step_size
@@ -286,10 +290,11 @@ def optimization(
     if is_update_sampleholder:
         # at the end of the optimization, update the sample position by doing relocate()
         update_sampleholder(sampleholder, rearranged_vertices_list)
+        sampleholder.update_min_circle()
 
     if is_plot_area:
         ax_area.plot(np.array(range(number_of_iterations)), np.log(area_evolution))
-    return rearranged_vertices_list, area
+    return rearranged_vertices_list, area, area_evolution
 
 
 def _create_movement_vector(

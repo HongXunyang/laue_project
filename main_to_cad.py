@@ -67,7 +67,7 @@ sampleholder = generate_sampleholder_object(samples_list)
 # ----------- optimization ----------- #
 if True:
     start_time = time.time()
-    optimized_configuration_list, area_list, sorted_indices = batch_optimization(
+    optimized_configuration_list, area_list, sorted_indices, _ = batch_optimization(
         sampleholder,
         **batch_optimization_kwargs,
     )
@@ -80,7 +80,6 @@ if True:
         ax=ax,
         is_plot_contour=False,
         is_plot_hull=True,
-        is_relocation_arrow=False,
     )
 
 # ----------- end of optimization ----------- #

@@ -13,31 +13,30 @@ from utils import visualize_contours, visualize_sampleholder
 
 start_time = time.time()
 # pre-defined parameters
+# ----------- image pre=processing ----------- #
 stripes_vectors = [
-    np.array([95, 86, 167]),
-    np.array([57, 48, 139]),
-    np.array([72, 66, 137]),
+    np.array([119, 119, 119]),
+    np.array([100, 100, 100]),
+    np.array([120, 120, 120]),
 ]
-target_background_vector = np.array([202, 209, 206])
+target_background_vector = np.array([209, 209, 209])
 background_vectors = [
-    np.array([202, 209, 206]),
-    np.array([190, 201, 199]),
-    np.array([182, 185, 183]),
+    np.array([209, 209, 209]),
+    np.array([190, 190, 190]),
+    np.array([220, 220, 220]),
 ]
-
-
 # Load image
-image = cv2.imread("../images/fake_holder_with_samples.jpg")
+image = cv2.imread("../images/sissi_circle_sample.jpg")
 rows, columns, channels = image.shape
 
 # crop image
-image = image[
-    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
-]
+# image = image[
+#    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
+# ]
 # compress image
-image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
+# image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
 rows, columns, channels = image.shape
-
+# ----------- end of image pre-processing ----------- #
 # finding contours and hulls
 contours, approximated_contours, hulls = image2contours(
     image,
@@ -47,7 +46,7 @@ contours, approximated_contours, hulls = image2contours(
     lowercut=100,
     area_lowercut=2000,
     gaussian_window=(5, 5),
-    is_gaussian_filter=True,
+    is_gaussian_filter=False,
     isprint=False,
 )
 

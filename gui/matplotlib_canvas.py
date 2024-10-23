@@ -7,9 +7,5 @@ class MatplotlibCanvas(FigureCanvas):
         self.fig = Figure()
         super().__init__(self.fig)
         self.setObjectName("matplotlib_canvas")
-        self.axes = self.fig.add_subplot(111)
-
-    def plot(self, data):
-        self.axes.clear()
-        self.axes.plot(data)
-        self.draw()
+        self.ax_sampleholder = self.fig.add_subplot(121)
+        self.ax_evolution = self.fig.add_subplot(122)

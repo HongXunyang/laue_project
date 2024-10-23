@@ -14,26 +14,26 @@ from config.config import physical_size, batch_optimization_kwargs
 start_time = time.time()
 # ----------- image pre=processing ----------- #
 stripes_vectors = [
-    np.array([95, 86, 167]),
-    np.array([57, 48, 139]),
-    np.array([72, 66, 137]),
+    np.array([119, 119, 119]),
+    np.array([100, 100, 100]),
+    np.array([120, 120, 120]),
 ]
-target_background_vector = np.array([202, 209, 206])
+target_background_vector = np.array([209, 209, 209])
 background_vectors = [
-    np.array([202, 209, 206]),
-    np.array([190, 201, 199]),
-    np.array([182, 185, 183]),
+    np.array([209, 209, 209]),
+    np.array([190, 190, 190]),
+    np.array([220, 220, 220]),
 ]
 # Load image
-image = cv2.imread("../images/fake_holder_with_samples.jpg")
+image = cv2.imread("../images/sissi_circle_sample.jpg")
 rows, columns, channels = image.shape
 
 # crop image
-image = image[
-    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
-]
+# image = image[
+#    int(0.15 * rows) : int(0.435 * rows), int(0.1 * columns) : int(0.9 * columns)
+# ]
 # compress image
-image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
+# image = cv2.resize(image, (rows // 4, columns // 4), interpolation=cv2.INTER_AREA)
 rows, columns, channels = image.shape
 # ----------- end of image pre-processing ----------- #
 
@@ -65,7 +65,7 @@ sampleholder = generate_sampleholder_object(samples_list)
 # ----------- optimization ----------- #
 if True:
     start_time = time.time()
-    optimized_configuration_list, area_list, sorted_indices = batch_optimization(
+    optimized_configuration_list, area_list, sorted_indices, _ = batch_optimization(
         sampleholder,
         **batch_optimization_kwargs,
     )
@@ -78,9 +78,9 @@ if True:
         ax=ax,
         is_plot_contour=False,
         is_plot_hull=True,
-        is_relocation_arrow=False,
     )
 
+print(sampleholder.ratio_of_samples())
 plt.show()
 # ----------- end of optimization ----------- #
 print("end")
