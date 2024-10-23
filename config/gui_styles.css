@@ -41,14 +41,14 @@ QGroupBox::title {
 }
 
 /* Button Styling */
-#select_points_button, #process_button {
+#select_points_button, #process_button, #close_packing_button {
     background-color: #4CAF50;
     color: white;
     border-radius: 4px;
     padding: 8px 16px;
     border: none;
 }
-#select_points_button:hover, #process_button:hover {
+#select_points_button:hover, #process_button:hover, #close_packing_button:hover {
     background-color: #45a049;
 }
 

@@ -18,7 +18,11 @@ from .matplotlib_canvas import MatplotlibCanvas
 from .helper_functions import process_data
 from PyQt5.QtCore import Qt
 from utils import visualize_contours
-from contour_finding import image2contours
+from contour_finding import (
+    image2contours,
+    generate_sample_objects,
+    generate_sampleholder_object,
+)
 from config.config import batch_optimization_kwargs
 
 
@@ -41,6 +45,7 @@ class MainWindow(QMainWindow):
             "area_lowercut": 2000,
         }
         self.default_batch_optimization_kwargs = batch_optimization_kwargs
+        self.sampleholder = None  # sampleholder object
 
     def initUI(self):
         main_widget = QWidget()
@@ -172,6 +177,11 @@ class MainWindow(QMainWindow):
         controls_layout.addWidget(self.process_button)
         self.process_button.setObjectName("process_button")
 
+        # Close Packing Button
+        self.close_packing_button = QPushButton("Start Close Packing")
+        controls_layout.addWidget(self.close_packing_button)
+        self.close_packing_button.setObjectName("close_packing_button")
+
         controls.setLayout(controls_layout)
 
         panelB_layout.addWidget(contour_finding_params)
@@ -199,6 +209,7 @@ class MainWindow(QMainWindow):
         # Connect signals
         self.process_button.clicked.connect(self.process_image)
         self.select_points_button.clicked.connect(self.start_point_selection)
+        self.close_packing_button.clicked.connect(self.close_packing)
         # -----------------------
         # Signal management
         # -----------------------
@@ -255,13 +266,15 @@ class MainWindow(QMainWindow):
             image_to_visualize = visualize_contours(
                 image, approximated_contours, hulls, is_plot=False
             )
-            # detele later
             min_area = min([cv2.contourArea(hull) for hull in hulls])
             self.output_log.append(f"Minimum area: {min_area}\n")
             # re-plot the image in image_display
             self.image_display.replot_image_with_contours(image_to_visualize)
 
-            # output the minmum perimeter of the contours
+            # update the sampleholder object
+            samples_list = generate_sample_objects(approximated_contours, hulls)
+            sampleholder = generate_sampleholder_object(samples_list)
+            self.output_log.append(str(sampleholder))
             self.output_log.append("----------- Image processed -----------\n")
 
     def start_point_selection(self):
@@ -272,6 +285,15 @@ class MainWindow(QMainWindow):
             self.output_log.append("Please select three stripe points on the image.")
         else:
             self.output_log.append("Please load an image first.")
+
+    def close_packing(self):
+        """
+        start close packing process and display the results
+
+        - read close packing keyword arguments
+        - run the close packing algorithm
+        """
+        local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
 
     # -----------------------
     # Signal management methods
