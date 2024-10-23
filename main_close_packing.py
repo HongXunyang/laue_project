@@ -9,6 +9,7 @@ from contour_finding import (
     generate_sampleholder_object,
 )
 from utils import visualize_sampleholder, visualize_contours
+from config.config import physical_size, batch_optimization_kwargs
 
 start_time = time.time()
 # ----------- image pre=processing ----------- #
@@ -66,16 +67,7 @@ if True:
     start_time = time.time()
     optimized_configuration_list, area_list, sorted_indices = batch_optimization(
         sampleholder,
-        number_system=3,
-        is_plot=True,
-        is_print=True,
-        step_size=10,
-        number_of_iteration=4000,
-        temperature=1500,
-        contour_buffer_multiplier=1.05,
-        is_gravity=True,
-        is_update_sampleholder=True,
-        is_contour_buffer=True,
+        **batch_optimization_kwargs,
     )
     end_time = time.time()
 
@@ -86,8 +78,9 @@ if True:
         ax=ax,
         is_plot_contour=False,
         is_plot_hull=True,
-        is_relocation_arrow=True,
+        is_relocation_arrow=False,
     )
 
 plt.show()
 # ----------- end of optimization ----------- #
+print("end")

@@ -23,7 +23,9 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
+from close_packing import batch_optimization
 from config.config import batch_optimization_kwargs
+from utils import visualize_sampleholder
 
 
 class MainWindow(QMainWindow):
@@ -83,10 +85,10 @@ class MainWindow(QMainWindow):
         self.area_lowercut_input = QLineEdit()
         self.gaussian_size_input = QLineEdit()
         # Set placeholders or default values
-        self.epsilon_input.setPlaceholderText("Default: 2.5")
-        self.lowercut_input.setPlaceholderText("Default: 100")
-        self.area_lowercut_input.setPlaceholderText("Default: 2000")
-        self.gaussian_size_input.setPlaceholderText("Default: 7")
+        self.epsilon_input.setPlaceholderText(" 2.5")
+        self.lowercut_input.setPlaceholderText(" 100")
+        self.area_lowercut_input.setPlaceholderText(" 2000")
+        self.gaussian_size_input.setPlaceholderText(" 7")
         contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
         contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
         contour_finding_params_layout.addRow("Area lowercut:", self.area_lowercut_input)
@@ -102,7 +104,7 @@ class MainWindow(QMainWindow):
         # - add SUB-widgets to layout
         # - set layout in MAIN-widget
 
-        # parameters needed: number_system: int, step_size:float, number_of_iteration:int,temperature:float,contour_buffer_multiplier:float,optimize_shape:str,gravity_multiplier:float,
+        # parameters needed: number_system: int, step_size:float, number_of_iterations:int,temperature:float,contour_buffer_multiplier:float,optimize_shape:str,gravity_multiplier:float,
 
         # all the boolean parameters are set by a toggle button
         # all the integer parameters are set by a QLineEdit
@@ -110,13 +112,36 @@ class MainWindow(QMainWindow):
 
         close_packing_params = QGroupBox("close_packing_params")
         close_packing_params_layout = QFormLayout()
+
+        # Create QLineEdit widgets for integer and float parameters
         self.number_system_input = QLineEdit()
+        self.number_system_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["number_system"])
+        )
         self.step_size_input = QLineEdit()
-        self.number_of_iteration_input = QLineEdit()
+        self.step_size_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["step_size"])
+        )
+        self.number_of_iterations_input = QLineEdit()
+        self.number_of_iterations_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["number_of_iterations"])
+        )
         self.temperature_input = QLineEdit()
+        self.temperature_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["temperature"])
+        )
         self.contour_buffer_multiplier_input = QLineEdit()
+        self.contour_buffer_multiplier_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["contour_buffer_multiplier"])
+        )
         self.optimize_shape_input = QLineEdit()
+        self.optimize_shape_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["optimize_shape"])
+        )
         self.gravity_multiplier_input = QLineEdit()
+        self.gravity_multiplier_input.setPlaceholderText(
+            "" + str(batch_optimization_kwargs["gravity_multiplier"])
+        )
         # boolean parameters are set by a toggle button
         # is_gravity:bool,is_update_sampleholder:bool,# is_contour_buffer:bool,is_plot_area:bool
 
@@ -146,7 +171,7 @@ class MainWindow(QMainWindow):
         close_packing_params_layout.addRow("No. of System:", self.number_system_input)
         close_packing_params_layout.addRow("Step Size:", self.step_size_input)
         close_packing_params_layout.addRow(
-            "Number of Iterations:", self.number_of_iteration_input
+            "Number of Iterations:", self.number_of_iterations_input
         )
         close_packing_params_layout.addRow("Temperature:", self.temperature_input)
         close_packing_params_layout.addRow(
@@ -210,6 +235,7 @@ class MainWindow(QMainWindow):
         self.process_button.clicked.connect(self.process_image)
         self.select_points_button.clicked.connect(self.start_point_selection)
         self.close_packing_button.clicked.connect(self.close_packing)
+        self.close_packing_button.clicked.connect(self.plot_close_packing_results)
         # -----------------------
         # Signal management
         # -----------------------
@@ -218,7 +244,7 @@ class MainWindow(QMainWindow):
 
     def process_image(self):
         if self.image_display.image is not None:
-            self.output_log.append("----------- Processing image -----------\n")
+            self.output_log.append("----------- 🏃‍ Start [Image Process] -----------\n")
             # Retrieve parameters, use defaults if input is empty
             epsilon_text = self.epsilon_input.text()
             lowercut_text = self.lowercut_input.text()
@@ -273,9 +299,8 @@ class MainWindow(QMainWindow):
 
             # update the sampleholder object
             samples_list = generate_sample_objects(approximated_contours, hulls)
-            sampleholder = generate_sampleholder_object(samples_list)
-            self.output_log.append(str(sampleholder))
-            self.output_log.append("----------- Image processed -----------\n")
+            self.sampleholder = generate_sampleholder_object(samples_list)
+            self.output_log.append("----------- ✔️ End [Image Process] -----------\n")
 
     def start_point_selection(self):
         if self.image_display.image is not None:
@@ -293,7 +318,21 @@ class MainWindow(QMainWindow):
         - read close packing keyword arguments
         - run the close packing algorithm
         """
+        self.output_log.append("----------- 🏃‍ Start [close packing] -----------\n")
         local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
+        optimized_configuration_list, area_list, sorted_indices = batch_optimization(
+            self.sampleholder,
+            **local_batch_optimization_kwargs,
+        )
+        self.output_log.append("----------- ✔️ End of [Close Packing] -----------\n")
+
+    def plot_close_packing_results(self):
+        """plot this on the matplotlib canvas"""
+        # clear the canvas
+        self.matplotlib_canvas.axes.clear()
+        visualize_sampleholder(self.sampleholder, self.matplotlib_canvas.axes)
+        self.matplotlib_canvas.axes.set(xticks=[], yticks=[])
+        self.matplotlib_canvas.draw()
 
     # -----------------------
     # Signal management methods
@@ -364,8 +403,8 @@ class MainWindow(QMainWindow):
             else self.default_batch_optimization_kwargs["step_size"]
         )
         number_of_iterations = (
-            int(self.number_of_iteration_input.text())
-            if self.number_of_iteration_input.text()
+            int(self.number_of_iterations_input.text())
+            if self.number_of_iterations_input.text()
             else self.default_batch_optimization_kwargs["number_of_iterations"]
         )
         temperature = (

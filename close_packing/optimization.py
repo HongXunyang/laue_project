@@ -28,7 +28,7 @@ def batch_optimization(
     number_system: int,
     is_plot=True,
     is_print=True,
-    number_of_iteration: int = 3000,
+    number_of_iterations: int = 3000,
     step_size: int = 5,
     fluctuation: float = 0.1,
     temperature: float = 1000,
@@ -71,7 +71,7 @@ def batch_optimization(
             print(f"NO.{batch_index+1} out of {number_system} started")
         optimized_configuration, area = optimization(
             sampleholder,
-            number_of_iteration,
+            number_of_iterations,
             step_size=step_size,
             fluctuation=fluctuation,
             temperature=temperature,
@@ -87,7 +87,7 @@ def batch_optimization(
         )
         optimized_configuration_list[batch_index] = optimized_configuration
         area_list[batch_index] = area
-
+        sorted_indices = np.argsort(area_list)
     if is_plot:
         if number_system == 1:
             fig, ax = plt.subplots()
@@ -112,7 +112,6 @@ def batch_optimization(
             rows = int(np.ceil(np.sqrt(number_system)))
             columns = int(np.ceil(number_system / rows))
             fig, axs = plt.subplots(columns, rows, figsize=(20, 14))
-            sorted_indices = np.argsort(area_list)
             for i, index in enumerate(sorted_indices):
                 ax = axs[i % columns, i // columns]
                 visualize_vertices_list(optimized_configuration_list[index], ax=ax)
@@ -128,6 +127,7 @@ def batch_optimization(
 
     # update the sample holder if is_update_sampleholder is True
     if is_update_sampleholder:
+        print(sorted_indices)
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
 
@@ -136,7 +136,7 @@ def batch_optimization(
 
 def optimization(
     sampleholder: FunctionalSampleHolder,
-    number_of_iteration: int = 3000,
+    number_of_iterations: int = 3000,
     step_size: int = 5,
     fluctuation: float = 0.1,
     temperature: float = 1000,
@@ -178,8 +178,8 @@ def optimization(
     initial_temperature = temperature
     current_temperature = temperature
     final_temperature = temperature * 0.01
-    temperature_decay = (initial_temperature - final_temperature) / number_of_iteration
-    step_size_decay = 0.8 * step_size / number_of_iteration
+    temperature_decay = (initial_temperature - final_temperature) / number_of_iterations
+    step_size_decay = 0.8 * step_size / number_of_iterations
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
@@ -201,7 +201,7 @@ def optimization(
         rearranged_vertices_list, shape=optimize_shape
     )  # initial area
     if is_plot_area:
-        area_evolution = np.zeros(number_of_iteration)
+        area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
@@ -213,7 +213,7 @@ def optimization(
     number_polygons = len(vertices_list)
 
     # -------- Start of the optimization -------- #
-    for iteration in range(number_of_iteration):
+    for iteration in range(number_of_iterations):
         # randomly select a polygon
         index = np.random.randint(0, number_polygons)
         vertices = rearranged_vertices_list[index]  # the vertices of the select polygon
@@ -288,7 +288,7 @@ def optimization(
         update_sampleholder(sampleholder, rearranged_vertices_list)
 
     if is_plot_area:
-        ax_area.plot(np.array(range(number_of_iteration)), np.log(area_evolution))
+        ax_area.plot(np.array(range(number_of_iterations)), np.log(area_evolution))
     return rearranged_vertices_list, area
 
 
@@ -390,6 +390,7 @@ def _calculate_area(vertices_list, shape="convex_hull"):
     """
     # Extract all points
     points = np.array([point for vertices in vertices_list for point in vertices])
+    points = points.astype(np.float32)
     convex_hull = cv2.convexHull(points)
     if shape == "convex_hull":
         return cv2.contourArea(convex_hull)
@@ -474,7 +475,7 @@ def _randomly_rearrange(vertices_list: list, block_size: int):
         old_center = np.mean(vertices, axis=0)
         translation = new_center_list[index] - old_center
         new_vertices_list[index] = vertices_list[index] + translation
-
+        new_vertices_list[index] = new_vertices_list[index].astype(np.float32)
     return new_vertices_list
 
 

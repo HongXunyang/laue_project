@@ -16,10 +16,12 @@ with open("config/stylesheet.json", "r") as json_file:
 def visualize_sampleholder(
     sampleholder,
     ax=None,
+    is_only_new=True,
     is_plot_contour=False,
     is_plot_hull=True,
     is_fill_new_polygon=True,
     is_relocation_arrow=False,
+    is_min_circle=True,
 ):
     """
     This method visualizes the sample holder.
@@ -29,14 +31,31 @@ def visualize_sampleholder(
 
     Keyword arguments:
     - ax: the axis to plot the sample holder.
+    - is_only_new: if True, only plot the new contours and hulls
     - is_plot_contour: if True, plot the contours of each samples
     - is_plot_hull: if True, plot the hulls of each samples
     - is_fill_new_polygon: if True, fill the new polygon with color
     - is_relocation_arrow: if True, an arrow pointing from the original position to the new position will be ploted for each sample
+    - is_min_circle: if True, plot the minimum enclosing circle
 
     Returns:
     - ax: the axis with the sample holder plotted.
     """
+    if ax is None:
+        fig, ax = plt.subplots()
+    if is_min_circle:
+        sampleholder.update_min_circle()
+        center = sampleholder.center
+        radius = sampleholder.radius
+        circle = plt.Circle(
+            center, radius, color="r", fill=False, linewidth=4, alpha=0.5, zorder=-100
+        )
+        ax.add_artist(circle)
+        ax.set(
+            xlim=(center[0] - 1.1 * radius, center[0] + 1.1 * radius),
+            ylim=(center[1] - 1.1 * radius, center[1] + 1.1 * radius),
+        )
+        ax.set_aspect("equal", "box")
     for i, sample in enumerate(sampleholder.samples_list):
         contour_original = sample.contour_original.contour
         contour_new = sample.contour_new.contour
@@ -55,22 +74,19 @@ def visualize_sampleholder(
         x_hull_new = [point[0][0] for point in hull_new]
         y_hull_new = [point[0][1] for point in hull_new]
 
-        if ax is None:
-            fig, ax = plt.subplots()
-
         if is_plot_contour:
             ax.fill(x_contour_new, y_contour_new, edgecolor=None)
         if is_plot_hull:
             ax.fill(x_hull_new, y_hull_new, edgecolor=None)
 
-        if is_plot_contour:
+        if (is_plot_contour) and (not is_only_new):
             ax.plot(
                 np.append(x_contour_original, x_contour_original[0]),
                 np.append(y_contour_original, y_contour_original[0]),
                 linestyle="--",
                 color=np.array(stylesheet["contours_kwargs"]["color"])[::-1] / 255,
             )
-        if is_plot_hull:
+        if is_plot_hull and (not is_only_new):
             ax.plot(
                 np.append(x_hull_original, x_hull_original[0]),
                 np.append(y_hull_original, y_hull_original[0]),

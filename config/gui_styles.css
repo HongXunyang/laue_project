@@ -51,7 +51,9 @@ QGroupBox::title {
 #select_points_button:hover, #process_button:hover, #close_packing_button:hover {
     background-color: #45a049;
 }
-
+#select_points_button:pressed, #process_button:pressed, #close_packing_button:pressed {
+    background-color: #337335;
+}
 
 /* Line Edit Styling */
 QLineEdit {
