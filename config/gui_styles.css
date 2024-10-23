@@ -41,17 +41,17 @@ QGroupBox::title {
 }
 
 /* Button Styling */
-QPushButton {
+#select_points_button, #process_button {
     background-color: #4CAF50;
     color: white;
     border-radius: 4px;
     padding: 8px 16px;
     border: none;
 }
-
-QPushButton:hover {
+#select_points_button:hover, #process_button:hover {
     background-color: #45a049;
 }
+
 
 /* Line Edit Styling */
 QLineEdit {
@@ -93,4 +93,29 @@ QScrollBar::handle:hover {
 #matplotlib_canvas {
     border: 1px solid #cccccc;
     background-color: #ffffff;
+}
+
+/* Styling for the checkbox */
+#is_gravity_button, #is_update_sampleholder_button, #is_contour_buffer_button, #is_plot_area_button {
+    background-color: #FFAAAA;
+    color: white;
+    border-radius: 4px;
+    padding: 8px 16px;
+    border: none;
+}
+#is_gravity_button:checked, #is_update_sampleholder_button:checked, #is_contour_buffer_button:checked, #is_plot_area_button:checked {
+    background-color: #821131;
+    color: white;
+}
+#is_gravity_button:unchecked, #is_update_sampleholder_button:unchecked, #is_contour_buffer_button:unchecked, #is_plot_area_button:unchecked {
+    background-color: #FFAAAA;
+    color: white;
+}
+#is_gravity_button:checked:pressed, #is_update_sampleholder_button:checked:pressed {
+    background-color: #821131;
+    color: white;
+}
+#is_gravity_button:unchecked:pressed, #is_update_sampleholder_button:unchecked:pressed {
+    background-color: #FFAAAA;
+    color: white;
 }

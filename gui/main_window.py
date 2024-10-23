@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QPushButton,
+    QCheckBox,
+    QGridLayout,
 )
 from .image_display import ImageDisplay
 from .matplotlib_canvas import MatplotlibCanvas
@@ -17,6 +19,7 @@ from .helper_functions import process_data
 from PyQt5.QtCore import Qt
 from utils import visualize_contours
 from contour_finding import image2contours
+from config.config import batch_optimization_kwargs
 
 
 class MainWindow(QMainWindow):
@@ -37,6 +40,7 @@ class MainWindow(QMainWindow):
             "gaussian_window": (7, 7),
             "area_lowercut": 2000,
         }
+        self.default_batch_optimization_kwargs = batch_optimization_kwargs
 
     def initUI(self):
         main_widget = QWidget()
@@ -88,12 +92,70 @@ class MainWindow(QMainWindow):
         contour_finding_params.setLayout(contour_finding_params_layout)
 
         # B-2: Close packing parameters
+        # - create MAIN-widget
+        # - create layout
+        # - add SUB-widgets to layout
+        # - set layout in MAIN-widget
+
+        # parameters needed: number_system: int, step_size:float, number_of_iteration:int,temperature:float,contour_buffer_multiplier:float,optimize_shape:str,gravity_multiplier:float,
+
+        # all the boolean parameters are set by a toggle button
+        # all the integer parameters are set by a QLineEdit
+        # all the float parameters are set by a QLineEdit as well and later on converted to float
+
         close_packing_params = QGroupBox("close_packing_params")
         close_packing_params_layout = QFormLayout()
-        self.param3 = QLineEdit()
-        self.param4 = QLineEdit()
-        close_packing_params_layout.addRow("Parameter 3:", self.param3)
-        close_packing_params_layout.addRow("Parameter 4:", self.param4)
+        self.number_system_input = QLineEdit()
+        self.step_size_input = QLineEdit()
+        self.number_of_iteration_input = QLineEdit()
+        self.temperature_input = QLineEdit()
+        self.contour_buffer_multiplier_input = QLineEdit()
+        self.optimize_shape_input = QLineEdit()
+        self.gravity_multiplier_input = QLineEdit()
+        # boolean parameters are set by a toggle button
+        # is_gravity:bool,is_update_sampleholder:bool,# is_contour_buffer:bool,is_plot_area:bool
+
+        # Create QPushButton widgets for boolean parameters
+        self.is_gravity_button = QPushButton("Enable Gravity")
+        self.is_gravity_button.setCheckable(True)
+        self.is_gravity_button.setChecked(True)
+        self.is_gravity_button.setObjectName("is_gravity_button")
+
+        self.is_update_sampleholder_button = QPushButton("Update Sample Holder")
+        self.is_update_sampleholder_button.setCheckable(True)
+        self.is_update_sampleholder_button.setChecked(True)
+        self.is_update_sampleholder_button.setObjectName(
+            "is_update_sampleholder_button"
+        )
+
+        self.is_contour_buffer_button = QPushButton("Enable Contour Buffer")
+        self.is_contour_buffer_button.setCheckable(True)
+        self.is_contour_buffer_button.setChecked(True)
+        self.is_contour_buffer_button.setObjectName("is_contour_buffer_button")
+
+        self.is_plot_area_button = QPushButton("Plot Area")
+        self.is_plot_area_button.setCheckable(True)
+        self.is_plot_area_button.setChecked(False)
+        self.is_plot_area_button.setObjectName("is_plot_area_button")
+
+        close_packing_params_layout.addRow("No. of System:", self.number_system_input)
+        close_packing_params_layout.addRow("Step Size:", self.step_size_input)
+        close_packing_params_layout.addRow(
+            "Number of Iterations:", self.number_of_iteration_input
+        )
+        close_packing_params_layout.addRow("Temperature:", self.temperature_input)
+        close_packing_params_layout.addRow(
+            "Contour Buffer Multiplier:", self.contour_buffer_multiplier_input
+        )
+        close_packing_params_layout.addRow("Optimize Shape:", self.optimize_shape_input)
+        close_packing_params_layout.addRow(
+            "Gravity Multiplier:", self.gravity_multiplier_input
+        )
+        close_packing_params_layout.addRow(self.is_gravity_button)
+        close_packing_params_layout.addRow(self.is_update_sampleholder_button)
+        close_packing_params_layout.addRow(self.is_contour_buffer_button)
+        close_packing_params_layout.addRow(self.is_plot_area_button)
+
         close_packing_params.setLayout(close_packing_params_layout)
 
         # B-3: Buttons
@@ -103,10 +165,12 @@ class MainWindow(QMainWindow):
         # select-points button
         self.select_points_button = QPushButton("Select Points")
         controls_layout.addWidget(self.select_points_button)
+        self.select_points_button.setObjectName("select_points_button")
 
         # Process Button
         self.process_button = QPushButton("Process Image")
         controls_layout.addWidget(self.process_button)
+        self.process_button.setObjectName("process_button")
 
         controls.setLayout(controls_layout)
 
@@ -212,7 +276,6 @@ class MainWindow(QMainWindow):
     # -----------------------
     # Signal management methods
     # -----------------------
-
     def _on_image_loaded(self):
         self.output_log.append("----------- Image loaded -----------\n")
 
@@ -262,3 +325,69 @@ class MainWindow(QMainWindow):
         self.stripes_vectors = [np.array(p["bgr"]) for p in stripe_points]
         self.background_vectors = [np.array(p["bgr"]) for p in background_points]
         self.target_background_vector = np.mean(self.background_vectors, axis=0)
+
+    # -----------------------
+    # Helper methods
+    # -----------------------
+    def get_local_batch_optimization_kwargs(self):
+        # Retrieve and convert parameters
+        number_system = (
+            int(self.number_system_input.text())
+            if self.number_system_input.text()
+            else self.default_batch_optimization_kwargs["number_system"]
+        )
+        step_size = (
+            float(self.step_size_input.text())
+            if self.step_size_input.text()
+            else self.default_batch_optimization_kwargs["step_size"]
+        )
+        number_of_iterations = (
+            int(self.number_of_iteration_input.text())
+            if self.number_of_iteration_input.text()
+            else self.default_batch_optimization_kwargs["number_of_iterations"]
+        )
+        temperature = (
+            float(self.temperature_input.text())
+            if self.temperature_input.text()
+            else self.default_batch_optimization_kwargs["temperature"]
+        )
+        contour_buffer_multiplier = (
+            float(self.contour_buffer_multiplier_input.text())
+            if self.contour_buffer_multiplier_input.text()
+            else self.default_batch_optimization_kwargs["contour_buffer_multiplier"]
+        )
+        optimize_shape = (
+            self.optimize_shape_input.text()
+            if self.optimize_shape_input.text()
+            else self.default_batch_optimization_kwargs["optimize_shape"]
+        )
+        gravity_multiplier = (
+            float(self.gravity_multiplier_input.text())
+            if self.gravity_multiplier_input.text()
+            else self.default_batch_optimization_kwargs["gravity_multiplier"]
+        )
+
+        # Retrieve boolean parameters
+        is_gravity = self.is_gravity_button.isChecked()
+        is_update_sampleholder = self.is_update_sampleholder_button.isChecked()
+        is_contour_buffer = self.is_contour_buffer_button.isChecked()
+        is_plot_area = self.is_plot_area_button.isChecked()
+
+        # Now you can use these parameters as needed
+        local_batch_optimization_kwargs = {
+            "number_system": number_system,
+            "step_size": step_size,
+            "number_of_iterations": number_of_iterations,
+            "temperature": temperature,
+            "contour_buffer_multiplier": contour_buffer_multiplier,
+            "optimize_shape": optimize_shape,
+            "gravity_multiplier": gravity_multiplier,
+            "is_gravity": is_gravity,
+            "is_update_sampleholder": is_update_sampleholder,
+            "is_contour_buffer": is_contour_buffer,
+            "is_plot_area": is_plot_area,
+            "is_plot": False,
+            "is_print": False,
+        }
+
+        return local_batch_optimization_kwargs
