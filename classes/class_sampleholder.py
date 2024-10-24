@@ -40,9 +40,17 @@ class SampleHolder:
         self.radius: float = None  # the radius of the sample holder if it is a circle
         self.thickness: float = None  # the thickness of the sample holder
         self.center: np.ndarray = None  # the center position of the sample holder
+        self.samples_area: float = (
+            None  # the total area of the samples on the sample holder
+        )
         self.convex_hull = None  # the cv2 convex hull of the sample holder
-        self.min_circle = None  # the minimum enclosing circle of the convex hull
         self.samples_list = []  # This is the list storing the sample objects
+        self.vertices_list = (
+            None  # This is the list storing the vertices of the sample holder
+        )
+        self.ratio: float = (
+            None  # the ratio of the total area of the samples to the total area of the sample holder
+        )
         self._id2sample = {}  # given the id, return the sample object
         self._id2list_index = (
             {}
@@ -94,21 +102,37 @@ class SampleHolder:
         self.radius = radius
         return center, radius
 
-    def ratio_of_samples(self):
+    def calculate_samples_area(self):
         """
-        calcualte the total area of the samples' contour divided by the total area of the sample holder
+        calculate the area of the samples
         """
         sample_area = 0
         for sample in self.samples_list:
             contour = sample.contour_new.contour
             sample_area += cv2.contourArea(contour)
+        return sample_area
 
+    def calculate_ratio_of_samples(self):
+        """
+        calcualte the total area of the samples' contour divided by the total area of the sample holder
+        """
+        sample_area = self.calculate_samples_area()
         self.update_min_circle()
         sampleholder_area = np.pi * self.radius**2
         return sample_area / sampleholder_area
 
-    def vertices_list(self):
+    def update_vertices_list(self):
         return _sampleholder2vertices_list(self)
+
+    def update(self):
+        """
+        update the sample holder parameters based on the current samples_list.
+        """
+        self.update_convex_hull()
+        self.update_min_circle()
+        self.vertices_list = self.update_vertices_list()
+        self.ratio = self.calculate_ratio_of_samples()
+        self.samples_area = self.calculate_samples_area()
 
     def id2sample(self, id: int):
         """

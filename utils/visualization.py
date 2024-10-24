@@ -19,7 +19,6 @@ def visualize_sampleholder(
     is_only_new=True,
     is_plot_contour=False,
     is_plot_hull=True,
-    is_fill_new_polygon=True,
     is_min_circle=True,
 ):
     """
@@ -106,6 +105,13 @@ def visualize_sampleholder(
         )
 
     return ax
+
+
+def visualize_sampleholder_dict(sampleholder_dict, ax=None, is_fill_polygon=True):
+    pass
+    """ 
+    same as `visualize_sampleholder`, but use the sampleholder_dict instead of the sampleholder object
+    """
 
 
 def visualize_contours(
