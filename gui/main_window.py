@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
 
         self.is_plot_area_button = QPushButton("Plot Area")
         self.is_plot_area_button.setCheckable(True)
-        self.is_plot_area_button.setChecked(False)
+        self.is_plot_area_button.setChecked(True)
         self.is_plot_area_button.setObjectName("is_plot_area_button")
 
         close_packing_params_layout.addRow("No. of System:", self.number_system_input)
@@ -307,6 +307,8 @@ class MainWindow(QMainWindow):
         - run the close packing algorithm
         """
         self.output_log.append("----------- 🏃‍ Start [close packing] -----------\n")
+
+        # start the close packing process
         local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
         _, _, _, self.area_evolution_list = batch_optimization(
             self.sampleholder,
@@ -320,8 +322,13 @@ class MainWindow(QMainWindow):
 
     def plot_close_packing_results(self):
         """plot this on the matplotlib canvas"""
+        # clear out current canvas image
+        self.matplotlib_canvas.ax_sampleholder.clear()
+        self.matplotlib_canvas.ax_evolution.clear()
+
         # get kwargs
         local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
+
         # plot the sampleholder
         self.matplotlib_canvas.ax_sampleholder.clear()
         visualize_sampleholder(
@@ -329,6 +336,7 @@ class MainWindow(QMainWindow):
         )
         self.matplotlib_canvas.ax_sampleholder.set(xticks=[], yticks=[])
 
+        # plot the area evolution
         if local_batch_optimization_kwargs["is_plot_area"]:
             self.matplotlib_canvas.ax_evolution.clear()
             ax_ratio = self.matplotlib_canvas.ax_evolution.twinx()
