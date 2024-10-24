@@ -29,7 +29,9 @@ from classes import (
 # --------------------------------
 #  Main functions for processing
 # --------------------------------
-def remove_stripes(image, stripes_vectors, target_background_vector, isprint=False):
+def remove_stripes(
+    image, stripes_vectors, target_background_vector, min_R=20, max_R=40, isprint=False
+):
     """
     This function filters out the stripes from the image.
 
@@ -37,6 +39,8 @@ def remove_stripes(image, stripes_vectors, target_background_vector, isprint=Fal
     - image: cv2 image
     - (list) stripes_vectors: sampling of vectors that contains the BGR info of the stripes. [np.array([1,2,3]), np.array([255,1,136])] for examples
     - target_background_vector: np.array([1,2,3]) for example
+    - min_R: the minimum radius of the color of the stripes
+    - max_R: the maximum radius of the color of the stripes
     - isprint: if True, print the progress bar
     Returns: filtered_image
     ---------------
@@ -49,11 +53,11 @@ def remove_stripes(image, stripes_vectors, target_background_vector, isprint=Fal
     """
     filtered_image = image.copy()
     mean_stripe_vector = _center_of_mass(stripes_vectors)
-    R = max([distance(mean_stripe_vector, v) for v in stripes_vectors])
-
+    R = 2 * max([distance(mean_stripe_vector, v) for v in stripes_vectors])
+    R = min(max(min_R, R), max_R)
     diff_image = image - mean_stripe_vector
     diff_image_norm = np.linalg.norm(diff_image, axis=2)
-    mask = diff_image_norm < 2 * R
+    mask = diff_image_norm < R
     filtered_image[mask] = target_background_vector
 
     return filtered_image
@@ -183,22 +187,26 @@ def image2contours(
             raise ValueError("stripes_vectors or background_vectors is not provided")
 
         image_stripes_free = remove_stripes(
-            image, stripes_vectors, target_background_vector, isprint
+            image, stripes_vectors, target_background_vector
         )
+        print(target_background_vector)
+        cv2.imshow("image_stripes_free", image_stripes_free)
         image_unfied_background = unify_background(
-            image_stripes_free, background_vectors, target_background_vector, isprint
+            image_stripes_free, background_vectors, target_background_vector
         )
+        cv2.imshow("image_unfied_background", image_unfied_background)
         image_preprocessed = image_unfied_background
     else:
         image_preprocessed = image
     # convert to grayscale
     image_gray = cv2.cvtColor(image_preprocessed, cv2.COLOR_BGR2GRAY)
     # apply Gaussian filter
+    cv2.imshow("image_gray", image_gray)
     if is_gaussian_filter:
         image_gray = cv2.GaussianBlur(image_gray, gaussian_window, 0)
     # binarize the image
-    _, image_binary = cv2.threshold(image_gray, 127, 255, cv2.THRESH_BINARY)
-
+    _, image_binary = cv2.threshold(image_gray, 50, 255, cv2.THRESH_BINARY)
+    cv2.imshow("image_binary", image_binary)
     # get contours
     contours, hierarchy = cv2.findContours(
         image_binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
