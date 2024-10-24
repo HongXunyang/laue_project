@@ -38,7 +38,7 @@ rows, columns, channels = image.shape
 rows, columns, channels = image.shape
 # ----------- end of image pre-processing ----------- #
 # finding contours and hulls
-contours, approximated_contours, hulls = image2contours(
+contours, approximated_contours, hulls, _ = image2contours(
     image,
     stripes_vectors=stripes_vectors,
     background_vectors=background_vectors,

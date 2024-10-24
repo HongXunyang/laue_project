@@ -24,7 +24,7 @@ from contour_finding import (
     generate_sampleholder_object,
 )
 from close_packing import batch_optimization
-from config.config import batch_optimization_kwargs
+from config.config import batch_optimization_kwargs, config, image2contours_kwargs
 from utils import visualize_sampleholder
 
 
@@ -41,12 +41,7 @@ class MainWindow(QMainWindow):
         self.background_vectors = []
         self.target_background_vector = None
         self.area_evolution_list = None
-        self.default_params_contours_finding = {
-            "epsilon": 2.5,
-            "lowercut": 100,
-            "gaussian_window": (7, 7),
-            "area_lowercut": 2000,
-        }
+        self.default_image2contours_kwargs = image2contours_kwargs
         self.default_batch_optimization_kwargs = batch_optimization_kwargs
         self.sampleholder = None  # sampleholder object
 
@@ -85,17 +80,24 @@ class MainWindow(QMainWindow):
         self.lowercut_input = QLineEdit()
         self.area_lowercut_input = QLineEdit()
         self.gaussian_size_input = QLineEdit()
+        self.threshold_input = QLineEdit()
         # Set placeholders or default values
-        self.epsilon_input.setPlaceholderText(" 2.5")
-        self.lowercut_input.setPlaceholderText(" 100")
-        self.area_lowercut_input.setPlaceholderText(" 2000")
-        self.gaussian_size_input.setPlaceholderText(" 7")
+        self.epsilon_input.setPlaceholderText(str(image2contours_kwargs["epsilon"]))
+        self.lowercut_input.setPlaceholderText(str(image2contours_kwargs["lowercut"]))
+        self.area_lowercut_input.setPlaceholderText(
+            str(image2contours_kwargs["area_lowercut"])
+        )
+        self.gaussian_size_input.setPlaceholderText(
+            str(image2contours_kwargs["gaussian_window"][0]) + ", set to 0 if no filter"
+        )
+        self.threshold_input.setPlaceholderText(str(image2contours_kwargs["threshold"]))
         contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
         contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
         contour_finding_params_layout.addRow("Area lowercut:", self.area_lowercut_input)
         contour_finding_params_layout.addRow(
             "Gauss. filter size:", self.gaussian_size_input
         )
+        contour_finding_params_layout.addRow("Threshold:", self.threshold_input)
 
         contour_finding_params.setLayout(contour_finding_params_layout)
 
@@ -247,60 +249,45 @@ class MainWindow(QMainWindow):
         if self.image_display.image is not None:
             self.output_log.append("----------- 🏃‍ Start [Image Process] -----------\n")
             # Retrieve parameters, use defaults if input is empty
-            epsilon_text = self.epsilon_input.text()
-            lowercut_text = self.lowercut_input.text()
-            area_lowercut_text = self.area_lowercut_input.text()
-            gaussian_size_text = self.gaussian_size_input.text()
-
+            image2contours_kwargs = self.get_local_image2contours_kwargs()
             # Load the image path
             image_path = self.image_display.image_path
             image = self.image_display.image
             rows, columns, channels = image.shape
             number_pixels = rows * columns
             estimated_time = int(number_pixels / (1024 * 2048) * 0.25)
-            self.output_log.append(f"Estimated time: {estimated_time} seconds\n")
-            epsilon = (
-                float(epsilon_text)
-                if epsilon_text
-                else self.default_params_contours_finding["epsilon"]
-            )
-            lowercut = (
-                int(lowercut_text)
-                if lowercut_text
-                else self.default_params_contours_finding["lowercut"]
-            )
-            area_lowercut = (
-                int(area_lowercut_text)
-                if area_lowercut_text
-                else self.default_params_contours_finding["area_lowercut"]
-            )
-            gaussian_window = (
-                (int(gaussian_size_text), int(gaussian_size_text))
-                if gaussian_size_text
-                else self.default_params_contours_finding["gaussian_window"]
-            )
+            self.output_log.append(f"Estimated time: {estimated_time} seconds")
             cv2.waitKey(0)
-            contours, approximated_contours, hulls = image2contours(
+            _, approximated_contours, hulls, logging_dict = image2contours(
                 image,
                 stripes_vectors=self.stripes_vectors,
                 background_vectors=self.background_vectors,
-                epsilon=epsilon,
-                lowercut=lowercut,
-                area_lowercut=area_lowercut,
-                gaussian_window=gaussian_window,
-                is_gaussian_filter=True,
+                **image2contours_kwargs,
             )
             image_to_visualize = visualize_contours(
                 image, approximated_contours, hulls, is_plot=False
             )
             min_area = min([cv2.contourArea(hull) for hull in hulls])
-            self.output_log.append(f"Minimum area: {min_area}\n")
+            max_area = max([cv2.contourArea(hull) for hull in hulls])
+            self.output_log.append(
+                f"Minimum area: {min_area}, maximum area: {max_area}\n"
+            )
             # re-plot the image in image_display
             self.image_display.replot_image_with_contours(image_to_visualize)
 
             # update the sampleholder object
             samples_list = generate_sample_objects(approximated_contours, hulls)
             self.sampleholder = generate_sampleholder_object(samples_list)
+            self.output_log.append(f"Information about the Image:")
+            # max brighness, min brightness, width in pixel, height in pixel
+            self.output_log.append(f"max brightness: {logging_dict['max_brightness']}")
+            self.output_log.append(
+                f"current threshold: {image2contours_kwargs['threshold']}"
+            )
+            self.output_log.append(f"min brightness: {logging_dict['min_brightness']}")
+            self.output_log.append(f"width in pixel: {logging_dict['width']}")
+            self.output_log.append(f"height in pixel: {logging_dict['height']}")
+
             self.output_log.append("----------- ✔️ End [Image Process] -----------\n")
 
     def start_point_selection(self):
@@ -469,3 +456,46 @@ class MainWindow(QMainWindow):
         }
 
         return local_batch_optimization_kwargs
+
+    def get_local_image2contours_kwargs(self):
+        epsilon = (
+            float(self.epsilon_input.text())
+            if self.epsilon_input.text()
+            else self.default_image2contours_kwargs["epsilon"]
+        )
+        lowercut = (
+            int(self.lowercut_input.text())
+            if self.lowercut_input.text()
+            else self.default_image2contours_kwargs["lowercut"]
+        )
+        area_lowercut = (
+            int(self.area_lowercut_input.text())
+            if self.area_lowercut_input.text()
+            else self.default_image2contours_kwargs["area_lowercut"]
+        )
+        threshold = (
+            int(self.threshold_input.text())
+            if self.threshold_input.text()
+            else self.default_image2contours_kwargs["threshold"]
+        )
+        gaussian_window = (
+            np.array(
+                [
+                    int(self.gaussian_size_input.text()),
+                    int(self.gaussian_size_input.text()),
+                ]
+            )
+            if self.gaussian_size_input.text()
+            else self.default_image2contours_kwargs["gaussian_window"]
+        )
+        is_gaussian_filter = False if self.gaussian_size_input.text() == "0" else True
+
+        image2contours_kwargs = dict(
+            epsilon=epsilon,
+            lowercut=lowercut,
+            area_lowercut=area_lowercut,
+            threshold=threshold,
+            gaussian_window=gaussian_window,
+            is_gaussian_filter=is_gaussian_filter,
+        )
+        return image2contours_kwargs

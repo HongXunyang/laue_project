@@ -67,7 +67,9 @@ def batch_optimization(
             ax_area.set_xlabel("Iteration")
             ax_area.set_ylabel("area")
         ax_ratio = ax_area.twinx()
-
+    else:
+        ax_area = None
+        ax_ratio = None
     area_evolution_list = [None] * number_system
     vertices_list = sampleholder2vertices_list(sampleholder)
     sample_areas_list = np.array(

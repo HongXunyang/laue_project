@@ -84,6 +84,8 @@ def visualize_sampleholder(
             sample.id,
             fontsize=12,
             color="black",
+            horizontalalignment="center",
+            verticalalignment="center",
         )
 
     return ax
@@ -139,7 +141,7 @@ def visualize_contours(
     contours,
     hulls,
     is_remove_background_contour=True,
-    is_plot=True,
+    is_plot=False,
 ):
     """
     Overlay the contours and hulls on the image and label the contours.
@@ -264,3 +266,7 @@ def visualize_vertices(vertices: np.ndarray, ax=None, is_fill_polygon=True):
     ax.set_aspect("equal", "box")
     ax.invert_yaxis()
     return ax
+
+
+def visualize_area_evolution():
+    pass

@@ -32,7 +32,7 @@ from utils import visualize_contours
 #  Main functions for processing
 # --------------------------------
 def remove_stripes(
-    image, stripes_vectors, target_background_vector, min_R=20, max_R=40
+    image, stripes_vectors, target_background_vector, min_R=20, max_R=60
 ):
     """
     This function filters out the stripes from the image.
@@ -66,7 +66,7 @@ def remove_stripes(
 
 
 def unify_background(
-    image, background_vectors, target_background_vector, min_R=20, max_R=40
+    image, background_vectors, target_background_vector, min_R=20, max_R=60
 ):
     """
     This function unifies the color of the background of the image
@@ -245,11 +245,19 @@ def image2contours(
         )
         cv2.imwrite(folder_path + "6_temp_final_image.jpg", image_to_visualize)
 
-    return (
-        contours,
-        approximated_contours,
-        hulls,
+    # OUTPUT: contours, approximated_contours, hulls, and a dirctionary of
+    # - maximum brighness of the gray image
+    # - minimum brighness of the gray image
+    # - threshold set for binarization
+
+    logging_dict = dict(
+        max_brightness=np.max(image_gray),
+        min_brightness=np.min(image_gray),
+        threshold=threshold,
+        width=image.shape[1],
+        height=image.shape[0],
     )
+    return (contours, approximated_contours, hulls, logging_dict)
 
 
 # -------------------------------------

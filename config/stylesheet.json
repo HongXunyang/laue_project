@@ -1,10 +1,10 @@
 {
 "contours_kwargs": {
     "color": [0, 0, 255],
-    "thickness": 1
+    "thickness": 3
 },
 "hulls_kwargs": {
     "color": [0, 255, 0],
-    "thickness": 1
+    "thickness": 3 
 }
 }
