@@ -350,7 +350,7 @@ class MainWindow(QMainWindow):
             )
         else:
             self.output_log.append(
-                f"Progress: {progress}% | Total Time: {estimated_total_time_str} | Remaining: {remaining_time_str}"
+                f"Progress: {progress:.1f}% | Total Time: {estimated_total_time_str} | Remaining: {remaining_time_str}"
             )
         # Scroll to the end
         self.output_log.moveCursor(QTextCursor.End)
