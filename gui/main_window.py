@@ -294,7 +294,7 @@ class MainWindow(QMainWindow):
         if self.image_display.image is not None:
             self.selection_state = "selecting_stripe_points"
             self.selected_points = []
-            self.output_log.append("################################################")
+            self.output_log.append("----------- 🏃‍ Start [Point Selection] -----------")
             self.output_log.append("Please select three stripe points on the image.")
         else:
             self.output_log.append("Please load an image first.")
@@ -376,7 +376,7 @@ class MainWindow(QMainWindow):
                     self.selection_state = None
                     self.output_log.append("Point selection completed.")
                     self.output_log.append(
-                        "################################################\n"
+                        "----------- ✔️ End [Point Selection] -----------\n"
                     )
                     self.handle_selected_points()
             else:

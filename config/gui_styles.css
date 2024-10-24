@@ -2,7 +2,7 @@
 QWidget {
     background-color: #f5f5f5;
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* Panel A Styling */
@@ -61,6 +61,7 @@ QLineEdit {
     padding: 4px;
     border-radius: 3px;
     background-color: #ffffff;
+    font-size: 12px;
 }
 
 /* Text Edit (Output Log) Styling */
