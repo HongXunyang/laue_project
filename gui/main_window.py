@@ -1,5 +1,5 @@
 import numpy as np
-import cv2, json
+import cv2, json, time
 from PyQt5.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -16,16 +16,18 @@ from PyQt5.QtWidgets import (
 from .image_display import ImageDisplay
 from .matplotlib_canvas import MatplotlibCanvas
 from .helper_functions import process_data
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QThread
 from utils import visualize_contours
 from contour_finding import (
     image2contours,
     generate_sample_objects,
     generate_sampleholder_object,
 )
+from PyQt5.QtGui import QTextCursor
 from close_packing import batch_optimization
 from config.config import batch_optimization_kwargs, config, image2contours_kwargs
 from utils import visualize_sampleholder, visualize_area_evolution, save_sampleholder
+from .worker import ClosePackingWorker
 
 
 class MainWindow(QMainWindow):
@@ -238,7 +240,6 @@ class MainWindow(QMainWindow):
         self.process_button.clicked.connect(self.process_image)
         self.select_points_button.clicked.connect(self.start_point_selection)
         self.close_packing_button.clicked.connect(self.close_packing)
-        self.close_packing_button.clicked.connect(self.plot_close_packing_results)
         # -----------------------
         # Signal management
         # -----------------------
@@ -247,7 +248,7 @@ class MainWindow(QMainWindow):
 
     def process_image(self):
         if self.image_display.image is not None:
-            self.output_log.append("----------- 🏃‍ Start [Image Process] -----------\n")
+            self.output_log.append("----------- 🏃‍ Start [Image Process] -----------")
             # Retrieve parameters, use defaults if input is empty
             image2contours_kwargs = self.get_local_image2contours_kwargs()
             # Load the image path
@@ -306,19 +307,69 @@ class MainWindow(QMainWindow):
         - read close packing keyword arguments
         - run the close packing algorithm
         """
-        self.output_log.append("----------- 🏃‍ Start [close packing] -----------\n")
+        self.output_log.append("----------- 🏃‍ Start [close packing] -----------")
 
-        # start the close packing process
+        # get local batch optimization kwargs
         local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
-        _, _, _, self.area_evolution_list = batch_optimization(
-            self.sampleholder,
-            **local_batch_optimization_kwargs,
+
+        # create a worker thread
+        self.thread = QThread()
+
+        # Create a worker object
+        self.worker = ClosePackingWorker(
+            self.sampleholder, local_batch_optimization_kwargs
         )
-        # save the results
+
+        # Move the worker to the thread
+        self.worker.moveToThread(self.thread)
+
+        # Connect signals and slots
+        self.thread.started.connect(self.worker.run)
+        self.worker.progress_signal.connect(self.update_progress)
+        self.worker.finished_signal.connect(self.close_packing_finished)
+        self.worker.finished_signal.connect(self.thread.quit)
+        self.worker.finished_signal.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        # Start the thread
+        self.thread.start()
+
+        self.output_log.append("Close packing started in background thread.")
+
+    def update_progress(self, progress, estimated_total_time, remaining_time):
+        estimated_total_time_str = time.strftime(
+            "%H:%M:%S", time.gmtime(estimated_total_time)
+        )
+        remaining_time_str = time.strftime("%H:%M:%S", time.gmtime(remaining_time))
+
+        if remaining_time < 0:
+            remaining_time = 0
+        if progress <= 1:
+            self.output_log.append(f"Progress: {progress}% | Estimating total time...")
+        else:
+            self.output_log.append(
+                f"Progress: {progress}% | Total Time: {estimated_total_time_str} | Remaining: {remaining_time_str}"
+            )
+        # Scroll to the end
+        self.output_log.moveCursor(QTextCursor.End)
+
+    def close_packing_finished(self, sampleholder, area_evolution_list):
+        """
+        Handle the completion of the close packing process.
+        """
+        # Update the sampleholder and area_evolution_list
+        self.sampleholder = sampleholder
+        self.area_evolution_list = area_evolution_list
+
+        # Save the results
         save_sampleholder(
             self.sampleholder, config["data_path"], config["sampleholder_dict_filename"]
         )
+
         self.output_log.append("----------- ✔️ End of [Close Packing] -----------\n")
+
+        # Plot the results
+        self.plot_close_packing_results()
 
     def plot_close_packing_results(self):
         """plot this on the matplotlib canvas"""

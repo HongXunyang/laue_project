@@ -14,6 +14,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
+import time
 from classes import FunctionalSampleHolder
 from utils import (
     sampleholder2vertices_list,
@@ -41,6 +42,7 @@ def batch_optimization(
     is_contour_buffer=True,
     is_plot_area=False,
     ax_area=None,
+    progress_callback=None,
 ):
     """
     Args:
@@ -49,6 +51,7 @@ def batch_optimization(
     Kwargs:
     - is_plot: if True, plot the optimized configuration
     - is_print: if True, print stuff for debugging
+    - progress_callback: ...?
     - kwargs: the kwargs for optimization()
 
     Returns:
@@ -60,6 +63,8 @@ def batch_optimization(
     max_configurations = 9  # the maximum number of configurations to plot
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
+    start_time = time.time()
+    iteration_times = []
     if is_plot_area:
         if ax_area is None:
             fig, ax_area = plt.subplots()
@@ -76,8 +81,10 @@ def batch_optimization(
         [vertices_area(vertices) for vertices in vertices_list]
     )
     samples_area = np.sum(sample_areas_list)
-    # start the optimization
+
+    # ---------------- start the optimization ---------------- #
     for batch_index in range(number_system):
+        iteration_start_time = time.time()
         if is_print:
             print(f"NO.{batch_index+1} out of {number_system} started")
 
@@ -103,6 +110,22 @@ def batch_optimization(
         optimized_configuration_list[batch_index] = optimized_configuration
         area_list[batch_index] = optimized_area
         sorted_indices = np.argsort(area_list)
+
+        # estimate time
+        iteration_time = time.time() - iteration_start_time
+        iteration_times.append(iteration_time)
+
+        # Estimate total time based on average iteration time
+        elapsed_time = time.time() - start_time
+        average_iteration_time = sum(iteration_times) / len(iteration_times)
+        estimated_total_time = average_iteration_time * number_system
+        remaining_time = estimated_total_time - elapsed_time
+
+        if progress_callback is not None:
+            progress = ((batch_index + 1) * 1.0) / number_system * 100
+            progress_callback(progress, estimated_total_time, remaining_time)
+    # ---------------- end the optimization ---------------- #
+
     if is_plot:
         if number_system == 1:
             fig, ax = plt.subplots()
