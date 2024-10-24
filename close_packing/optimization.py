@@ -60,13 +60,20 @@ def batch_optimization(
     max_configurations = 9  # the maximum number of configurations to plot
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
-    if is_plot_area and ax_area is None:
-        fig, ax_area = plt.subplots()
-        ax_area.set_title("Area Evolution")
-        ax_area.set_xlabel("Iteration")
-        ax_area.set_ylabel("area")
+    if is_plot_area:
+        if ax_area is None:
+            fig, ax_area = plt.subplots()
+            ax_area.set_title("Area Evolution")
+            ax_area.set_xlabel("Iteration")
+            ax_area.set_ylabel("area")
+        ax_ratio = ax_area.twinx()
 
     area_evolution_list = [None] * number_system
+    vertices_list = sampleholder2vertices_list(sampleholder)
+    sample_areas_list = np.array(
+        [vertices_area(vertices) for vertices in vertices_list]
+    )
+    samples_area = np.sum(sample_areas_list)
     # start the optimization
     for batch_index in range(number_system):
         if is_print:
@@ -88,6 +95,7 @@ def batch_optimization(
                 is_contour_buffer=is_contour_buffer,
                 is_plot_area=is_plot_area,
                 ax_area=ax_area,
+                ax_ratio=ax_ratio,
             )
         )
         optimized_configuration_list[batch_index] = optimized_configuration
@@ -129,7 +137,34 @@ def batch_optimization(
                 ax.set(xticks=[], yticks=[])
     # ax setting: remove space between axes
     plt.subplots_adjust(wspace=0, hspace=0)
-
+    if is_plot_area:
+        ax_area.axhline(
+            y=area_list[sorted_indices[0]], color="lightseagreen", linestyle="--"
+        )
+        ax_area.text(
+            x=1,  # X-coordinate in data space (or in axis fraction, e.g., 0.5 for middle)
+            y=area_list[
+                sorted_indices[0]
+            ],  # Y-coordinate where you want the text to be
+            s=f"Area: {area_list[sorted_indices[0]]:.1f}",  # Text to display
+            color="lightseagreen",  # Color of the text
+            verticalalignment="bottom",  # Align text above the line
+            horizontalalignment="left",
+        )
+        ax_ratio.axhline(
+            y=100 * samples_area / (np.pi * area_list[sorted_indices[0]] ** 2),
+            color="indigo",
+            linestyle="--",
+        )
+        ax_ratio.text(
+            x=number_of_iterations,  # X-coordinate in data space (or in axis fraction, e.g., 0.5 for middle)
+            y=100 * samples_area / (np.pi * area_list[sorted_indices[0]] ** 2),
+            s=f"Ratio: {100 * samples_area / (np.pi * area_list[sorted_indices[0]] ** 2):.1f}%",  # Text to display
+            color="indigo",  # Color of the text
+            verticalalignment="bottom",  # Align text above the line
+            horizontalalignment="right",
+        )
+        # add text of the ratio and the area to the plot: area on the left, ratio on the right
     # update the sample holder if is_update_sampleholder is True
     if is_update_sampleholder:
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
@@ -153,6 +188,7 @@ def optimization(
     is_contour_buffer=True,
     is_plot_area=False,
     ax_area=None,
+    ax_ratio=None,
 ):
     """
     Args:
@@ -171,6 +207,7 @@ def optimization(
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
     - is_plot_area: if True, plot out the area evolution during the optimization process
     - ax_area: the axis to plot the area evolution
+    - ax_ratio: the axis to plot the ratio of the sample area to the area of the sampleholder
 
     Returns:
     - best_vertices_list: the best optimized (ever) configuration of the samples
@@ -321,22 +358,23 @@ def optimization(
         ax_area.set_ylabel("Area Evolution", color="lightseagreen")
         ax_area.tick_params(axis="y", labelcolor="lightseagreen")
         # Create another y-axis that shares the same x-axis
-        ax_sample_area = ax_area.twinx()
+        if ax_ratio is None:
+            ax_ratio = ax_area.twinx()
 
         # Plot sample_area / area_evolution on the right y-axis
-        ax_sample_area.plot(
+        ax_ratio.plot(
             np.array(range(number_of_iterations)),
             100 * samples_area / (np.pi * area_evolution**2),
             color="indigo",
             label="Ratio",
         )
-        ax_sample_area.set_ylabel("Ratio (%)", color="indigo")
-        ax_sample_area.tick_params(axis="y", labelcolor="indigo")
+        ax_ratio.set_ylabel("Ratio (%)", color="indigo")
+        ax_ratio.tick_params(axis="y", labelcolor="indigo")
         # auto adjust yticks
         ax_area.set(
             yticks=np.linspace(area_evolution[-1] * 0.9, area_evolution[0] * 1.1, 5)
         )
-        ax_sample_area.set(yticks=[0, 20, 40, 60, 80])
+        ax_ratio.set(yticks=[0, 20, 40, 60, 80])
 
     return best_vertices_list, best_area, area_evolution
 
