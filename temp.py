@@ -1,7 +1,5 @@
 from close_packing import optimization, visualize_vertices_list, batch_optimization
 from matplotlib import pyplot as plt
-import cProfile
-import pstats
 import numpy as np
 import matplotlib.pyplot as plt
 import time, cv2
@@ -84,7 +82,7 @@ optimization(
     is_contour_buffer=True,
 )
 
-folder_path = "data/"
+folder_path = "../data/"
 filename = "sampleholder.json"
 sampleholder_dict = save_sampleholder(sampleholder, folder_path, filename)
 

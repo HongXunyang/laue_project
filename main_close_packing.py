@@ -79,8 +79,8 @@ if True:
         is_plot_contour=False,
         is_plot_hull=True,
     )
-
-print(sampleholder.ratio_of_samples())
+sampleholder.update()
+print(sampleholder.ratio)
 plt.show()
 # ----------- end of optimization ----------- #
 print("end")

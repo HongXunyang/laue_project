@@ -10,11 +10,11 @@ physical_size = dict(
 )
 
 batch_optimization_kwargs = dict(
-    number_system=300,
+    number_system=3,
     is_plot=True,
     is_print=True,
     step_size=10,
-    number_of_iterations=40000,
+    number_of_iterations=1000,
     temperature=700,
     contour_buffer_multiplier=1.01,
     optimize_shape="min_circle",
@@ -23,4 +23,10 @@ batch_optimization_kwargs = dict(
     is_update_sampleholder=True,
     is_contour_buffer=True,
     is_plot_area=True,
+)
+
+config = dict(
+    data_path="../data/",
+    sampleholder_dict_filename="sampleholder.json",
+    sampleholder_cad_filename="engraved_sampleholder.stl",
 )
