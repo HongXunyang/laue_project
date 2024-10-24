@@ -345,7 +345,9 @@ class MainWindow(QMainWindow):
         if remaining_time < 0:
             remaining_time = 0
         if progress <= 1:
-            self.output_log.append(f"Progress: {progress}% | Estimating total time...")
+            self.output_log.append(
+                f"Progress: {progress:.1f}% | Estimating total time..."
+            )
         else:
             self.output_log.append(
                 f"Progress: {progress}% | Total Time: {estimated_total_time_str} | Remaining: {remaining_time_str}"
