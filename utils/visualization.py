@@ -27,7 +27,7 @@ def visualize_sampleholder(
     - indicate the movement of the samples with arrows
 
     Args:
-    sampleholder: either a SampleHolder object or a sampleholder_dict.
+    sampleholder: a FunctionalSampleHolder object
 
     Keyword arguments:
     - ax: the axis to plot the sample holder.
@@ -42,6 +42,7 @@ def visualize_sampleholder(
     if ax is None:
         fig, ax = plt.subplots()
 
+    sampleholder.update()
     # plot the minimum enclosing circle
     if is_min_circle:
         center = sampleholder.center
@@ -88,11 +89,49 @@ def visualize_sampleholder(
     return ax
 
 
-def visualize_sampleholder_dict(sampleholder_dict, ax=None, is_fill_polygon=True):
+def visualize_sampleholder_dict(sampleholder_dict, ax=None, is_min_circle=True):
     pass
     """ 
     same as `visualize_sampleholder`, but use the sampleholder_dict instead of the sampleholder object
     """
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    # plot the minimum enclosing circle
+    if is_min_circle:
+        center = sampleholder_dict["center"]
+        radius = sampleholder_dict["radius"]
+        circle = plt.Circle(
+            center, radius, color="r", fill=False, linewidth=4, alpha=0.5, zorder=-100
+        )
+        ax.add_artist(circle)
+        ax.set(
+            xlim=(center[0] - 1.1 * radius, center[0] + 1.1 * radius),
+            ylim=(center[1] - 1.1 * radius, center[1] + 1.1 * radius),
+        )
+        ax.set_aspect("equal", "box")
+
+    # plot samples
+    for i, vertices in enumerate(sampleholder_dict["vertices_list"]):
+
+        # vertices is a list of points, each point is a list of x and y coordinates
+        x = [point[0] for point in vertices]
+        y = [point[1] for point in vertices]
+
+        ax.fill(x, y, edgecolor=None)
+        ax.invert_yaxis()
+        # add the id of the sample at the position of the sample
+        text_x = np.mean(x)
+        text_y = np.mean(y)
+        ax.text(
+            text_x,
+            text_y,
+            i,
+            fontsize=12,
+            color="black",
+        )
+
+    return ax
 
 
 def visualize_contours(

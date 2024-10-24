@@ -10,7 +10,12 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import visualize_sampleholder, visualize_contours
+from utils import (
+    visualize_sampleholder,
+    visualize_contours,
+    save_sampleholder,
+    visualize_sampleholder_dict,
+)
 
 start_time = time.time()
 # ----------- image pre=processing ----------- #
@@ -63,29 +68,25 @@ samples_list = generate_sample_objects(approximated_contours, hulls)
 sampleholder = generate_sampleholder_object(samples_list)
 # ----------- end of contour finding ----------- #
 
+
 # ----------- optimization ----------- #
 
 
-def func_to_profile():
-    optimization(
-        sampleholder,
-        step_size=10,
-        number_of_iteration=1000,
-        temperature=500,
-        contour_buffer_multiplier=1.05,
-        optimize_shape="min_circle",
-        is_gravity=False,
-        is_update_sampleholder=True,
-        is_contour_buffer=True,
-    )
+optimization(
+    sampleholder,
+    step_size=10,
+    number_of_iterations=1000,
+    temperature=500,
+    contour_buffer_multiplier=1.05,
+    optimize_shape="min_circle",
+    is_gravity=False,
+    is_update_sampleholder=True,
+    is_contour_buffer=True,
+)
 
+folder_path = "data/"
+filename = "sampleholder.json"
+sampleholder_dict = save_sampleholder(sampleholder, folder_path, filename)
 
-# Profile the function and save the stats to a file
-cProfile.run("func_to_profile()", "profiling_output.prof")
-
-# Load the profiling results from the file
-with open("profiling_output.prof", "r") as f:
-    stats = pstats.Stats("profiling_output.prof")
-
-# Sort by cumulative time (cumulative time is the time spent in a function and all sub-functions)
-stats.sort_stats("cumulative").print_stats(30)  # Print top 10 results
+visualize_sampleholder_dict(sampleholder_dict)
+plt.show()

@@ -51,6 +51,7 @@ def update_sampleholder(sampleholder: FunctionalSampleHolder, new_vertices_list:
     """
     old_vertices_list = sampleholder2vertices_list(sampleholder)
     _update_sampleholder(sampleholder, old_vertices_list, new_vertices_list)
+    sampleholder.update()
     return sampleholder
 
 
@@ -111,8 +112,8 @@ def save_sampleholder(sampleholder, folder_path, filename):
         else "None"
     )
     vertices_list: list[list[list[float, float]]] = (
-        sampleholder.vertices_list.tolist()
-        if (sampleholder.vertices_list is not None)
+        [vertices.tolist() for vertices in sampleholder.vertices_list]
+        if sampleholder.vertices_list is not None
         else "None"
     )
 
@@ -129,10 +130,10 @@ def save_sampleholder(sampleholder, folder_path, filename):
         vertices_list=vertices_list,
     )
 
-    with open(f"{folder_path}+{filename}", "w") as f:
+    with open((folder_path + filename), "w") as f:
         json.dump(sampleholder_dict, f)
 
-    print(f"Sampleholder data saved to {folder_path}+{filename}")
+    print(f"Sampleholder data saved to {folder_path + filename}")
 
     return sampleholder_dict
 
