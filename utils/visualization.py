@@ -16,7 +16,6 @@ with open("config/stylesheet.json", "r") as json_file:
 def visualize_sampleholder(
     sampleholder,
     ax=None,
-    is_only_new=True,
     is_plot_contour=False,
     is_plot_hull=True,
     is_min_circle=True,
@@ -27,9 +26,11 @@ def visualize_sampleholder(
     - Plot the new contours after reorientation or relocation with solid lines
     - indicate the movement of the samples with arrows
 
+    Args:
+    sampleholder: either a SampleHolder object or a sampleholder_dict.
+
     Keyword arguments:
     - ax: the axis to plot the sample holder.
-    - is_only_new: if True, only plot the new contours and hulls
     - is_plot_contour: if True, plot the contours of each samples
     - is_plot_hull: if True, plot the hulls of each samples
     - is_fill_new_polygon: if True, fill the new polygon with color
@@ -40,8 +41,9 @@ def visualize_sampleholder(
     """
     if ax is None:
         fig, ax = plt.subplots()
+
+    # plot the minimum enclosing circle
     if is_min_circle:
-        sampleholder.update_min_circle()
         center = sampleholder.center
         radius = sampleholder.radius
         circle = plt.Circle(
@@ -53,17 +55,11 @@ def visualize_sampleholder(
             ylim=(center[1] - 1.1 * radius, center[1] + 1.1 * radius),
         )
         ax.set_aspect("equal", "box")
-    for i, sample in enumerate(sampleholder.samples_list):
-        contour_original = sample.contour_original.contour
-        contour_new = sample.contour_new.contour
-        hull_original = sample.contour_original.hull
-        hull_new = sample.contour_new.hull
 
-        # plot the original contour and hull using dashed line
-        x_contour_original = [point[0][0] for point in contour_original]
-        y_contour_original = [point[0][1] for point in contour_original]
-        x_hull_original = [point[0][0] for point in hull_original]
-        y_hull_original = [point[0][1] for point in hull_original]
+    # plot samples
+    for i, sample in enumerate(sampleholder.samples_list):
+        contour_new = sample.contour_new.contour
+        hull_new = sample.contour_new.hull
 
         # plot the new contour and hull using solid line
         x_contour_new = [point[0][0] for point in contour_new]
@@ -75,21 +71,6 @@ def visualize_sampleholder(
             ax.fill(x_contour_new, y_contour_new, edgecolor=None)
         if is_plot_hull:
             ax.fill(x_hull_new, y_hull_new, edgecolor=None)
-
-        if (is_plot_contour) and (not is_only_new):
-            ax.plot(
-                np.append(x_contour_original, x_contour_original[0]),
-                np.append(y_contour_original, y_contour_original[0]),
-                linestyle="--",
-                color=np.array(stylesheet["contours_kwargs"]["color"])[::-1] / 255,
-            )
-        if is_plot_hull and (not is_only_new):
-            ax.plot(
-                np.append(x_hull_original, x_hull_original[0]),
-                np.append(y_hull_original, y_hull_original[0]),
-                linestyle="--",
-                color=np.array(stylesheet["hulls_kwargs"]["color"])[::-1] / 255,
-            )
         ax.invert_yaxis()
         # add the id of the sample at the position of the sample
         if sample.is_relocated:
