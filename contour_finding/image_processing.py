@@ -24,6 +24,8 @@ from classes import (
     _remove_background_contour,
     distance,
 )
+from config.config import config
+from utils import visualize_contours
 
 
 # --------------------------------
@@ -164,8 +166,8 @@ def image2contours(
     area_lowercut=2000,
     threshold=50,
     gaussian_window=(7, 7),
-    isprint=True,
     is_gaussian_filter=True,
+    is_output_image=True,
 ):
     """
     This function process the image and return the original contours, approximated contours, and hulls
@@ -180,8 +182,8 @@ def image2contours(
     - area_lowercut: the lowercut of the area. If the area of the contour is less than area_lowercut, we drop this contour. unit in pixel^2
     - threshold: the threshold for binarization
     - gaussian_window: the window size of the Gaussian filter
-    - isprint: if True, print the progress bar
     - is_gaussian_filter: if True, apply Gaussian filter to the image
+    - is_output_image: if True, output the images at each step
     """
     target_background_vector = np.mean(background_vectors, axis=0)
     target_background_vector = target_background_vector.astype(np.uint8)
@@ -193,28 +195,28 @@ def image2contours(
         image_stripes_free = remove_stripes(
             image, stripes_vectors, target_background_vector
         )
-        print(target_background_vector)
-        cv2.imshow("image_stripes_free", image_stripes_free)
         image_unfied_background = unify_background(
             image_stripes_free, background_vectors, target_background_vector
         )
-        cv2.imshow("image_unfied_background", image_unfied_background)
         image_preprocessed = image_unfied_background
     else:
         image_preprocessed = image
+
     # convert to grayscale
     image_gray = cv2.cvtColor(image_preprocessed, cv2.COLOR_BGR2GRAY)
+
     # apply Gaussian filter
-    cv2.imshow("image_gray", image_gray)
     if is_gaussian_filter:
         image_gray = cv2.GaussianBlur(image_gray, gaussian_window, 0)
+
     # binarize the image
     _, image_binary = cv2.threshold(image_gray, threshold, 255, cv2.THRESH_BINARY)
-    cv2.imshow("image_binary", image_binary)
+
     # get contours
     contours, hierarchy = cv2.findContours(
         image_binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
     )
+
     # approximate contours
     approximated_contours = contours2approximated_contours(
         contours,
@@ -222,8 +224,27 @@ def image2contours(
         lowercut=lowercut,
         area_lowercut=area_lowercut,
     )
+
     # get hulls
     hulls, _ = contours2hulls(approximated_contours)
+
+    # save all images
+    if is_output_image:
+        folder_path = config["temp_images_path"]
+        cv2.imwrite(folder_path + "1_temp_original_image.jpg", image)
+        cv2.imwrite(folder_path + "2_temp_stripes_free_image.jpg", image_stripes_free)
+        cv2.imwrite(
+            folder_path + "3_temp_unified_background_image.jpg", image_unfied_background
+        )
+        cv2.imwrite(folder_path + "4_temp_gray_image.jpg", image_gray)
+        cv2.imwrite(folder_path + "5_temp_binary_image.jpg", image_binary)
+        image_to_visualize = visualize_contours(
+            image,
+            approximated_contours,
+            hulls,
+        )
+        cv2.imwrite(folder_path + "6_temp_final_image.jpg", image_to_visualize)
+
     return (
         contours,
         approximated_contours,

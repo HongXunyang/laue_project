@@ -34,4 +34,5 @@ config = dict(
     data_path="../data/",
     sampleholder_dict_filename="sampleholder.json",
     sampleholder_cad_filename="engraved_sampleholder.stl",
+    temp_images_path="../temp_images/",
 )

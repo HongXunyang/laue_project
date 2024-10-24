@@ -40,7 +40,6 @@ rows, columns, channels = image.shape
 
 image_stripes_removed = remove_stripes(image, stripes_vectors, target_background_vector)
 # plot this image
-cv2.imshow("image_stripes_removed", image_stripes_removed)
 image_unified = unify_background(
     image_stripes_removed, background_vectors, target_background_vector
 )
@@ -53,10 +52,3 @@ contours, approximated_contours, hulls = image2contours(
     is_gaussian_filter=False,
     gaussian_window=(3, 3),
 )
-# draw contour on the image
-image_to_visualize = visualize_contours(
-    image,
-    approximated_contours,
-    hulls,
-)
-cv2.waitKey(0)
