@@ -1,7 +1,12 @@
 import numpy as np
 
 image2contours_kwargs = dict(
-    epsilon=2.5, lowercut=100, area_lowercut=1000, gaussian_window=np.array([7, 7])
+    epsilon=2.5,
+    lowercut=100,
+    area_lowercut=1000,
+    threshold=50,
+    gaussian_window=np.array([5, 5]),
+    is_gaussian_filter=True,
 )
 
 physical_size = dict(

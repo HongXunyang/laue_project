@@ -30,7 +30,7 @@ from classes import (
 #  Main functions for processing
 # --------------------------------
 def remove_stripes(
-    image, stripes_vectors, target_background_vector, min_R=20, max_R=40, isprint=False
+    image, stripes_vectors, target_background_vector, min_R=20, max_R=40
 ):
     """
     This function filters out the stripes from the image.
@@ -41,13 +41,13 @@ def remove_stripes(
     - target_background_vector: np.array([1,2,3]) for example
     - min_R: the minimum radius of the color of the stripes
     - max_R: the maximum radius of the color of the stripes
-    - isprint: if True, print the progress bar
+
     Returns: filtered_image
     ---------------
 
     # Mechanism
     - assuming v1, v2, v3 are the vectors of the stripes, v = (v1 + v2 + v3) / 3 is the center of mass.
-    - R = max(distance(v, v1), distance(v, v2), distance(v, v3)) is the max distance from the center of mass to the stripes_vectors
+    - R = 2*max(distance(v, v1), distance(v, v2), distance(v, v3)) is the max distance from the center of mass to the stripes_vectors. It will be set between min_R and max_R, if not
     - For each pixel in the image, we calculate the distance to the v, denoted as r
     - If r < R, we replace the pixel with the background_vector
     """
@@ -64,7 +64,7 @@ def remove_stripes(
 
 
 def unify_background(
-    image, background_vectors, target_background_vector, isprint=False
+    image, background_vectors, target_background_vector, min_R=20, max_R=40
 ):
     """
     This function unifies the color of the background of the image
@@ -72,25 +72,27 @@ def unify_background(
     Args:
     - image: cv2 image
     - (list of np.array) background_vectors: sampling of vectors that contains the BGR info of the background. [np.array([1,2,3]), np.array([255,1,136])] for examples
-    - (np.array) target_background_vector: the target color of the background
-    - isprint: if True, print the progress bar
+    - (np.array) target_background_vector: the target color of the background.
+    - min_R: the minimum radius of the color of the background
+    - max_R: the maximum radius of the color of the background
 
     Returns: filtered_image
     ---------------
 
     # Mechanism
     - assuming v1, v2, v3 are the vectors sample of the background, v = (v1 + v2 + v3) / 3 is the center of mass.
-    - R = max(distance(v, v1), distance(v, v2), distance(v, v3)) is the max distance from the center of mass to the background_vectors
+    - R = 2*max(distance(v, v1), distance(v, v2), distance(v, v3)) is the max distance from the center of mass to the background_vectors. It will be set between min_R and max_R, if not
     - For each pixel in the image, we calculate the distance to the center of mass v, denoted as r
     - If r < R, we replace the pixel with the target_background_vector
     """
 
     filtered_image = image.copy()
     mean_background_vector = _center_of_mass(background_vectors)
-    R = max([distance(mean_background_vector, v) for v in background_vectors])
+    R = 2 * max([distance(mean_background_vector, v) for v in background_vectors])
+    R = min(max(min_R, R), max_R)
     diff_image = image - mean_background_vector
     diff_image_norm = np.linalg.norm(diff_image, axis=2)
-    mask = diff_image_norm < 2 * R
+    mask = diff_image_norm < R
     filtered_image[mask] = target_background_vector
 
     return filtered_image
@@ -160,6 +162,7 @@ def image2contours(
     epsilon=2.5,
     lowercut=100,
     area_lowercut=2000,
+    threshold=50,
     gaussian_window=(7, 7),
     isprint=True,
     is_gaussian_filter=True,
@@ -175,6 +178,7 @@ def image2contours(
     - epsilon: the approximation accuracy
     - lowercut: the lowercut of the perimeter. If the perimeter of the contour is less than lowercut, we drop this contour. unit in pixel
     - area_lowercut: the lowercut of the area. If the area of the contour is less than area_lowercut, we drop this contour. unit in pixel^2
+    - threshold: the threshold for binarization
     - gaussian_window: the window size of the Gaussian filter
     - isprint: if True, print the progress bar
     - is_gaussian_filter: if True, apply Gaussian filter to the image
@@ -205,7 +209,7 @@ def image2contours(
     if is_gaussian_filter:
         image_gray = cv2.GaussianBlur(image_gray, gaussian_window, 0)
     # binarize the image
-    _, image_binary = cv2.threshold(image_gray, 50, 255, cv2.THRESH_BINARY)
+    _, image_binary = cv2.threshold(image_gray, threshold, 255, cv2.THRESH_BINARY)
     cv2.imshow("image_binary", image_binary)
     # get contours
     contours, hierarchy = cv2.findContours(
