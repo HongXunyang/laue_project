@@ -4,6 +4,7 @@ from .visualization import (
     visualize_sampleholder,
     visualize_sampleholder_dict,
     visualize_contours,
+    visualize_area_evolution,
 )
 
 from .helper_functions import (

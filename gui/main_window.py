@@ -25,7 +25,7 @@ from contour_finding import (
 )
 from close_packing import batch_optimization
 from config.config import batch_optimization_kwargs, config, image2contours_kwargs
-from utils import visualize_sampleholder
+from utils import visualize_sampleholder, visualize_area_evolution, save_sampleholder
 
 
 class MainWindow(QMainWindow):
@@ -312,6 +312,10 @@ class MainWindow(QMainWindow):
             self.sampleholder,
             **local_batch_optimization_kwargs,
         )
+        # save the results
+        save_sampleholder(
+            self.sampleholder, config["data_path"], config["sampleholder_dict_filename"]
+        )
         self.output_log.append("----------- ✔️ End of [Close Packing] -----------\n")
 
     def plot_close_packing_results(self):
@@ -327,13 +331,12 @@ class MainWindow(QMainWindow):
 
         if local_batch_optimization_kwargs["is_plot_area"]:
             self.matplotlib_canvas.ax_evolution.clear()
-            x = np.array(range(local_batch_optimization_kwargs["number_of_iterations"]))
-            for i, area_evolution in enumerate(self.area_evolution_list):
-                self.matplotlib_canvas.ax_evolution.plot(
-                    x, area_evolution, label=f"{i}"
-                )
-            self.matplotlib_canvas.ax_evolution.set(
-                xlabel="Iteration", ylabel="Area", yticks=[]
+            ax_ratio = self.matplotlib_canvas.ax_evolution.twinx()
+            visualize_area_evolution(
+                self.sampleholder,
+                self.area_evolution_list,
+                self.matplotlib_canvas.ax_evolution,
+                ax_ratio,
             )
 
         self.matplotlib_canvas.draw()

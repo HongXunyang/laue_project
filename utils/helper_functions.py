@@ -2,6 +2,7 @@ import numpy as np
 import json
 from shapely.geometry import Polygon
 from classes import Contour, FunctionalSampleHolder, Sample
+import os
 
 
 def sampleholder2polygons(sampleholder: FunctionalSampleHolder):
@@ -129,6 +130,8 @@ def save_sampleholder(sampleholder, folder_path, filename):
         convex_hull=convex_hull,
         vertices_list=vertices_list,
     )
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
 
     with open((folder_path + filename), "w") as f:
         json.dump(sampleholder_dict, f)

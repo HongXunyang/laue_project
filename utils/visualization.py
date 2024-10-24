@@ -4,7 +4,7 @@ import cv2
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 from classes import _remove_background_contour
-
+from config.config import plot_area_evolution_kwargs, plot_ratio_evolution_kwargs
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -183,6 +183,7 @@ def visualize_contours(
                 int(255 - 105 * i / number_contours),
             )
             # the font size depends on the i value: 1.8 while for i=0, and linearly decreases down to 1.0
+            # horizontal alignment: center, vertical alignment: center
             font_size = 1.8 - 0.8 * i / number_contours
             cv2.putText(
                 image_copy,
@@ -268,5 +269,33 @@ def visualize_vertices(vertices: np.ndarray, ax=None, is_fill_polygon=True):
     return ax
 
 
-def visualize_area_evolution():
-    pass
+def visualize_area_evolution(
+    sampleholder,
+    area_evolution_list,
+    ax_area,
+    ax_ratio,
+):
+    sampleholder.update()
+    samples_area = sampleholder.samples_area
+    for i, area_evolution in enumerate(area_evolution_list):
+        area_evolution = np.array(area_evolution) ** 2 * np.pi
+        ax_area.plot(
+            area_evolution,
+            color=plot_area_evolution_kwargs["color"],
+            alpha=plot_area_evolution_kwargs["alpha"],
+            linewidth=plot_area_evolution_kwargs["linewidth"],
+        )
+        ax_area.set_ylabel(
+            "Area of sampleholder", color=plot_area_evolution_kwargs["color"]
+        )
+        ax_area.set_xlabel("Iteration")
+        ax_area.set(yticks=[])
+        ax_ratio.plot(
+            100 * samples_area / area_evolution,
+            color=plot_ratio_evolution_kwargs["color"],
+            alpha=plot_ratio_evolution_kwargs["alpha"],
+            linewidth=plot_ratio_evolution_kwargs["linewidth"],
+        )
+        ax_ratio.set_ylabel("Ratio (%)", color=plot_ratio_evolution_kwargs["color"])
+        ax_ratio.tick_params(axis="y", labelcolor=plot_ratio_evolution_kwargs["color"])
+        ax_ratio.set(yticks=[0, 20, 40, 60, 80])

@@ -36,3 +36,7 @@ config = dict(
     sampleholder_cad_filename="engraved_sampleholder.stl",
     temp_images_path="../temp_images/",
 )
+
+plot_area_evolution_kwargs = dict(color="dodgerblue", alpha=0.5, linewidth=1.5)
+
+plot_ratio_evolution_kwargs = dict(color="darkorange", alpha=0.5, linewidth=1.5)
