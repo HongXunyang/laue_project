@@ -10,16 +10,16 @@ physical_size = dict(
 )
 
 batch_optimization_kwargs = dict(
-    number_system=3,
+    number_system=10,
     is_plot=True,
     is_print=True,
     step_size=10,
-    number_of_iterations=1000,
-    temperature=700,
+    number_of_iterations=30000,
+    temperature=1000,
     contour_buffer_multiplier=1.01,
     optimize_shape="min_circle",
     is_gravity=True,
-    gravity_multiplier=0.3,
+    gravity_multiplier=0.7,
     is_update_sampleholder=True,
     is_contour_buffer=True,
     is_plot_area=True,

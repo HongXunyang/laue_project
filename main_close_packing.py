@@ -8,8 +8,8 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import visualize_sampleholder, visualize_contours
-from config.config import physical_size, batch_optimization_kwargs
+from utils import visualize_sampleholder, visualize_contours, save_sampleholder
+from config.config import physical_size, batch_optimization_kwargs, config
 
 start_time = time.time()
 # ----------- image pre=processing ----------- #
@@ -24,6 +24,20 @@ background_vectors = [
     np.array([190, 190, 190]),
     np.array([220, 220, 220]),
 ]
+
+# stripes_vectors = [
+#    np.array([95, 86, 167]),
+#    np.array([57, 48, 139]),
+#    np.array([72, 66, 137]),
+# ]
+# target_background_vector = np.array([202, 209, 206])
+# background_vectors = [
+#    np.array([202, 209, 206]),
+#    np.array([190, 201, 199]),
+#    np.array([182, 185, 183]),
+# ]
+
+
 # Load image
 image = cv2.imread("../images/sissi_circle_sample.jpg")
 rows, columns, channels = image.shape
@@ -80,6 +94,10 @@ if True:
         is_plot_hull=True,
     )
 sampleholder.update()
+save_sampleholder(
+    sampleholder, config["data_path"], config["sampleholder_dict_filename"]
+)
+
 print(sampleholder.ratio)
 plt.show()
 # ----------- end of optimization ----------- #

@@ -71,24 +71,27 @@ def batch_optimization(
     for batch_index in range(number_system):
         if is_print:
             print(f"NO.{batch_index+1} out of {number_system} started")
-        optimized_configuration, area, area_evolution_list[batch_index] = optimization(
-            sampleholder,
-            number_of_iterations,
-            step_size=step_size,
-            fluctuation=fluctuation,
-            temperature=temperature,
-            contour_buffer_multiplier=contour_buffer_multiplier,
-            optimize_shape=optimize_shape,
-            is_rearrange_vertices=is_rearrange_vertices,
-            is_gravity=is_gravity,
-            gravity_multiplier=gravity_multiplier,
-            is_update_sampleholder=False,
-            is_contour_buffer=is_contour_buffer,
-            is_plot_area=is_plot_area,
-            ax_area=ax_area,
+
+        optimized_configuration, optimized_area, area_evolution_list[batch_index] = (
+            optimization(
+                sampleholder,
+                number_of_iterations,
+                step_size=step_size,
+                fluctuation=fluctuation,
+                temperature=temperature,
+                contour_buffer_multiplier=contour_buffer_multiplier,
+                optimize_shape=optimize_shape,
+                is_rearrange_vertices=is_rearrange_vertices,
+                is_gravity=is_gravity,
+                gravity_multiplier=gravity_multiplier,
+                is_update_sampleholder=False,
+                is_contour_buffer=is_contour_buffer,
+                is_plot_area=is_plot_area,
+                ax_area=ax_area,
+            )
         )
         optimized_configuration_list[batch_index] = optimized_configuration
-        area_list[batch_index] = area
+        area_list[batch_index] = optimized_area
         sorted_indices = np.argsort(area_list)
     if is_plot:
         if number_system == 1:
@@ -129,7 +132,6 @@ def batch_optimization(
 
     # update the sample holder if is_update_sampleholder is True
     if is_update_sampleholder:
-        print(sorted_indices)
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
 
@@ -171,8 +173,9 @@ def optimization(
     - ax_area: the axis to plot the area evolution
 
     Returns:
-    - rearranged_vertices_list: the optimized configuration of the samples
-    - area: the area of the convex hull of the optimized configuration
+    - best_vertices_list: the best optimized (ever) configuration of the samples
+    - best_area: the area of sampleholder of the best configuration
+    - area_evolution: the evolution of the area during the optimization process
     """
     # initialization
 
@@ -181,10 +184,13 @@ def optimization(
     current_temperature = temperature
     final_temperature = temperature * 0.01
     temperature_decay = (initial_temperature - final_temperature) / number_of_iterations
-    step_size_decay = 0.8 * step_size / number_of_iterations
+    step_size_decay = 0.5 * step_size / number_of_iterations
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
+
+    # here stores the best configuration ever
+    best_vertices_list = vertices_list.copy()
 
     # inflate the vertices to leave buffer area between samples.
     if is_contour_buffer:
@@ -194,14 +200,21 @@ def optimization(
     # rearrange the vertices_list for a better optimization (if is_rearrange_vertices is True)
     if is_rearrange_vertices:
         rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
+    else:
+        rearranged_vertices_list = vertices_list.copy()
+
     # the area of each sample
     sample_areas_list = np.array(
         [vertices_area(vertices) for vertices in vertices_list]
     )
-    # the initial area of the convex hull
+    samples_area = np.sum(sample_areas_list)
+
+    # the initial area of the sampleholder
     area = _calculate_area(
         rearranged_vertices_list, shape=optimize_shape
     )  # initial area
+    best_area = area  # the best area ever
+
     if is_plot_area:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
@@ -267,6 +280,11 @@ def optimization(
                 # new configuration is accepted, update the configuration
                 area = temp_area
                 rearranged_vertices_list[index] = temp_vertices
+
+                # update the best configuration ever
+                if best_area > area:
+                    best_area = area
+                    best_vertices_list = rearranged_vertices_list.copy()
             else:
                 # if not accepted, revert the temp_vertices_list
                 temp_vertices_list[index] = vertices
@@ -289,11 +307,38 @@ def optimization(
 
     if is_update_sampleholder:
         # at the end of the optimization, update the sample position by doing relocate()
-        update_sampleholder(sampleholder, rearranged_vertices_list)
+        update_sampleholder(sampleholder, best_vertices_list)
 
     if is_plot_area:
-        ax_area.plot(np.array(range(number_of_iterations)), np.log(area_evolution))
-    return rearranged_vertices_list, area, area_evolution
+        # Plot area_evolution on the left y-axis
+        ax_area.plot(
+            np.array(range(number_of_iterations)),
+            area_evolution,
+            color="lightseagreen",
+            label="Area Evolution",
+        )
+        ax_area.set_xlabel("Iterations")
+        ax_area.set_ylabel("Area Evolution", color="lightseagreen")
+        ax_area.tick_params(axis="y", labelcolor="lightseagreen")
+        # Create another y-axis that shares the same x-axis
+        ax_sample_area = ax_area.twinx()
+
+        # Plot sample_area / area_evolution on the right y-axis
+        ax_sample_area.plot(
+            np.array(range(number_of_iterations)),
+            100 * samples_area / (np.pi * area_evolution**2),
+            color="indigo",
+            label="Ratio",
+        )
+        ax_sample_area.set_ylabel("Ratio (%)", color="indigo")
+        ax_sample_area.tick_params(axis="y", labelcolor="indigo")
+        # auto adjust yticks
+        ax_area.set(
+            yticks=np.linspace(area_evolution[-1] * 0.9, area_evolution[0] * 1.1, 5)
+        )
+        ax_sample_area.set(yticks=[0, 20, 40, 60, 80])
+
+    return best_vertices_list, best_area, area_evolution
 
 
 def _create_movement_vector(
