@@ -8,7 +8,12 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import visualize_sampleholder, visualize_contours, save_sampleholder
+from utils import (
+    visualize_sampleholder,
+    visualize_contours,
+    save_sampleholder,
+    animate_config_evolution,
+)
 from config.config import physical_size, batch_optimization_kwargs, config
 
 start_time = time.time()
@@ -60,13 +65,13 @@ contours, approximated_contours, hulls, _ = image2contours(
     lowercut=100,
     area_lowercut=2000,
     gaussian_window=(5, 5),
-    is_gaussian_filter=True,
-    isprint=False,
+    is_gaussian_filter=False,
+    threshold=50,
 )
 
 # visualize contours
 image_to_visualize = visualize_contours(
-    image, approximated_contours, hulls, is_plot=True
+    image, approximated_contours, hulls, is_plot=False
 )
 end_time = time.time()
 print(f"image processed time: {end_time - start_time} seconds\n")
@@ -77,28 +82,36 @@ sampleholder = generate_sampleholder_object(samples_list)
 # ----------- end of contour finding ----------- #
 
 # ----------- optimization ----------- #
-if True:
-    start_time = time.time()
-    optimized_configuration_list, area_list, sorted_indices, _ = batch_optimization(
-        sampleholder,
-        **batch_optimization_kwargs,
-    )
-    end_time = time.time()
 
-    print(f"optimization time: {end_time - start_time} seconds\n")
-    fig, ax = plt.subplots()
-    visualize_sampleholder(
-        sampleholder,
-        ax=ax,
-        is_plot_contour=False,
-        is_plot_hull=True,
-    )
-sampleholder.update()
-save_sampleholder(
-    sampleholder, config["data_path"], config["sampleholder_dict_filename"]
+start_time = time.time()
+fig_area, ax_area = plt.subplots()
+best_vertices_list, best_area, optimization_history = optimization(
+    sampleholder,
+    number_of_iterations=1000,
+    step_size=10,
+    temperature=3000,
+    contour_buffer_multiplier=1.01,
+    optimize_shape="min_circle",
+    is_rearrange_vertices=True,
+    is_gravity=True,
+    gravity_multiplier=0.5,
+    is_update_sampleholder=True,
+    is_contour_buffer=True,
+    is_plot_area=True,
+    is_record_history=True,
+    ax_area=ax_area,
+    ax_ratio=ax_area.twinx(),
 )
+end_time = time.time()
 
+print(f"optimization time: {end_time - start_time} seconds\n")
+fig_ani, ax_ani = plt.subplots()
+configurations = optimization_history["vertices_list_evolution"]
+animate_config_evolution(configurations, fig=fig_ani, ax=ax_ani, is_save=True)
+
+sampleholder.update()
 print(sampleholder.ratio)
-plt.show()
+
+
 # ----------- end of optimization ----------- #
 print("end")

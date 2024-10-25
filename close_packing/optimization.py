@@ -205,7 +205,7 @@ def optimization(
     fluctuation: float = 0.1,
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
-    optimize_shape="convex_hull",
+    optimize_shape="min_circle",
     is_rearrange_vertices=True,
     is_gravity=True,
     gravity_multiplier: float = 0.5,
@@ -414,10 +414,10 @@ def optimization(
         )
         ax_ratio.set(yticks=[0, 20, 40, 60, 80])
 
-        optimization_history = dict(
-            area_evolution=area_evolution,
-            vertices_list_evolution=vertices_list_evolution,
-        )
+    optimization_history = dict(
+        area_evolution=area_evolution,
+        vertices_list_evolution=vertices_list_evolution,
+    )
     return best_vertices_list, best_area, optimization_history
 
 

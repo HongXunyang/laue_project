@@ -4,7 +4,11 @@ import cv2
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 from classes import _remove_background_contour
-from config.config import plot_area_evolution_kwargs, plot_ratio_evolution_kwargs
+from config.config import (
+    plot_area_evolution_kwargs,
+    plot_ratio_evolution_kwargs,
+    config,
+)
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -306,7 +310,7 @@ import matplotlib.animation as animation
 from matplotlib.patches import Polygon
 
 
-def animate_polygons(configurations):
+def animate_config_evolution(configurations, fig=None, ax=None, is_save=False):
     """
     Animates the optimization process of polygon configurations.
 
@@ -315,7 +319,8 @@ def animate_polygons(configurations):
       and each polygon is a list of (x, y) tuples.
     """
     # Set up the figure and axis
-    fig, ax = plt.subplots()
+    if ax is None or fig is None:
+        fig, ax = plt.subplots()
     ax.set_aspect("equal")
 
     # Initialize the list to store polygon patches
@@ -347,8 +352,14 @@ def animate_polygons(configurations):
 
     # Create the animation
     ani = animation.FuncAnimation(
-        fig, update, frames=len(configurations), init_func=init, blit=True
+        fig, update, frames=len(configurations), init_func=init, blit=True, interval=3
     )
-
+    if is_save:
+        print(config)
+        ani.save(
+            config["temp_images_path"] + "polygon_evolution.mp4",
+            writer="ffmpeg",
+            fps=400,
+        )
     # Display the animation
     plt.show()
