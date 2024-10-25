@@ -278,7 +278,8 @@ def optimization(
     sample_areas_list = np.array(
         [vertices_area(vertices) for vertices in vertices_list]
     )
-    samples_area = np.sum(sample_areas_list)
+    sampleholder.update()
+    samples_area = sampleholder.samples_area
 
     # the initial area of the sampleholder
     area = _calculate_area(
@@ -496,7 +497,7 @@ def _check_movement(temp_vertices, index: int, vertices_list: list):
     return True
 
 
-def _check_configuration(temp_vertices_list, area, temperature, shape="convex_hull"):
+def _check_configuration(temp_vertices_list, area, temperature, shape="min_circle"):
     """
     a function check if the configuration is better than the previous one
 
@@ -517,7 +518,7 @@ def _check_configuration(temp_vertices_list, area, temperature, shape="convex_hu
     return new_area, is_accept
 
 
-def _calculate_area(vertices_list, shape="convex_hull"):
+def _calculate_area(vertices_list, shape="min_circle"):
     """
     calculate the area of the convex hull of the given vertices list
 

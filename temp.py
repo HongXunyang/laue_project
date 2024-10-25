@@ -103,6 +103,9 @@ best_vertices_list, best_area, optimization_history = optimization(
     ax_ratio=ax_area.twinx(),
 )
 end_time = time.time()
+sampleholder.update()
+print(sampleholder.ratio)
+
 
 print(f"optimization time: {end_time - start_time} seconds\n")
 fig_ani, ax_ani = plt.subplots()
@@ -110,9 +113,6 @@ configurations = optimization_history["vertices_list_evolution"]
 animate_config_evolution(
     configurations, fig=fig_ani, ax=ax_ani, is_save=False, filename="just_correct.mp4"
 )
-
-sampleholder.update()
-print(sampleholder.ratio)
 
 
 # ----------- end of optimization ----------- #
