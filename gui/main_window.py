@@ -147,6 +147,10 @@ class MainWindow(QMainWindow):
         self.gravity_multiplier_input.setPlaceholderText(
             "" + str(batch_optimization_kwargs["gravity_multiplier"])
         )
+        self.gravity_off_at_input = QLineEdit()
+        self.gravity_off_at_input.setPlaceholderText(
+            str(batch_optimization_kwargs["gravity_off_at"])
+        )
         # boolean parameters are set by a toggle button
         # is_gravity:bool,is_update_sampleholder:bool,# is_contour_buffer:bool,is_plot_area:bool
 
@@ -186,6 +190,10 @@ class MainWindow(QMainWindow):
         close_packing_params_layout.addRow(
             "Gravity Multiplier:", self.gravity_multiplier_input
         )
+        close_packing_params_layout.addRow(
+            "Turn off gravity at step:", self.gravity_off_at_input
+        )
+
         close_packing_params_layout.addRow(self.is_gravity_button)
         close_packing_params_layout.addRow(self.is_update_sampleholder_button)
         close_packing_params_layout.addRow(self.is_contour_buffer_button)
@@ -495,7 +503,11 @@ class MainWindow(QMainWindow):
             if self.gravity_multiplier_input.text()
             else self.default_batch_optimization_kwargs["gravity_multiplier"]
         )
-
+        gravity_off_at = (
+            int(self.gravity_off_at_input.text())
+            if self.gravity_off_at_input.text()
+            else self.default_batch_optimization_kwargs["gravity_off_at"]
+        )
         # Retrieve boolean parameters
         is_gravity = self.is_gravity_button.isChecked()
         is_update_sampleholder = self.is_update_sampleholder_button.isChecked()
@@ -511,6 +523,7 @@ class MainWindow(QMainWindow):
             "contour_buffer_multiplier": contour_buffer_multiplier,
             "optimize_shape": optimize_shape,
             "gravity_multiplier": gravity_multiplier,
+            "gravity_off_at": gravity_off_at,
             "is_gravity": is_gravity,
             "is_update_sampleholder": is_update_sampleholder,
             "is_contour_buffer": is_contour_buffer,

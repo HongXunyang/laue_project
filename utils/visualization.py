@@ -278,8 +278,8 @@ def visualize_area_evolution(
 ):
     sampleholder.update()
     samples_area = sampleholder.samples_area
+    area_evolution_list = np.array(area_evolution_list) ** 2 * np.pi
     for i, area_evolution in enumerate(area_evolution_list):
-        area_evolution = np.array(area_evolution) ** 2 * np.pi
         ax_area.plot(
             area_evolution,
             color=plot_area_evolution_kwargs["color"],
@@ -301,6 +301,25 @@ def visualize_area_evolution(
         ax_ratio.tick_params(axis="y", labelcolor=plot_ratio_evolution_kwargs["color"])
         ax_ratio.set(yticks=[0, 20, 40, 60, 80])
 
+    # on ax_ratio, plot the largest ratio as a horizontal line
+    max_ratio = np.max(100 * samples_area / np.array(area_evolution_list))
+    ax_ratio.axhline(
+        max_ratio,
+        color=plot_ratio_evolution_kwargs["color"],
+        linestyle="--",
+        linewidth=1.5,
+    )
+    # on the top of the line, add the text of the largest ratio, on the right hand side of the line
+    ax_ratio.text(
+        len(area_evolution) - 1,
+        max_ratio,
+        f"{max_ratio:.2f}%",
+        color=plot_ratio_evolution_kwargs["color"],
+        fontsize=12,
+        verticalalignment="bottom",
+        horizontalalignment="right",
+    )
+
 
 # ----------------- Animation -----------------
 import matplotlib.animation as animation
@@ -308,20 +327,30 @@ from matplotlib.patches import Polygon as MatPlotPolygon
 
 
 def animate_config_evolution(
-    configurations, fig=None, ax=None, is_save=False, filename=None
+    configurations,
+    area_evolution,
+    samples_area,
+    fig=None,
+    axs=None,
+    is_save=False,
+    filename=None,
+    max_duration=20,
 ):
     """
-    Animates the optimization process of polygon configurations.
+    Animates the optimization process of polygon configurations alongside the area evolution.
 
     Parameters:
     - configurations: list of configurations, where each configuration is a list of polygons,
       and each polygon is a list of (x, y) tuples.
+    - area_evolution: list of area values corresponding to each configuration.
     """
-    # Set up the figure and axis
-    if ax is None or fig is None:
-        fig, ax = plt.subplots()
-    ax.set_aspect("equal")
-
+    # Set up the figure and axes
+    if axs is None or fig is None:
+        fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+    ax_ratio, ax_config = axs
+    ax_config.set_aspect("equal")
+    area_evolution = np.array(area_evolution) ** 2 * np.pi
+    ratio_evolution = 100 * samples_area / np.array(area_evolution)
     # Initialize the list to store polygon patches
     polygon_patches = []
 
@@ -329,41 +358,75 @@ def animate_config_evolution(
     initial_polygons = configurations[0]
     for polygon_coords in initial_polygons:
         polygon_patch = MatPlotPolygon(polygon_coords, closed=True, edgecolor="k")
-        ax.add_patch(polygon_patch)
+        ax_config.add_patch(polygon_patch)
         polygon_patches.append(polygon_patch)
 
-    # Set the plot limits
+    # Set the plot limits for configuration plot
     all_x = [x for config in configurations for poly in config for x, y in poly]
     all_y = [y for config in configurations for poly in config for x, y in poly]
-    ax.set_xlim(min(all_x) - 1, max(all_x) + 1)
-    ax.set_ylim(min(all_y) - 1, max(all_y) + 1)
+    ax_config.set_xlim(min(all_x) - 1, max(all_x) + 1)
+    ax_config.set_ylim(min(all_y) - 1, max(all_y) + 1)
+    ax_config.set_title("Configuration Evolution")
+
+    # Initialize the area plot
+    (ratio_line,) = ax_ratio.plot(
+        [],
+        [],
+        color=plot_ratio_evolution_kwargs["color"],
+        linewidth=plot_ratio_evolution_kwargs["linewidth"],
+    )
+    ax_ratio.set_xlim(0, len(ratio_evolution))
+    ax_ratio.set_ylim(0, 80)
+    ax_ratio.set_title("Ratio Evolution")
+    ax_ratio.set_xlabel("Iteration")
+    ax_ratio.set_ylabel("Ratio (%)")
+    ax_ratio.set_yticks([0, 20, 40, 60, 80])
+
+    # Initialize the horizontal dashed line and text annotation
+    horizontal_line = ax_ratio.axhline(
+        y=ratio_evolution[0], color=plot_ratio_evolution_kwargs["color"], linestyle="--"
+    )
+    text_annotation = ax_ratio.text(0, ratio_evolution[0], "", va="bottom", ha="center")
 
     def init():
         """Initialize the background of the animation."""
-        return polygon_patches
+        ratio_line.set_data([], [])
+        horizontal_line.set_ydata(ratio_evolution[0])
+        text_annotation.set_text(f"{ratio_evolution[0]:.2f}%")
+        return polygon_patches + [ratio_line, horizontal_line, text_annotation]
 
     def update(frame):
-        """Update the polygons for each frame."""
+        """Update the polygons and area plot for each frame."""
+        # Update configuration polygons
         polygons = configurations[frame]
         for patch, coords in zip(polygon_patches, polygons):
             patch.set_xy(coords)
-        return polygon_patches
+        current_ratio = ratio_evolution[frame]
+        horizontal_line.set_ydata(current_ratio)
+        text_annotation.set_position((frame, current_ratio))
+        text_annotation.set_text(f"{current_ratio:.2f}%")
+
+        # Update area plot
+        ratio_line.set_data(range(frame + 1), ratio_evolution[: frame + 1])
+        return polygon_patches + [ratio_line, horizontal_line, text_annotation]
 
     # Create the animation
+    total_frames = len(configurations) // 7
+    interval = min(3, max_duration * 1000 / total_frames)  # interval in ms
     ani = animation.FuncAnimation(
         fig,
         update,
-        frames=range(0, len(configurations), 3),
+        frames=range(0, len(configurations), 7),
         init_func=init,
         blit=True,
-        interval=3,
+        interval=interval,
     )
-    filename = filename if (filename is not None) else "config_evolution.mp4"
+    filename = filename if (filename is not None) else "config_and_area_evolution.mp4"
     if is_save:
         ani.save(
-            config["temp_images_path"] + filename,
+            filename,
             writer="ffmpeg",
-            fps=400,
+            fps=1000 / interval,
         )
     # Display the animation
     plt.show()
