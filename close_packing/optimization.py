@@ -88,25 +88,25 @@ def batch_optimization(
         if is_print:
             print(f"NO.{batch_index+1} out of {number_system} started")
 
-        optimized_configuration, optimized_area, area_evolution_list[batch_index] = (
-            optimization(
-                sampleholder,
-                number_of_iterations,
-                step_size=step_size,
-                fluctuation=fluctuation,
-                temperature=temperature,
-                contour_buffer_multiplier=contour_buffer_multiplier,
-                optimize_shape=optimize_shape,
-                is_rearrange_vertices=is_rearrange_vertices,
-                is_gravity=is_gravity,
-                gravity_multiplier=gravity_multiplier,
-                is_update_sampleholder=False,
-                is_contour_buffer=is_contour_buffer,
-                is_plot_area=is_plot_area,
-                ax_area=ax_area,
-                ax_ratio=ax_ratio,
-            )
+        optimized_configuration, optimized_area, optimization_history = optimization(
+            sampleholder,
+            number_of_iterations,
+            step_size=step_size,
+            fluctuation=fluctuation,
+            temperature=temperature,
+            contour_buffer_multiplier=contour_buffer_multiplier,
+            optimize_shape=optimize_shape,
+            is_rearrange_vertices=is_rearrange_vertices,
+            is_gravity=is_gravity,
+            gravity_multiplier=gravity_multiplier,
+            is_update_sampleholder=False,
+            is_contour_buffer=is_contour_buffer,
+            is_plot_area=is_plot_area,
+            is_record_history=False,
+            ax_area=ax_area,
+            ax_ratio=ax_ratio,
         )
+        area_evolution_list[batch_index] = optimization_history["area_evolution"]
         optimized_configuration_list[batch_index] = optimized_configuration
         area_list[batch_index] = optimized_area
         sorted_indices = np.argsort(area_list)
@@ -212,6 +212,7 @@ def optimization(
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_area=False,
+    is_record_history=False,
     ax_area=None,
     ax_ratio=None,
 ):
@@ -231,6 +232,7 @@ def optimization(
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
     - is_plot_area: if True, plot out the area evolution during the optimization process
+    - is_record_history: record the history of the vertices_list during the optimization process
     - ax_area: the axis to plot the area evolution
     - ax_ratio: the axis to plot the ratio of the sample area to the area of the sampleholder
 
@@ -277,11 +279,20 @@ def optimization(
     )  # initial area
     best_area = area  # the best area ever
 
+    # ---------------- History recording variables ---------------- #
     if is_plot_area:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
     else:
         area_evolution = None
+
+    if is_record_history:
+        vertices_list_evolution = [None] * number_of_iterations
+        vertices_list_evolution[0] = rearranged_vertices_list.copy()
+    else:
+        vertices_list_evolution = None
+    # --------------------------End ---------------------------------#
+
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
         scale_hull * step_size
@@ -355,6 +366,8 @@ def optimization(
         step_size -= step_size_decay  # linearly decrease the step_size
         if is_plot_area:
             area_evolution[iteration] = area
+        if is_record_history:
+            vertices_list_evolution[iteration] = rearranged_vertices_list.copy()
     # -------- End of the optimization -------- #
 
     if is_contour_buffer:
@@ -401,7 +414,11 @@ def optimization(
         )
         ax_ratio.set(yticks=[0, 20, 40, 60, 80])
 
-    return best_vertices_list, best_area, area_evolution
+        optimization_history = dict(
+            area_evolution=area_evolution,
+            vertices_list_evolution=vertices_list_evolution,
+        )
+    return best_vertices_list, best_area, optimization_history
 
 
 def _create_movement_vector(

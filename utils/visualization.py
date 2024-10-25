@@ -299,3 +299,56 @@ def visualize_area_evolution(
         ax_ratio.set_ylabel("Ratio (%)", color=plot_ratio_evolution_kwargs["color"])
         ax_ratio.tick_params(axis="y", labelcolor=plot_ratio_evolution_kwargs["color"])
         ax_ratio.set(yticks=[0, 20, 40, 60, 80])
+
+
+# ----------------- Animation -----------------
+import matplotlib.animation as animation
+from matplotlib.patches import Polygon
+
+
+def animate_polygons(configurations):
+    """
+    Animates the optimization process of polygon configurations.
+
+    Parameters:
+    - configurations: list of configurations, where each configuration is a list of polygons,
+      and each polygon is a list of (x, y) tuples.
+    """
+    # Set up the figure and axis
+    fig, ax = plt.subplots()
+    ax.set_aspect("equal")
+
+    # Initialize the list to store polygon patches
+    polygon_patches = []
+
+    # Create polygon patches for the initial frame
+    initial_polygons = configurations[0]
+    for polygon_coords in initial_polygons:
+        polygon_patch = Polygon(polygon_coords, closed=True, edgecolor="k")
+        ax.add_patch(polygon_patch)
+        polygon_patches.append(polygon_patch)
+
+    # Set the plot limits
+    all_x = [x for config in configurations for poly in config for x, y in poly]
+    all_y = [y for config in configurations for poly in config for x, y in poly]
+    ax.set_xlim(min(all_x) - 1, max(all_x) + 1)
+    ax.set_ylim(min(all_y) - 1, max(all_y) + 1)
+
+    def init():
+        """Initialize the background of the animation."""
+        return polygon_patches
+
+    def update(frame):
+        """Update the polygons for each frame."""
+        polygons = configurations[frame]
+        for patch, coords in zip(polygon_patches, polygons):
+            patch.set_xy(coords)
+        return polygon_patches
+
+    # Create the animation
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(configurations), init_func=init, blit=True
+    )
+
+    # Display the animation
+    plt.show()
