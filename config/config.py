@@ -12,6 +12,7 @@ image2contours_kwargs = dict(
 physical_size = dict(
     sampleholder_thickness=60,
     sampleholder_size=np.array([1000, 1000]),
+    sample_thickness=30,
 )
 
 batch_optimization_kwargs = dict(

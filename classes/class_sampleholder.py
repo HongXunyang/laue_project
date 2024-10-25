@@ -16,7 +16,7 @@ import json, cv2
 import matplotlib.pyplot as plt
 from .class_sample import Sample
 from .helper_functions import _sampleholder2vertices_list
-
+from config.config import physical_size
 
 # Load the data from the JSON file
 with open("config/config.json", "r") as json_file:
@@ -39,6 +39,7 @@ class SampleHolder:
         )
         self.radius: float = None  # the radius of the sample holder if it is a circle
         self.thickness: float = None  # the thickness of the sample holder
+        self.sample_thickness: float = None
         self.center: np.ndarray = None  # the center position of the sample holder
         self.samples_area: float = (
             None  # the total area of the samples on the sample holder
@@ -133,6 +134,8 @@ class SampleHolder:
         self.vertices_list = self.update_vertices_list()
         self.ratio = self.calculate_ratio_of_samples()
         self.samples_area = self.calculate_samples_area()
+        self.thickness = physical_size["sampleholder_thickness"]
+        self.sample_thickness = physical_size["sample_thickness"]
 
     def id2sample(self, id: int):
         """

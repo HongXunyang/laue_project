@@ -3,6 +3,7 @@ import json
 from shapely.geometry import Polygon
 from classes import Contour, FunctionalSampleHolder, Sample
 import os
+from config.config import physical_size
 
 
 def sampleholder2polygons(sampleholder: FunctionalSampleHolder):
@@ -98,7 +99,14 @@ def save_sampleholder(sampleholder, folder_path, filename):
     )
     radius: float = sampleholder.radius if (sampleholder.radius is not None) else "None"
     thickness: float = (
-        sampleholder.thickness if (sampleholder.thickness is not None) else "None"
+        sampleholder.thickness
+        if (sampleholder.thickness is not None)
+        else physical_size["sampleholder_thickness"]
+    )
+    sample_thickness: float = (
+        sampleholder.sample_thickness
+        if (sampleholder.sample_thickness is not None)
+        else physical_size["sample_thickness"]
     )
     center: list[float, float] = (
         sampleholder.center.tolist() if (sampleholder.center is not None) else "None"
@@ -124,6 +132,7 @@ def save_sampleholder(sampleholder, folder_path, filename):
         size=size,
         radius=radius,
         thickness=thickness,
+        sample_thickness=sample_thickness,
         center=center,
         samples_area=samples_area,
         ratio=ratio,

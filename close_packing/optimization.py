@@ -22,6 +22,7 @@ from utils import (
     update_sampleholder,
     visualize_vertices_list,
 )
+from config.config import physical_size
 
 
 def batch_optimization(
@@ -197,8 +198,6 @@ def batch_optimization(
     if is_update_sampleholder:
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
-        print(sampleholder.ratio)
-        print(samples_area / (np.pi * min(area_list) ** 2))
 
     return optimized_configuration_list, area_list, sorted_indices, area_evolution_list
 
