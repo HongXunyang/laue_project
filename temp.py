@@ -87,9 +87,9 @@ start_time = time.time()
 fig_area, ax_area = plt.subplots()
 best_vertices_list, best_area, optimization_history = optimization(
     sampleholder,
-    number_of_iterations=1000,
-    step_size=10,
-    temperature=3000,
+    number_of_iterations=30000,
+    step_size=20,
+    temperature=200,
     contour_buffer_multiplier=1.01,
     optimize_shape="min_circle",
     is_rearrange_vertices=True,
@@ -107,7 +107,9 @@ end_time = time.time()
 print(f"optimization time: {end_time - start_time} seconds\n")
 fig_ani, ax_ani = plt.subplots()
 configurations = optimization_history["vertices_list_evolution"]
-animate_config_evolution(configurations, fig=fig_ani, ax=ax_ani, is_save=True)
+animate_config_evolution(
+    configurations, fig=fig_ani, ax=ax_ani, is_save=False, filename="just_correct.mp4"
+)
 
 sampleholder.update()
 print(sampleholder.ratio)

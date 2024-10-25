@@ -38,6 +38,7 @@ def batch_optimization(
     is_rearrange_vertices=True,
     is_gravity=True,
     gravity_multiplier: float = 0.5,
+    gravity_off_at: int = 3000,
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_area=False,
@@ -99,6 +100,7 @@ def batch_optimization(
             is_rearrange_vertices=is_rearrange_vertices,
             is_gravity=is_gravity,
             gravity_multiplier=gravity_multiplier,
+            gravity_off_at=gravity_off_at,
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
             is_plot_area=is_plot_area,
@@ -209,6 +211,7 @@ def optimization(
     is_rearrange_vertices=True,
     is_gravity=True,
     gravity_multiplier: float = 0.5,
+    gravity_off_at: int = 3000,
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_area=False,
@@ -229,6 +232,7 @@ def optimization(
     - is_rearrange_vertices: if true, the initial positions of the samples will be rearranged for a better optimization.
     - is_gravity: if True, the movement vector will be affected by the gravity of the samples. This will increase the running time by roughly 50%.
     - gravity_multiplier: controling the strength of the gravity. 1 means the movement vector is always along the gravity direction; 0.5 means the movement vector is somewhat along the gravity direction; 1.5 means the movement vector is more along the gravity direction.
+    - gravity_off_at: the iteration number when the gravity effect is turned off. The gravity effect is turned off by setting gravity_multiplier to 0.
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
     - is_plot_area: if True, plot out the area evolution during the optimization process
@@ -246,8 +250,11 @@ def optimization(
     # preset annealing parameters
     initial_temperature = temperature
     current_temperature = temperature
-    final_temperature = temperature * 0.01
-    temperature_decay = (initial_temperature - final_temperature) / number_of_iterations
+    temperature_at_gravity_off = temperature * 0.2
+    # temperature decays exponentially from the initial_temperature to the temperature_at_gravity_off at gravity_off_at step.
+    temperature_decay_rate = np.exp(
+        np.log(temperature_at_gravity_off / initial_temperature) / gravity_off_at
+    )  # temperature decays exponentially
     step_size_decay = 0.5 * step_size / number_of_iterations
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
@@ -307,7 +314,8 @@ def optimization(
         # randomly select a polygon
         index = np.random.randint(0, number_polygons)
         vertices = rearranged_vertices_list[index]  # the vertices of the select polygon
-
+        if iteration > gravity_off_at:
+            is_gravity = False
         # create a movement vector
         # check if we accept the new configuration
         # (1) if there's overlap
@@ -362,7 +370,9 @@ def optimization(
                 # if not accepted, revert the temp_vertices_list
                 temp_vertices_list[index] = vertices
 
-        current_temperature -= temperature_decay  # linearly decrease the temperature
+        current_temperature = (
+            current_temperature * temperature_decay_rate
+        )  # exponentially decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
         if is_plot_area:
             area_evolution[iteration] = area

@@ -10,9 +10,6 @@ from config.config import (
     config,
 )
 
-# Load the data from the JSON file
-with open("config/config.json", "r") as json_file:
-    config = json.load(json_file)
 with open("config/stylesheet.json", "r") as json_file:
     stylesheet = json.load(json_file)
 
@@ -310,7 +307,9 @@ import matplotlib.animation as animation
 from matplotlib.patches import Polygon
 
 
-def animate_config_evolution(configurations, fig=None, ax=None, is_save=False):
+def animate_config_evolution(
+    configurations, fig=None, ax=None, is_save=False, filename=None
+):
     """
     Animates the optimization process of polygon configurations.
 
@@ -352,12 +351,17 @@ def animate_config_evolution(configurations, fig=None, ax=None, is_save=False):
 
     # Create the animation
     ani = animation.FuncAnimation(
-        fig, update, frames=len(configurations), init_func=init, blit=True, interval=3
+        fig,
+        update,
+        frames=range(0, len(configurations), 3),
+        init_func=init,
+        blit=True,
+        interval=3,
     )
+    filename = filename if (filename is not None) else "config_evolution.mp4"
     if is_save:
-        print(config)
         ani.save(
-            config["temp_images_path"] + "polygon_evolution.mp4",
+            config["temp_images_path"] + filename,
             writer="ffmpeg",
             fps=400,
         )
