@@ -95,6 +95,7 @@ best_vertices_list, best_area, optimization_history = optimization(
     is_rearrange_vertices=True,
     is_gravity=True,
     gravity_multiplier=0.5,
+    gravity_off_at=3000,
     is_update_sampleholder=True,
     is_contour_buffer=True,
     is_plot_area=True,

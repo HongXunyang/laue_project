@@ -304,7 +304,7 @@ def visualize_area_evolution(
 
 # ----------------- Animation -----------------
 import matplotlib.animation as animation
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon as MatPlotPolygon
 
 
 def animate_config_evolution(
@@ -328,7 +328,7 @@ def animate_config_evolution(
     # Create polygon patches for the initial frame
     initial_polygons = configurations[0]
     for polygon_coords in initial_polygons:
-        polygon_patch = Polygon(polygon_coords, closed=True, edgecolor="k")
+        polygon_patch = MatPlotPolygon(polygon_coords, closed=True, edgecolor="k")
         ax.add_patch(polygon_patch)
         polygon_patches.append(polygon_patch)
 

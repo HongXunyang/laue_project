@@ -81,7 +81,8 @@ def batch_optimization(
     sample_areas_list = np.array(
         [vertices_area(vertices) for vertices in vertices_list]
     )
-    samples_area = np.sum(sample_areas_list)
+    sampleholder.update()
+    samples_area = sampleholder.samples_area
 
     # ---------------- start the optimization ---------------- #
     for batch_index in range(number_system):
@@ -173,13 +174,13 @@ def batch_optimization(
             y=area_list[
                 sorted_indices[0]
             ],  # Y-coordinate where you want the text to be
-            s=f"Area: {area_list[sorted_indices[0]]:.1f}",  # Text to display
+            s=f"Area: {min(area_list):.1f}",  # Text to display
             color="lightseagreen",  # Color of the text
             verticalalignment="bottom",  # Align text above the line
             horizontalalignment="left",
         )
         ax_ratio.axhline(
-            y=100 * samples_area / (np.pi * area_list[sorted_indices[0]] ** 2),
+            y=100 * samples_area / (np.pi * min(area_list) ** 2),
             color="indigo",
             linestyle="--",
         )
@@ -196,6 +197,8 @@ def batch_optimization(
     if is_update_sampleholder:
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
+        print(sampleholder.ratio)
+        print(samples_area / (np.pi * min(area_list) ** 2))
 
     return optimized_configuration_list, area_list, sorted_indices, area_evolution_list
 
@@ -379,6 +382,11 @@ def optimization(
             area_evolution[iteration] = area
         if is_record_history:
             vertices_list_evolution[iteration] = rearranged_vertices_list.copy()
+            if is_contour_buffer:
+                vertices_list_evolution[iteration] = _inflate_vertices_list(
+                    vertices_list=vertices_list_evolution[iteration],
+                    multiplier=1 / contour_buffer_multiplier,
+                )
     # -------- End of the optimization -------- #
 
     if is_contour_buffer:

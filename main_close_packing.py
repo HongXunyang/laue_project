@@ -61,7 +61,7 @@ contours, approximated_contours, hulls, _ = image2contours(
     area_lowercut=2000,
     gaussian_window=(5, 5),
     is_gaussian_filter=True,
-    isprint=False,
+    threshold=50,
 )
 
 # visualize contours
