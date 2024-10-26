@@ -273,11 +273,10 @@ def visualize_vertices(vertices: np.ndarray, ax=None, is_fill_polygon=True):
 def visualize_area_evolution(
     sampleholder,
     area_evolution_list,
-    fig=None,
     ax_area=None,
     ax_ratio=None,
 ):
-    if (ax_area is None) or (ax_ratio is None) or (fig is None):
+    if (ax_area is None) or (ax_ratio is None):
         fig, ax_area = plt.subplots()
         ax_ratio = ax_area.twinx()
 
@@ -324,7 +323,7 @@ def visualize_area_evolution(
         verticalalignment="bottom",
         horizontalalignment="right",
     )
-    return fig, ax_area, ax_ratio
+    return ax_area, ax_ratio
 
 
 # ----------------- Animation -----------------

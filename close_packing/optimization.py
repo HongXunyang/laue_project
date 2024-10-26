@@ -70,7 +70,7 @@ def batch_optimization(
     iteration_times = []
     if is_plot_area:
         if ax_area is None:
-            fig, ax_area = plt.subplots()
+            fig_area, ax_area = plt.subplots()
             ax_area.set_title("Area Evolution")
             ax_area.set_xlabel("Iteration")
             ax_area.set_ylabel("area")
@@ -108,8 +108,6 @@ def batch_optimization(
             is_contour_buffer=is_contour_buffer,
             is_plot_area=False,
             is_record_history=is_plot_area,
-            ax_area=ax_area,
-            ax_ratio=ax_ratio,
         )
         area_evolution_list[batch_index] = optimization_history["area_evolution"]
         optimized_configuration_list[batch_index] = optimized_configuration
@@ -170,13 +168,13 @@ def batch_optimization(
 
     # ----------------- Plot the area evolution ----------------- #
     if is_plot_area:
-        fig, ax_area, ax_ratio = visualize_area_evolution(
+        ax_area, ax_ratio = visualize_area_evolution(
             sampleholder=sampleholder,
             area_evolution_list=area_evolution_list,
             ax_area=ax_area,
             ax_ratio=ax_ratio,
         )
-    fig.tight_layout()
+    fig_area.tight_layout()
 
     # ----------------------------------------------------------- #
 
@@ -194,7 +192,7 @@ def batch_optimization(
     area_evolution_path = os.path.join(
         config["temporary_output_folder"], "area_evolution.jpg"
     )
-    fig.savefig(area_evolution_path)
+    fig_area.savefig(area_evolution_path)
 
     # save the sampleholder. change the name of the output file within the folder if the results are desirable
     save_sampleholder(sampleholder)
@@ -401,34 +399,10 @@ def optimization(
 
     # ----------------- Plot the area evolution ----------------- #
     if is_plot_area:
-        # Plot area_evolution on the left y-axis
-        ax_area.plot(
-            np.array(range(number_of_iterations)),
-            area_evolution,
-            color="lightseagreen",
-            label="Area Evolution",
-        )
-        ax_area.set_xlabel("Iterations")
-        ax_area.set_ylabel("Area Evolution", color="lightseagreen")
-        ax_area.tick_params(axis="y", labelcolor="lightseagreen")
-        # Create another y-axis that shares the same x-axis
-        if ax_ratio is None:
+        if (ax_area is None) or (ax_ratio is None):
+            fig, ax_area = plt.subplots()
             ax_ratio = ax_area.twinx()
-
-        # Plot sample_area / area_evolution on the right y-axis
-        ax_ratio.plot(
-            np.array(range(number_of_iterations)),
-            100 * samples_area / (np.pi * area_evolution**2),
-            color="indigo",
-            label="Ratio",
-        )
-        ax_ratio.set_ylabel("Ratio (%)", color="indigo")
-        ax_ratio.tick_params(axis="y", labelcolor="indigo")
-        # auto adjust yticks
-        ax_area.set(
-            yticks=np.linspace(area_evolution[-1] * 0.9, area_evolution[0] * 1.1, 5)
-        )
-        ax_ratio.set(yticks=[0, 20, 40, 60, 80])
+        visualize_area_evolution(sampleholder, area_evolution, ax_area, ax_ratio)
     # ----------------------------------------------------------- #
 
     optimization_history = dict(
