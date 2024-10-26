@@ -392,6 +392,16 @@ def animate_config_evolution(
         color=plot_ratio_evolution_kwargs["color"],
         linewidth=plot_ratio_evolution_kwargs["linewidth"],
     )
+    # Initialize the full area plot
+    (ratio_full_line,) = ax_ratio.plot(
+        range(len(ratio_evolution)),
+        100 * samples_area / area_evolution,
+        color=plot_ratio_evolution_kwargs["color"],
+        linewidth=10,
+        alpha=0.1,
+        zorder=-100,
+    )
+
     ax_ratio.set_xlim(0, len(ratio_evolution))
     ax_ratio.set_ylim(0, 80)
     ax_ratio.set_title("Ratio Evolution")
@@ -410,7 +420,12 @@ def animate_config_evolution(
         ratio_line.set_data([], [])
         horizontal_line.set_ydata(ratio_evolution[0])
         text_annotation.set_text(f"{ratio_evolution[0]:.2f}%")
-        return polygon_patches + [ratio_line, horizontal_line, text_annotation]
+        return polygon_patches + [
+            ratio_line,
+            horizontal_line,
+            text_annotation,
+            ratio_full_line,
+        ]
 
     def update(frame):
         """Update the polygons and area plot for each frame."""
@@ -425,7 +440,12 @@ def animate_config_evolution(
 
         # Update area plot
         ratio_line.set_data(range(frame + 1), ratio_evolution[: frame + 1])
-        return polygon_patches + [ratio_line, horizontal_line, text_annotation]
+        return polygon_patches + [
+            ratio_line,
+            horizontal_line,
+            text_annotation,
+            ratio_full_line,
+        ]
 
     # Create the animation
     total_frames = len(configurations) // 7

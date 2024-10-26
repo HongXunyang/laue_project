@@ -41,7 +41,6 @@ def batch_optimization(
     is_gravity=True,
     gravity_multiplier: float = 0.5,
     gravity_off_at: int = 3000,
-    is_update_sampleholder=False,
     is_contour_buffer=True,
     is_save_results=True,
     ax_area=None,
@@ -123,9 +122,8 @@ def batch_optimization(
     # ---------------- end the optimization ---------------- #
 
     # update the sample holder if is_update_sampleholder is True
-    if is_update_sampleholder:
-        new_vertices_list = optimized_configuration_list[sorted_indices[0]]
-        update_sampleholder(sampleholder, new_vertices_list)
+    new_vertices_list = optimized_configuration_list[sorted_indices[0]]
+    update_sampleholder(sampleholder, new_vertices_list)
 
     # ------- plot the optimized configuration ------- #
     fig_config, ax_config = plt.subplots()
@@ -181,7 +179,7 @@ def optimization(
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_evolution=False,
-    is_record_history=False,
+    is_record_history=True,
     ax_area=None,
     ax_ratio=None,
 ):
@@ -208,7 +206,7 @@ def optimization(
     Returns:
     - best_vertices_list: the best optimized (ever) configuration of the samples
     - best_area: the area of sampleholder of the best configuration
-    - area_evolution: the evolution of the area during the optimization process
+    - optimization_history: a dictionary containing the area_evolution and vertices_list_evolution
     """
     # initialization
 
@@ -359,6 +357,9 @@ def optimization(
         rearranged_vertices_list = _inflate_vertices_list(
             vertices_list=rearranged_vertices_list,
             multiplier=1 / contour_buffer_multiplier,
+        )
+        best_vertices_list = _inflate_vertices_list(
+            vertices_list=best_vertices_list, multiplier=1 / contour_buffer_multiplier
         )
 
     if is_update_sampleholder:

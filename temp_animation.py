@@ -84,7 +84,6 @@ sampleholder = generate_sampleholder_object(samples_list)
 # ----------- optimization ----------- #
 
 start_time = time.time()
-fig_area, ax_area = plt.subplots()
 best_vertices_list, best_area, optimization_history = optimization(
     sampleholder,
     number_of_iterations=2000,
@@ -98,16 +97,12 @@ best_vertices_list, best_area, optimization_history = optimization(
     gravity_off_at=2500,
     is_update_sampleholder=True,
     is_contour_buffer=True,
-    is_plot_area=True,
+    is_plot_evolution=False,
     is_record_history=True,
-    ax_area=ax_area,
-    ax_ratio=ax_area.twinx(),
 )
 end_time = time.time()
 sampleholder.update()
 print(sampleholder.ratio)
-
-
 print(f"optimization time: {end_time - start_time} seconds\n")
 fig_ani, axs = plt.subplots(1, 2, figsize=(12, 6))
 configurations = optimization_history["vertices_list_evolution"]
