@@ -283,6 +283,9 @@ def visualize_area_evolution(
     sampleholder.update()
     samples_area = sampleholder.samples_area
     area_evolution_list = np.array(area_evolution_list) ** 2 * np.pi
+    if area_evolution_list.ndim == 1:
+        area_evolution_list = [area_evolution_list]
+
     for i, area_evolution in enumerate(area_evolution_list):
         ax_area.plot(
             area_evolution,

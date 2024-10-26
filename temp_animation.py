@@ -87,7 +87,7 @@ start_time = time.time()
 fig_area, ax_area = plt.subplots()
 best_vertices_list, best_area, optimization_history = optimization(
     sampleholder,
-    number_of_iterations=20000,
+    number_of_iterations=2000,
     step_size=20,
     temperature=300,
     contour_buffer_multiplier=1.01,
