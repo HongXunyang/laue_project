@@ -43,7 +43,7 @@ def batch_optimization(
     gravity_off_at: int = 3000,
     is_update_sampleholder=False,
     is_contour_buffer=True,
-    is_plot_area=False,
+    is_plot_evolution=False,
     ax_area=None,
     progress_callback=None,
 ):
@@ -68,7 +68,7 @@ def batch_optimization(
     area_list = np.zeros(number_system)
     start_time = time.time()
     iteration_times = []
-    if is_plot_area:
+    if is_plot_evolution:
         if ax_area is None:
             fig_area, ax_area = plt.subplots()
             ax_area.set_title("Area Evolution")
@@ -106,8 +106,8 @@ def batch_optimization(
             gravity_off_at=gravity_off_at,
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
-            is_plot_area=False,
-            is_record_history=is_plot_area,
+            is_plot_evolution=False,
+            is_record_history=is_plot_evolution,
         )
         area_evolution_list[batch_index] = optimization_history["area_evolution"]
         optimized_configuration_list[batch_index] = optimized_configuration
@@ -167,7 +167,7 @@ def batch_optimization(
     plt.subplots_adjust(wspace=0, hspace=0)
 
     # ----------------- Plot the area evolution ----------------- #
-    if is_plot_area:
+    if is_plot_evolution:
         ax_area, ax_ratio = visualize_area_evolution(
             sampleholder=sampleholder,
             area_evolution_list=area_evolution_list,
@@ -213,7 +213,7 @@ def optimization(
     gravity_off_at: int = 3000,
     is_update_sampleholder=False,
     is_contour_buffer=True,
-    is_plot_area=False,
+    is_plot_evolution=False,
     is_record_history=False,
     ax_area=None,
     ax_ratio=None,
@@ -233,7 +233,7 @@ def optimization(
     - gravity_off_at: the iteration number when the gravity effect is turned off. The gravity effect is turned off by setting gravity_multiplier to 0.
     - is_update_sampleholder: if True, the sampleholder will be modified/updated after the optimization
     - is_contour_buffer: if True, the contour of the samples will be inflated by a small amount to create buffer area betwee nsamples, avoiding edge touching
-    - is_plot_area: if True, plot out the area evolution during the optimization process
+    - is_plot_evolution: if True, plot out the area evolution during the optimization process
     - is_record_history: record the history of the vertices_list during the optimization process
     - ax_area: the axis to plot the area evolution
     - ax_ratio: the axis to plot the ratio of the sample area to the area of the sampleholder
@@ -286,7 +286,7 @@ def optimization(
     best_area = area  # the best area ever
 
     # ---------------- History recording variables ---------------- #
-    if is_plot_area or is_record_history:
+    if  is_plot_evolution or is_record_history:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
     else:
@@ -373,7 +373,7 @@ def optimization(
             current_temperature * temperature_decay_rate
         )  # exponentially decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
-        if is_plot_area or is_record_history:
+        if is_plot_evolution or is_record_history:
             area_evolution[iteration] = area
         if is_record_history:
             vertices_list_evolution[iteration] = rearranged_vertices_list.copy()
@@ -398,7 +398,7 @@ def optimization(
         update_sampleholder(sampleholder, best_vertices_list)
 
     # ----------------- Plot the area evolution ----------------- #
-    if is_plot_area:
+    if is_plot_evolution:
         if (ax_area is None) or (ax_ratio is None):
             fig, ax_area = plt.subplots()
             ax_ratio = ax_area.twinx()
