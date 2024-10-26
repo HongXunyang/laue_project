@@ -273,9 +273,14 @@ def visualize_vertices(vertices: np.ndarray, ax=None, is_fill_polygon=True):
 def visualize_area_evolution(
     sampleholder,
     area_evolution_list,
-    ax_area,
-    ax_ratio,
+    fig=None,
+    ax_area=None,
+    ax_ratio=None,
 ):
+    if (ax_area is None) or (ax_ratio is None) or (fig is None):
+        fig, ax_area = plt.subplots()
+        ax_ratio = ax_area.twinx()
+
     sampleholder.update()
     samples_area = sampleholder.samples_area
     area_evolution_list = np.array(area_evolution_list) ** 2 * np.pi
@@ -319,6 +324,7 @@ def visualize_area_evolution(
         verticalalignment="bottom",
         horizontalalignment="right",
     )
+    return fig, ax_area, ax_ratio
 
 
 # ----------------- Animation -----------------

@@ -11,7 +11,7 @@ TO-DO:
 """
 
 import numpy as np
-import cv2
+import cv2, os
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
 import time
@@ -22,8 +22,9 @@ from utils import (
     update_sampleholder,
     visualize_vertices_list,
     visualize_area_evolution,
+    save_sampleholder,
 )
-from config.config import physical_size
+from config import physical_size, config
 
 
 def batch_optimization(
@@ -105,8 +106,8 @@ def batch_optimization(
             gravity_off_at=gravity_off_at,
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
-            is_plot_area=is_plot_area,
-            is_record_history=False,
+            is_plot_area=False,
+            is_record_history=is_plot_area,
             ax_area=ax_area,
             ax_ratio=ax_ratio,
         )
@@ -169,38 +170,34 @@ def batch_optimization(
 
     # ----------------- Plot the area evolution ----------------- #
     if is_plot_area:
-        ax_area.axhline(
-            y=area_list[sorted_indices[0]], color="lightseagreen", linestyle="--"
+        fig, ax_area, ax_ratio = visualize_area_evolution(
+            sampleholder=sampleholder,
+            area_evolution_list=area_evolution_list,
+            ax_area=ax_area,
+            ax_ratio=ax_ratio,
         )
-        ax_area.text(
-            x=1,  # X-coordinate in data space (or in axis fraction, e.g., 0.5 for middle)
-            y=area_list[
-                sorted_indices[0]
-            ],  # Y-coordinate where you want the text to be
-            s=f"Area: {min(area_list):.1f}",  # Text to display
-            color="lightseagreen",  # Color of the text
-            verticalalignment="bottom",  # Align text above the line
-            horizontalalignment="left",
-        )
-        ax_ratio.axhline(
-            y=100 * samples_area / (np.pi * min(area_list) ** 2),
-            color="indigo",
-            linestyle="--",
-        )
-        ax_ratio.text(
-            x=number_of_iterations,  # X-coordinate in data space (or in axis fraction, e.g., 0.5 for middle)
-            y=100 * samples_area / (np.pi * area_list[sorted_indices[0]] ** 2),
-            s=f"Ratio: {100 * samples_area / (np.pi * area_list[sorted_indices[0]] ** 2):.1f}%",  # Text to display
-            color="indigo",  # Color of the text
-            verticalalignment="bottom",  # Align text above the line
-            horizontalalignment="right",
-        )
+    fig.tight_layout()
+
     # ----------------------------------------------------------- #
 
     # update the sample holder if is_update_sampleholder is True
     if is_update_sampleholder:
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
+
+    # ----------------- Save the results ----------------- #
+    # check folder
+    if not os.path.exists(config["temporary_output_folder"]):
+        os.makedirs(config["temporary_output_folder"])
+
+    # save the area evolution plot
+    area_evolution_path = os.path.join(
+        config["temporary_output_folder"], "area_evolution.jpg"
+    )
+    fig.savefig(area_evolution_path)
+
+    # save the sampleholder. change the name of the output file within the folder if the results are desirable
+    save_sampleholder(sampleholder)
 
     return optimized_configuration_list, area_list, sorted_indices, area_evolution_list
 
@@ -291,7 +288,7 @@ def optimization(
     best_area = area  # the best area ever
 
     # ---------------- History recording variables ---------------- #
-    if is_plot_area:
+    if is_plot_area or is_record_history:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
     else:
@@ -378,7 +375,7 @@ def optimization(
             current_temperature * temperature_decay_rate
         )  # exponentially decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
-        if is_plot_area:
+        if is_plot_area or is_record_history:
             area_evolution[iteration] = area
         if is_record_history:
             vertices_list_evolution[iteration] = rearranged_vertices_list.copy()
