@@ -8,7 +8,6 @@ updated on 26th Oct. 2024
 """
 
 import numpy as np
-import ezdxf
 import os, trimesh
 from classes import Sample, FunctionalSampleHolder, Contour
 from close_packing import sampleholder2vertices_list

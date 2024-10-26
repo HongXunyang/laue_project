@@ -4,8 +4,8 @@ This is a sub-project of the larger project *Automizing Sample re-orientation fo
 2. [ **To-do** ] Determining the Orientation of each sample (asssuming only phi offset, this is a orientation-finding project) by sweeping through the samples on the sample holder using Laue diffraction. This involves: (1) Automatic control of the robot arm to sweep through the samples, involving coordinate transformation; (2) Auto control of the Laue machine, involving both taking X-ray image and saving images; (3) Auto detection of the orientation of the sample based on the Laue images; (4) Based on everything above, assigning the orientation to each sample, re-oriente the sample contour.
 3. [ **Finished** ] Finding the countour of each sample using open CV (Post Jasmin's project). This is done in the `contour_finding/` package. It loads the image and generate sample holder, samples, and contours objects.
 5. [ **Finished** ] Finding the most compact configuration of samples on the holder (Post Sissi's project). Currently this is done in the `close_packing/` package. Simulated annealing + gravity effect is used to find the compact configuration.
-6. [ **To-do** ] If possible, generate a CAD file of the sample holder engraved with the re-oriented sample contours. 
-7. [ **In progress** ] Create a GUI to unify all the above. This is under construction in the `gui/` package. 
+6. [ **Finished** ] Generate a CAD file of the sample holder engraved with the re-oriented sample contours. This is in the `to_cad/` package.
+7. [ **Finished** ] Create a GUI to unify all the above. This is in the `gui/` package. 
 
 **Expected workflow**: 
 - The User upload only the image of the sample holder (with samples on).
@@ -17,6 +17,35 @@ This is a sub-project of the larger project *Automizing Sample re-orientation fo
 - Samples are flakes and c-axis is well-aligned. The only offset is in phi.
 - Sample contour is approimated by its convex hull. 
 
+
+# Installation
+To get started with the project:
+1. Install the required packages, such as NumPy and Matplotlib, using the following command:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Ensure that you are running Python 3.6 or later.
+## Usage
+Under development. `main_contour_finding` can be used to test the contour finding part. `main_close_packing` can be used to test the close packing part. `main_gui` can be used to test the GUI part. 
+
+Currently both `main_contour_finding.py` and `main_close_packing.py` requires manual input of the image path. You also need your own image to test the contour finding part. This is not super optimal at the moment. Only `main_gui.py` is fully functional.
+
+### Running the Script
+1. Navigate to the `workspace/` directory:
+   ```bash
+   cd workspace
+   ```
+2. Run the `main_gui.py` script:
+   ```bash
+   python main.py
+   ```
+3. The GUI window will open. Drag and drop an image file onto the window to start the process. 
+4. Click *select points* to select three points for the stripes, and three points for the background. Keep an eye on the output window for the instructions.
+5. Click *Image processing* to process the image.
+6. You will get the contours of the samples.
+7. Nothing else you can do with this GUI for the moment. 
+
+-------
 
 # Detailed Dig-in
 (*Updated on 2024-10-20*)  Currently I am working on the (1) Contour finding; (2) Close packing; (3) GUI design parts. 
@@ -124,34 +153,7 @@ The class also has the following methods:
 
 The `FunctionalSampleHolder` class enhances the basic `SampleHolder` by providing methods for adjusting the orientation and position of each sample to achieve specific spatial arrangements, such as close packing.
 
-## Installation
-To get started with the project:
-1. Install the required packages, such as NumPy and Matplotlib, using the following command:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Ensure that you are running Python 3.6 or later.
-## Usage
-Under development. `main_contour_finding` can be used to test the contour finding part. `main_close_packing` can be used to test the close packing part. `main_gui` can be used to test the GUI part. 
 
-Currently both `main_contour_finding.py` and `main_close_packing.py` requires manual input of the image path. You also need your own image to test the contour finding part. This is not super optimal at the moment. Only `main_gui.py` is fully functional.
-
-### Running the Script
-1. Navigate to the `workspace/` directory:
-   ```bash
-   cd workspace
-   ```
-2. Run the `main_gui.py` script:
-   ```bash
-   python main.py
-   ```
-3. The GUI window will open. Drag and drop an image file onto the window to start the process. 
-4. Click *select points* to select three points for the stripes, and three points for the background. Keep an eye on the output window for the instructions.
-5. Click *Image processing* to process the image.
-6. You will get the contours of the samples.
-7. Nothing else you can do with this GUI for the moment. 
-
----
 
 ### Future Improvements
 - Incorporate better handling of sample re-orientation and close packing strategies.
