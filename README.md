@@ -164,7 +164,7 @@ workspace/
    │   ├── __init__.py           # Package-level initialization
    │   ├── image_processing.py   # image processing functions
    ├── config/
-   │   ├── config.json           # parameters: image processing or close packing
+   │   ├── config.py             # configuration parameters and variables
    │   ├── gui_styles.css        # CSS for the GUI
    │   ├── stylesheet.json       # plot setting parameters
    ├── gui/
@@ -173,80 +173,113 @@ workspace/
    │   ├── image_display.py      # image drop-in and display widget
    │   ├── matplotlib_canvas.py  # results display panel widget
    │   ├── helper_functions.py   # helper functions only for internal use
+   │   ├── worker.py             # worker thread for close packing
+   ├── to_cad/
+   │   ├── __init__.py           # Package-level initialization
+   │   ├── to_cad.py             # functions for converting optimized configuration to CAD
+   │   ├── helper_functions.py   # internal helper FunctionalSampleHolder
    ├── utils/
    │   ├── __init__.py           # Package-level initialization 
    │   ├── visualization.py      # general visualization tools/functions
-   ├── main_close _packing.py    # run this to test close packing
-   ├── main_contour _finding.py  # run this to test contour finding
-   ├── main_gui.py               # run this to create a GUI
+   │   ├── helper_functions.py   # general helper functions
+   ├── temporary_output/         # temporary output files
+   ├── tests/                    # test scripts
+   ├── main.py                   # main script for running the program
+   ├── main_gui.py               # main script for running the GUI
    ├── requirements.txt          # required libraries
+   ├── .gitignore                # gitignore file
    └── README.md                 # Project documentation (this file)
 ```
 ### Data structure
 the contour, sample and sample holder are defined as classes in the `classes/` package.
 
-**Contour**: the contour class is defined in `class_contour.py`. It has the following attributes:
-- `contour`: (`cv2` contour) When no nesting allowed, it's a `(N, 1, 2)` numpy array, `int32` before the relocation/reorientation, `float32` after
-- `hull`: this is the convex hull of the contour. It's a `(N, 1, 2)` numpy array, `int32` before the relocation/reorientation, `float32` after. Usually it has less points than the contour.
-- `polygon`: (`shapely:Polygon` object) It's the polygon of the hull 
-- `vertices`: almost the same as hull, (N, 2) numpy array, `float32` from the beginning. 
-- `area`: the area of the hull
-- `center`: (`(1,2)` numpy array) The centroid/center of the hull, calculated by taking the mean of the vertices.
-- `sample`: (`Sample` object) The sample that the contour belongs to.
-- `id`: (`int`) The id of the parent sample object.
+**Contour**: The `Contour` class is defined in `class_contour.py`. It has the following attributes:
 
-and the following methods:
-- `reorient`: (*not yet implemented*) reorient the contour, keep the center unchanged. This should be performed before the relocation. everything will be converted to `float32`.
-- `relocate`: relocate the contour, everything will be converted to `float32`.
+- `contour`: (cv2 contour) A numpy array representing the contour points, initially as `(N, 1, 2)` with `int32` datatype; changes to `float32` after relocation.
+- `hull`: The convex hull of the contour, structured similarly to `contour` but typically containing fewer points.
+- `polygon`: A `shapely.Polygon` object representing the convex hull.
+- `vertices`: A simplified version of `hull`, as an `(N, 2)` numpy array with `float32` datatype.
+- `area`: The area of the convex hull.
+- `center`: The centroid of the hull, calculated as the mean of the vertices.
+- `sample`: The associated `Sample` object.
+- `id`: An integer identifying the parent sample.
 
------------------------
+The class includes these methods:
 
-**Sample**: The `Sample` class is defined in `class_sample.py`. It represents a sample that can be reoriented and relocated. The class has the following attributes:
-- `id`: (`int`) The unique identifier of the sample. 
-- `name`: (`str`) The name of the sample (default is "sample").
-- `grid_index`: The grid index of the sample on the sample holder (e.g., `(1, 2)`). Currently not used.
-- `contour_original`: (`Contour` object) The original contour of the sample before reorientation/relocation.
-- `contour_new`: The updated contour of the sample after reorientation/relocation
-- `position_original`: (`numpy.ndarray`) The center of the `contour_original`
-- `position_new`: The center of the `contour_new`
-- `phi_offset`: (`float` in degree) The offset angle (in degrees) used for reorienting the sample, counter-clockwise direction.
-- `is_reoriented`: A boolean indicating whether the sample has been reoriented.
-- `is_relocated`: A boolean indicating whether the sample has been relocated.
-
-The class also has the following methods:
-- `__str__`: Returns a string representation of the sample, including its ID and original position.
-- `reorient`: (*Update required*) Reorients the sample according to the `phi_offset` value. 
-- `relocate`: Relocates the sample to its new position (`position_new`). Purely translation.
+- `reorient`: (*not yet implemented*) Rotates the contour while keeping the center unchanged; all data is converted to `float32`.
+- `relocate`: Translates the contour to a new position, converting data to `float32` for accuracy.
 
 ---------------------
-**SampleHolder**: The `SampleHolder` class is defined in `class_sampleholder.py`. It represents a container for managing multiple samples and includes functionality to add, access, and manage samples. The class has the following attributes:
-- `name`: (`str`) The name of the sample holder
-- `size`: The dimensions of the sample holder (in mm). Set to `None` initially.
-- `samples_list`: A list storing the sample objects added to the sample holder.
-- `_id2sample`: A dictionary mapping sample IDs to their corresponding sample objects.
-- `_id2list_index`: A dictionary mapping sample IDs to their list index in `samples_list`.
 
-The class also has the following methods:
-- `__str__`: Returns a string representation of the sample holder, including its name and the number of samples.
-- `print_samples`: Prints information about each sample on the sample holder.
-- `add_sample`: Adds a `Sample` object to the sample holder and assigns it to the sample holder.
-- `id2sample`: Returns a sample object given its ID.
-- `id2list_index`: Returns the list index of a sample given its ID.
-- `list_index2id`: Returns the ID of a sample given its list index. Returns `None` if the index is out of range.
-- `number_samples`: Returns the number of samples currently on the sample holder.
------------------------------------
+**Sample**: The `Sample` class is defined in `class_sample.py`. It represents a sample with attributes for reorientation and relocation:
 
-**FunctionalSampleHolder**: The `FunctionalSampleHolder` class is a subclass of `SampleHolder` and adds functionality for reorienting and relocating samples. It has the following methods:
-- `assign_phi_offset`: Assigns a rotation angle (`phi_offset`) to a sample, which can later be used for reorientation.
-- `assign_phi_offset_by_index`: Assigns a `phi_offset` to a sample based on its ID or list index.
-- `reorient_sample`: Reorients a sample according to its `phi_offset` and updates the sample's contour.
-- `reorient_sample_by_index`: Reorients a sample based on its ID or list index.
-- `reorient`: Reorients all samples currently on the sample holder.
-- `relocate_sample`: Relocates a sample to a specified position.
-- `relocate_sample_by_index`: Relocates a sample based on its ID or list index to a specified position.
+- `id`: An integer identifier for the sample.
+- `name`: A string name for the sample.
+- `grid_index`: Position in a grid on the sample holder (e.g., `(1, 2)`, not currently used).
+- `contour_original`: The `Contour` object before reorientation or relocation.
+- `contour_new`: Updated `Contour` object after reorientation or relocation.
+- `position_original`: The center position of `contour_original`.
+- `position_new`: The center position after reorientation or relocation.
+- `phi_offset`: The angle offset in degrees (counter-clockwise) for reorientation.
+- `is_reoriented`: Boolean indicating if the sample is reoriented.
+- `is_relocated`: Boolean indicating if the sample is relocated.
 
-The `FunctionalSampleHolder` class enhances the basic `SampleHolder` by providing methods for adjusting the orientation and position of each sample to achieve specific spatial arrangements, such as close packing.
+The class has the following methods:
 
+- `__str__`: Provides a string representation with sample ID and original position.
+- `reorient`: (*Update required*) Adjusts orientation based on `phi_offset`.
+- `relocate`: Translates the sample to the new position defined by `position_new`.
+
+---------------------
+
+
+**SampleHolder**: The `SampleHolder` class is defined in `class_sampleholder.py`. It represents a container for managing multiple samples and includes functionality to add, access, and manage samples.
+
+- **Attributes**:
+  - `name`: (str) Name of the sample holder.
+  - `shape`: Shape of the sample holder (e.g., "circle" or "rectangle").
+  - `size`: Dimensions of the sample holder in mm, initialized to `None`.
+  - `radius`: Radius of the sample holder if circular, `None` initially.
+  - `thickness`: Thickness of the sample holder.
+  - `sample_thickness`: Thickness of the samples.
+  - `center`: Center position of the sample holder as an ndarray.
+  - `samples_area`: Total area of samples on the holder.
+  - `convex_hull`: Convex hull contour of the sample holder.
+  - `samples_list`: List of `Sample` objects contained in the holder.
+  - `vertices_list`: List of vertices representing the sample holder.
+  - `ratio`: Ratio of total sample area to sample holder area.
+  - `_id2sample`: Dictionary mapping sample IDs to their corresponding `Sample` objects.
+  - `_id2list_index`: Dictionary mapping sample IDs to their index in `samples_list`.
+
+- **Methods**:
+  - `__str__`: Returns a string representation with the name and sample count.
+  - `print_samples`: Prints details of each sample on the holder.
+  - `add_sample`: Adds a `Sample` object to the holder and updates mappings.
+  - `update_convex_hull`: Updates the holder’s convex hull based on current sample positions.
+  - `update_min_circle`: Computes the minimum enclosing circle for the convex hull.
+  - `calculate_samples_area`: Calculates total area of all samples.
+  - `calculate_ratio_of_samples`: Computes ratio of sample area to holder area.
+  - `update_vertices_list`: Updates the list of holder vertices.
+  - `update`: Refreshes holder parameters (convex hull, min circle, etc.) based on current samples.
+  - `id2sample`: Returns a sample object by its ID.
+  - `id2list_index`: Returns the index of a sample by its ID.
+  - `list_index2id`: Returns the ID of a sample by its index.
+  - `number_samples`: Returns the total number of samples on the holder.
+
+---
+
+**FunctionalSampleHolder**: The `FunctionalSampleHolder` class is a subclass of `SampleHolder` that adds methods for reorienting and relocating samples. (*The method currently under development. Operate with attention plz.*)
+
+- **Methods**:
+  - `assign_phi_offset`: Sets a rotation angle (`phi_offset`) for a sample.
+  - `assign_phi_offset_by_index`: Sets `phi_offset` for a sample based on ID or list index.
+  - `reorient_sample`: Reorients a sample according to its `phi_offset`.
+  - `reorient_sample_by_index`: Reorients a sample by ID or list index.
+  - `reorient`: Reorients all samples on the holder.
+  - `relocate_sample`: Relocates a sample to a specified position.
+  - `relocate_sample_by_index`: Relocates a sample by ID or list index to a specified position.
+
+The `FunctionalSampleHolder` class enhances `SampleHolder` by enabling reorientation and repositioning of samples for specific spatial arrangements, like close packing.
 
 
 ### Future Improvements
