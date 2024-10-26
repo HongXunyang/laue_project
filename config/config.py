@@ -11,9 +11,9 @@ image2contours_kwargs = dict(
     epsilon=2.5,
     lowercut=100,
     area_lowercut=1000,
-    threshold=100,
+    threshold=50,
     gaussian_window=np.array([5, 5]),
-    is_gaussian_filter=True,
+    is_gaussian_filter=False,
 )
 
 physical_size = dict(
@@ -24,11 +24,11 @@ physical_size = dict(
 )
 
 batch_optimization_kwargs = dict(
-    number_system=5,
+    number_system=3,
     is_plot=False,
     is_print=True,
     step_size=20,
-    number_of_iterations=4000,
+    number_of_iterations=10000,
     temperature=300,
     contour_buffer_multiplier=1.01,
     optimize_shape="min_circle",
@@ -45,7 +45,6 @@ config = dict(
     temporary_output_folder="temporary_output/",
     data_path="temporary_output/",
     sampleholder_dict_filename="sampleholder.json",
-    temp_images_path="temporary_output/",
     sampleholder_cad_filename="engraved_sampleholder.stl",
     samples_cad_filename="samples.stl",
 )
@@ -53,3 +52,18 @@ config = dict(
 plot_area_evolution_kwargs = dict(color="dodgerblue", alpha=0.5, linewidth=1.5)
 
 plot_ratio_evolution_kwargs = dict(color="darkorange", alpha=0.5, linewidth=1.5)
+
+tests_config = dict(
+    test_image_path="tests/test_data/test_image.jpg",
+    stripes_vectors=[
+        np.array([119, 119, 119]),
+        np.array([100, 100, 100]),
+        np.array([120, 120, 120]),
+    ],
+    target_background_vector=np.array([209, 209, 209]),
+    background_vectors=[
+        np.array([209, 209, 209]),
+        np.array([190, 190, 190]),
+        np.array([220, 220, 220]),
+    ],
+)

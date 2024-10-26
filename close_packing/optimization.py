@@ -21,6 +21,7 @@ from utils import (
     vertices_area,
     update_sampleholder,
     visualize_vertices_list,
+    visualize_area_evolution,
 )
 from config.config import physical_size
 
@@ -30,10 +31,9 @@ def batch_optimization(
     number_system: int,
     is_plot=True,
     is_print=True,
-    number_of_iterations: int = 3000,
-    step_size: int = 5,
-    fluctuation: float = 0.1,
-    temperature: float = 1000,
+    number_of_iterations: int = 10000,
+    step_size: int = 20,
+    temperature: float = 300,
     contour_buffer_multiplier: float = 1.01,
     optimize_shape="convex_hull",
     is_rearrange_vertices=True,
@@ -77,6 +77,7 @@ def batch_optimization(
     else:
         ax_area = None
         ax_ratio = None
+
     area_evolution_list = [None] * number_system
     vertices_list = sampleholder2vertices_list(sampleholder)
     sample_areas_list = np.array(
@@ -95,7 +96,6 @@ def batch_optimization(
             sampleholder,
             number_of_iterations,
             step_size=step_size,
-            fluctuation=fluctuation,
             temperature=temperature,
             contour_buffer_multiplier=contour_buffer_multiplier,
             optimize_shape=optimize_shape,
@@ -166,6 +166,8 @@ def batch_optimization(
                 ax.set(xticks=[], yticks=[])
     # ax setting: remove space between axes
     plt.subplots_adjust(wspace=0, hspace=0)
+
+    # ----------------- Plot the area evolution ----------------- #
     if is_plot_area:
         ax_area.axhline(
             y=area_list[sorted_indices[0]], color="lightseagreen", linestyle="--"
@@ -193,7 +195,8 @@ def batch_optimization(
             verticalalignment="bottom",  # Align text above the line
             horizontalalignment="right",
         )
-        # add text of the ratio and the area to the plot: area on the left, ratio on the right
+    # ----------------------------------------------------------- #
+
     # update the sample holder if is_update_sampleholder is True
     if is_update_sampleholder:
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
@@ -206,7 +209,6 @@ def optimization(
     sampleholder: FunctionalSampleHolder,
     number_of_iterations: int = 3000,
     step_size: int = 5,
-    fluctuation: float = 0.1,
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
     optimize_shape="min_circle",
@@ -227,7 +229,6 @@ def optimization(
 
     Kwargs:
     - step_size: in pixel. How much a sample can move each step at max.
-    - fluctuation: currently doing nothing
     - temperature: controling the posibilities of accepting inferior configuration
     - contour_buffer_multiplier: The contour buffer is a buffer around the convex hull of each sample. The buffer is used to avoid edge touching of samples. 1.01 means the convex hull of the samples will be 1% percent larger than its actual size. The larger the buffer, the larger the space between the samples.
     - optimize_shape: the shape of the area to optimize. Choose from "convex_hull" or "min_circle"
@@ -301,7 +302,7 @@ def optimization(
         vertices_list_evolution[0] = rearranged_vertices_list.copy()
     else:
         vertices_list_evolution = None
-    # --------------------------End ---------------------------------#
+    # -----------------------------------------------------------#
 
     scale_hull = np.sqrt(area)  # the scale of the convex hull
     ideal_temperature = (
@@ -399,9 +400,9 @@ def optimization(
         )
 
     if is_update_sampleholder:
-        # at the end of the optimization, update the sample position by doing relocate()
         update_sampleholder(sampleholder, best_vertices_list)
 
+    # ----------------- Plot the area evolution ----------------- #
     if is_plot_area:
         # Plot area_evolution on the left y-axis
         ax_area.plot(
@@ -431,6 +432,7 @@ def optimization(
             yticks=np.linspace(area_evolution[-1] * 0.9, area_evolution[0] * 1.1, 5)
         )
         ax_ratio.set(yticks=[0, 20, 40, 60, 80])
+    # ----------------------------------------------------------- #
 
     optimization_history = dict(
         area_evolution=area_evolution,
