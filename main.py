@@ -15,7 +15,7 @@ from utils import (
 )
 from to_cad import vertices_list_to_cad, sampleholder_to_cad
 from close_packing import optimization, visualize_vertices_list, batch_optimization
-from config.config import physical_size, batch_optimization_kwargs
+from config.config import physical_size, batch_optimization_kwargs, config
 
 
 start_time = time.time()
@@ -54,7 +54,7 @@ contours, approximated_contours, hulls, _ = image2contours(
     area_lowercut=2000,
     gaussian_window=(5, 5),
     is_gaussian_filter=True,
-    isprint=False,
+    threshold=150,
 )
 
 # visualize contours
@@ -94,10 +94,6 @@ if True:
 vertices_list = optimized_configuration_list[sorted_indices[0]]
 vertices_list_to_cad(
     vertices_list,
-    "3d_optimized_configuration.stl",
-    cad_folder="../data/",
-    is_3d=True,
-    thickness=30,
 )
 # ----------- end  ----------- #
 
@@ -113,9 +109,6 @@ sampleholder.radius = sampleholder.radius * 1.1
 
 sampleholder_to_cad(
     sampleholder,
-    sample_thickness=30,
-    cad_folder="../data/",
-    cad_file="engraved_sampleholder.stl",
 )
 
 # ----------- end  ----------- #

@@ -49,7 +49,6 @@ contours, approximated_contours, hulls, _ = image2contours(
     area_lowercut=2000,
     gaussian_window=(5, 5),
     is_gaussian_filter=True,
-    isprint=False,
 )
 
 # visualize contours
@@ -108,9 +107,6 @@ sampleholder.radius = sampleholder.radius * 1.1
 
 sampleholder_to_cad(
     sampleholder,
-    sample_thickness=30,
-    cad_folder="../data/",
-    cad_file="engraved_sampleholder.stl",
 )
 
 # ----------- end  ----------- #

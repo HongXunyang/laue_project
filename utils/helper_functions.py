@@ -1,9 +1,16 @@
+""" 
+__version__ = 1.0
+__author__ = "Xunyang Hong"
+
+updated on 26th Oct. 2024
+"""
+
 import numpy as np
-import json
+import json, os
 from shapely.geometry import Polygon
 from classes import Contour, FunctionalSampleHolder, Sample
 import os
-from config.config import physical_size
+from config.config import physical_size, config
 
 
 def sampleholder2polygons(sampleholder: FunctionalSampleHolder):
@@ -49,7 +56,9 @@ def update_sampleholder(sampleholder: FunctionalSampleHolder, new_vertices_list:
     """
     update the sampleholder with the new vertices configuration. This will update the samples_list in the sampleholder.
 
-    P.S. This is different from sampleholder.update() which only updates the sampleholder's parameters based on the existing samples_list.
+    -------------------------
+    # Sidenote:
+    This is different from sampleholder.update() which only updates the sampleholder's parameters based on the existing samples_list.
     """
     old_vertices_list = sampleholder2vertices_list(sampleholder)
     _update_sampleholder(sampleholder, old_vertices_list, new_vertices_list)
@@ -61,7 +70,11 @@ def _update_sampleholder(
     sampleholder: FunctionalSampleHolder, old_vertices_list, new_vertices_list: list
 ):
     """
-    update the sampleholder with the new configuration
+    update the samples on the sampleholder by replacing the old vertices with the new vertices
+
+    -------------------------
+    # Sidenote:
+    This function is an INTERNAL function and is only used by `update_sampleholder()`
     """
     # first update the samples in the sample holder
     for i, vertices in enumerate(new_vertices_list):
@@ -79,7 +92,13 @@ def _update_sampleholder(
 
 
 def _get_translation(old_vertices: np.ndarray, new_vertices: np.ndarray) -> np.ndarray:
-    """get the translation vector by comparing the center of mass of the old and new vertices"""
+    """get the translation vector by comparing the center of mass of the old and new vertices
+
+    -------------------------
+    # Sidenote:
+    This function is an INTERNAL function and is only used by `_update_sampleholder()`
+
+    """
 
     old_center = np.mean(old_vertices, axis=0)
     new_center = np.mean(new_vertices, axis=0)
@@ -87,17 +106,35 @@ def _get_translation(old_vertices: np.ndarray, new_vertices: np.ndarray) -> np.n
     return new_center - old_center
 
 
-def save_sampleholder(sampleholder, folder_path, filename):
+def save_sampleholder(sampleholder, folder_path=None, filename=None):
     """
     save the data stored in the sampleholder in the form of a dictionary to a json file
+
+    Args:
+    - sampleholder: FunctionalSampleHolder
+
+    Keyword Args:
+    - folder_path: str, the default value is defined in the config dictionary `config/config.py` file
+    - filename: str, the default value is defined in the config dictionary `config/config.py` file
     """
+
+    # check folder_path and filename
+    if folder_path is None:
+        folder_path = config["temporary_output_folder"]
+    if filename is None:
+        filename = config["sampleholder_dict_filename"]
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    path = os.path.join(folder_path, filename)
+
+    # update the sampleholder before saving
     sampleholder.update()
     name: str = sampleholder.name
-    shape: str = sampleholder.shape if (sampleholder.shape is not None) else "None"
+    shape: str = sampleholder.shape if (sampleholder.shape is not None) else "circle"
     size: list[float, float] = (
         sampleholder.size.tolist() if (sampleholder.size is not None) else "None"
     )
-    radius: float = sampleholder.radius if (sampleholder.radius is not None) else "None"
+    radius: float = sampleholder.radius if (sampleholder.radius is not None) else 0
     thickness: float = (
         sampleholder.thickness
         if (sampleholder.thickness is not None)
@@ -109,21 +146,21 @@ def save_sampleholder(sampleholder, folder_path, filename):
         else physical_size["sample_thickness"]
     )
     center: list[float, float] = (
-        sampleholder.center.tolist() if (sampleholder.center is not None) else "None"
+        sampleholder.center.tolist() if (sampleholder.center is not None) else [0, 0]
     )
     samples_area: float = (
-        sampleholder.samples_area if (sampleholder.samples_area is not None) else "None"
+        sampleholder.samples_area if (sampleholder.samples_area is not None) else 0
     )
-    ratio: float = sampleholder.ratio if (sampleholder.ratio is not None) else "None"
+    ratio: float = sampleholder.ratio if (sampleholder.ratio is not None) else 0
     convex_hull: list[list[list[float, float]]] = (
         sampleholder.convex_hull.tolist()
         if (sampleholder.convex_hull is not None)
-        else "None"
+        else [[[0, 0]]]
     )
     vertices_list: list[list[list[float, float]]] = (
         [vertices.tolist() for vertices in sampleholder.vertices_list]
         if sampleholder.vertices_list is not None
-        else "None"
+        else [[[0, 0]]]
     )
 
     sampleholder_dict = dict(
@@ -139,19 +176,20 @@ def save_sampleholder(sampleholder, folder_path, filename):
         convex_hull=convex_hull,
         vertices_list=vertices_list,
     )
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
 
-    with open((folder_path + filename), "w") as f:
+    with open(path, "w") as f:
         json.dump(sampleholder_dict, f)
 
-    print(f"Sampleholder data saved to {folder_path + filename}")
+    print(f"Sampleholder data saved to {path}")
 
     return sampleholder_dict
 
 
 def load_sampleholder(folder_path, filename):
     """
+    ---------WARNING---------
+        UNDER DEVELOPMENT
+    -------------------------
     load the sampleholder data from the json file
     """
     with open(f"{folder_path}+{filename}", "r") as f:
