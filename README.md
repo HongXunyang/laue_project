@@ -131,15 +131,15 @@ The GUI can be opened up by running the `main_gui.py` script. The GUI provides a
 
 2. The GUI window will open. Drag and drop an image of the sample holder with samples onto the designated area in the GUI. 
 
-3. Click the "*Select Points*" button in the controls panel. Keep an eye on the output log panel to see the instructions and the progress. The user will be required to select three points on the image (directly click on the image) to define the color vectors for stripe detection; after this, the the user will need to select another three points to define the background color vectors. See [Image processing](#image-processing) for more details. 
+3. Click the "**Select Points**" button in the controls panel. Keep an eye on the output log panel to see the instructions and the progress. The user will be required to select three points on the image (directly click on the image) to define the color vectors for stripe detection; after this, the the user will need to select another three points to define the background color vectors. See [Image processing](#image-processing) for more details. 
 
 4. On the top of the middle panel, the user can define the contour-finding parameters. When left empty, the parameters will be set to default values (indicated by the gray placeholder text). 
 
-5. Once the parameters are set, click the "Process Image" button to start the contour-finding process. The program will display the processed image with the detected contours. If the results are not satisfactory, the user might need to quit the GUI and restart it again to reprocess the image with different parameters. (*I know I know this is not ideal but as I said the GUI is still under development...*)
+5. Once the parameters are set, click the "**Process Image**" button to start the contour-finding process. The program will display the processed image with the detected contours. If the results are not satisfactory, the user might need to quit the GUI and restart it again to reprocess the image with different parameters. (*I know I know this is not ideal but as I said the GUI is still under development...*)
 
 6. After the contours are found, and before starting the close packing process, the user is suggested to adjust the parameters for the close packing in the middle panel. P.S. For now, I will suggest `NO. of system = 3` and `number_of_iterations = 3000` to start a trial run before any commitment. (*In the future, a "test close packing" need to be implemented for the user to find out the best optimization parameters...*)
 
-7. Once the parameters are set, click the "Start Close Packing" button to begin the optimization process. On the output log panel, the progress of the optimization will be displayed. The final optimized configuration and the evolution of the optimization process will be shown on the bottom left panel. You can re-run the optimization process by re-clicking the "Start Close Packing" button again. You don't need to quit the GUI. 
+7. Once the parameters are set, click the "**Start Close Packing**" button to begin the optimization process. On the output log panel, the progress of the optimization will be displayed. The final optimized configuration and the evolution of the optimization process will be shown on the bottom left panel. You can re-run the optimization process by re-clicking the "**Start Close Packing**" button again. You don't need to quit the GUI. 
 
 
 # Detailed Dig-in 
