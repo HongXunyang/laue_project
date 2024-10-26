@@ -88,7 +88,16 @@ def visualize_sampleholder(
             horizontalalignment="center",
             verticalalignment="center",
         )
-
+        ratio = sampleholder.ratio * 100
+        ax.text(
+            0.05,
+            0.95,
+            f"Ratio:{ratio:.2f}%",
+            transform=ax.transAxes,
+            fontsize=13,
+        )
+        ax.set_aspect("equal", "box")
+        ax.set(xticks=[], yticks=[])
     return ax
 
 

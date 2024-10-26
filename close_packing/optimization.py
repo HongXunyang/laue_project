@@ -21,6 +21,7 @@ from utils import (
     vertices_area,
     update_sampleholder,
     visualize_vertices_list,
+    visualize_sampleholder,
     visualize_area_evolution,
     save_sampleholder,
 )
@@ -30,7 +31,6 @@ from config import physical_size, config
 def batch_optimization(
     sampleholder: FunctionalSampleHolder,
     number_system: int,
-    is_plot=True,
     is_print=True,
     number_of_iterations: int = 10000,
     step_size: int = 20,
@@ -43,7 +43,7 @@ def batch_optimization(
     gravity_off_at: int = 3000,
     is_update_sampleholder=False,
     is_contour_buffer=True,
-    is_plot_evolution=False,
+    is_save_results=True,
     ax_area=None,
     progress_callback=None,
 ):
@@ -54,6 +54,7 @@ def batch_optimization(
     Kwargs:
     - is_plot: if True, plot the optimized configuration
     - is_print: if True, print stuff for debugging
+    - is_save_results: if True, save the results in the temporary_output folder
     - progress_callback: ...?
     - kwargs: the kwargs for optimization()
 
@@ -64,28 +65,20 @@ def batch_optimization(
     """
     # initialization
     max_configurations = 9  # the maximum number of configurations to plot
+
     optimized_configuration_list = [None] * number_system
     area_list = np.zeros(number_system)
     start_time = time.time()
     iteration_times = []
-    if is_plot_evolution:
-        if ax_area is None:
-            fig_area, ax_area = plt.subplots()
-            ax_area.set_title("Area Evolution")
-            ax_area.set_xlabel("Iteration")
-            ax_area.set_ylabel("area")
-        ax_ratio = ax_area.twinx()
-    else:
-        ax_area = None
-        ax_ratio = None
+    if ax_area is None:
+        fig_area, ax_area = plt.subplots()
+        ax_area.set_title("Area Evolution")
+        ax_area.set_xlabel("Iteration")
+        ax_area.set_ylabel("area")
+    ax_ratio = ax_area.twinx()
 
     area_evolution_list = [None] * number_system
-    vertices_list = sampleholder2vertices_list(sampleholder)
-    sample_areas_list = np.array(
-        [vertices_area(vertices) for vertices in vertices_list]
-    )
     sampleholder.update()
-    samples_area = sampleholder.samples_area
 
     # ---------------- start the optimization ---------------- #
     for batch_index in range(number_system):
@@ -107,7 +100,7 @@ def batch_optimization(
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
             is_plot_evolution=False,
-            is_record_history=is_plot_evolution,
+            is_record_history=True,
         )
         area_evolution_list[batch_index] = optimization_history["area_evolution"]
         optimized_configuration_list[batch_index] = optimized_configuration
@@ -129,73 +122,47 @@ def batch_optimization(
             progress_callback(progress, estimated_total_time, remaining_time)
     # ---------------- end the optimization ---------------- #
 
-    if is_plot:
-        if number_system == 1:
-            fig, ax = plt.subplots()
-            visualize_vertices_list(optimized_configuration_list[0], ax=ax)
-        elif number_system > max_configurations:
-            fig, axs = plt.subplots(3, 3, figsize=(20, 14))
-            # sorted based on the area
-            sorted_indices = np.argsort(area_list)
-            for i, index in enumerate(sorted_indices[:max_configurations]):
-                ax = axs[i // 3, i % 3]
-                visualize_vertices_list(optimized_configuration_list[index], ax=ax)
-                # on the left top corner, put the area of the configuration
-                ax.text(
-                    0.05,
-                    0.95,
-                    f"area:{area_list[index]:.3g}, index={index}",
-                    transform=ax.transAxes,
-                )
-                ax.set(xticks=[], yticks=[])
-
-        else:
-            rows = int(np.ceil(np.sqrt(number_system)))
-            columns = int(np.ceil(number_system / rows))
-            fig, axs = plt.subplots(columns, rows, figsize=(20, 14))
-            for i, index in enumerate(sorted_indices):
-                ax = axs[i % columns, i // columns]
-                visualize_vertices_list(optimized_configuration_list[index], ax=ax)
-                ax.text(
-                    0.05,
-                    0.95,
-                    f"area:{area_list[index]:.3g}, index={index}",
-                    transform=ax.transAxes,
-                )
-                ax.set(xticks=[], yticks=[])
-    # ax setting: remove space between axes
-    plt.subplots_adjust(wspace=0, hspace=0)
-
-    # ----------------- Plot the area evolution ----------------- #
-    if is_plot_evolution:
-        ax_area, ax_ratio = visualize_area_evolution(
-            sampleholder=sampleholder,
-            area_evolution_list=area_evolution_list,
-            ax_area=ax_area,
-            ax_ratio=ax_ratio,
-        )
-    fig_area.tight_layout()
-
-    # ----------------------------------------------------------- #
-
     # update the sample holder if is_update_sampleholder is True
     if is_update_sampleholder:
         new_vertices_list = optimized_configuration_list[sorted_indices[0]]
         update_sampleholder(sampleholder, new_vertices_list)
 
+    # ------- plot the optimized configuration ------- #
+    fig_config, ax_config = plt.subplots()
+    visualize_sampleholder(sampleholder, ax=ax_config)
+    fig_config.tight_layout()
+    # ------------------------------------------------ #
+
+    # ----------------- Plot the area evolution ----------------- #
+    ax_area, ax_ratio = visualize_area_evolution(
+        sampleholder=sampleholder,
+        area_evolution_list=area_evolution_list,
+        ax_area=ax_area,
+        ax_ratio=ax_ratio,
+    )
+    fig_area.tight_layout()
+    # ----------------------------------------------------------- #
+
     # ----------------- Save the results ----------------- #
     # check folder
-    if not os.path.exists(config["temporary_output_folder"]):
-        os.makedirs(config["temporary_output_folder"])
+    if is_save_results:
+        if not os.path.exists(config["temporary_output_folder"]):
+            os.makedirs(config["temporary_output_folder"])
 
-    # save the area evolution plot
-    area_evolution_path = os.path.join(
-        config["temporary_output_folder"], "area_evolution.jpg"
-    )
-    fig_area.savefig(area_evolution_path)
+        # save the optimized configuration plot
+        optimized_configuration_path = os.path.join(
+            config["temporary_output_folder"], "optimized_configuration.jpg"
+        )
+        fig_config.savefig(optimized_configuration_path)
 
-    # save the sampleholder. change the name of the output file within the folder if the results are desirable
-    save_sampleholder(sampleholder)
+        # save the area evolution plot
+        area_evolution_path = os.path.join(
+            config["temporary_output_folder"], "area_evolution.jpg"
+        )
+        fig_area.savefig(area_evolution_path)
+
+        # save the sampleholder. change the name of the output file within the folder if the results are desirable
+        save_sampleholder(sampleholder)
 
     return optimized_configuration_list, area_list, sorted_indices, area_evolution_list
 
@@ -286,7 +253,7 @@ def optimization(
     best_area = area  # the best area ever
 
     # ---------------- History recording variables ---------------- #
-    if  is_plot_evolution or is_record_history:
+    if is_plot_evolution or is_record_history:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
     else:

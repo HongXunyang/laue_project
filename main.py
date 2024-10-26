@@ -67,13 +67,6 @@ optimized_configuration_list, area_list, sorted_indices, _ = batch_optimization(
 )
 end_time = time.time()
 print(f"optimization time: {end_time - start_time} seconds\n")
-fig, ax = plt.subplots()
-visualize_sampleholder(
-    sampleholder,
-    ax=ax,
-    is_plot_contour=False,
-    is_plot_hull=True,
-)
 
 # ----------- end of optimization ----------- #
 # # ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓

@@ -25,7 +25,6 @@ physical_size = dict(
 
 batch_optimization_kwargs = dict(
     number_system=3,
-    is_plot=False,
     is_print=True,
     step_size=20,
     number_of_iterations=1000,
@@ -37,8 +36,8 @@ batch_optimization_kwargs = dict(
     gravity_off_at=2300,
     is_update_sampleholder=True,
     is_contour_buffer=True,
-    is_plot_area=True,
     is_rearrange_vertices=True,
+    is_save_results=True,
 )
 
 config = dict(

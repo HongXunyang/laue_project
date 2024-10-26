@@ -99,18 +99,18 @@ QScrollBar::handle:hover {
 }
 
 /* Styling for the checkbox */
-#is_gravity_button, #is_update_sampleholder_button, #is_contour_buffer_button, #is_plot_area_button {
+#is_gravity_button, #is_update_sampleholder_button, #is_contour_buffer_button, #is_save_results_button {
     background-color: #FFAAAA;
     color: white;
     border-radius: 4px;
     padding: 8px 16px;
     border: none;
 }
-#is_gravity_button:checked, #is_update_sampleholder_button:checked, #is_contour_buffer_button:checked, #is_plot_area_button:checked {
+#is_gravity_button:checked, #is_update_sampleholder_button:checked, #is_contour_buffer_button:checked, #is_save_results_button:checked {
     background-color: #821131;
     color: white;
 }
-#is_gravity_button:unchecked, #is_update_sampleholder_button:unchecked, #is_contour_buffer_button:unchecked, #is_plot_area_button:unchecked {
+#is_gravity_button:unchecked, #is_update_sampleholder_button:unchecked, #is_contour_buffer_button:unchecked, #is_save_results_button:unchecked {
     background-color: #FFAAAA;
     color: white;
 }

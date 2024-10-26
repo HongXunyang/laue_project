@@ -152,7 +152,7 @@ class MainWindow(QMainWindow):
             str(batch_optimization_kwargs["gravity_off_at"])
         )
         # boolean parameters are set by a toggle button
-        # is_gravity:bool,is_update_sampleholder:bool,# is_contour_buffer:bool,is_plot_area:bool
+        # is_gravity:bool,is_update_sampleholder:bool,# is_contour_buffer:bool, is_save_results:bool
 
         # Create QPushButton widgets for boolean parameters
         self.is_gravity_button = QPushButton("Enable Gravity")
@@ -172,10 +172,10 @@ class MainWindow(QMainWindow):
         self.is_contour_buffer_button.setChecked(True)
         self.is_contour_buffer_button.setObjectName("is_contour_buffer_button")
 
-        self.is_plot_area_button = QPushButton("Plot Area")
-        self.is_plot_area_button.setCheckable(True)
-        self.is_plot_area_button.setChecked(True)
-        self.is_plot_area_button.setObjectName("is_plot_area_button")
+        self.is_save_results_button = QPushButton("Save Results")
+        self.is_save_results_button.setCheckable(True)
+        self.is_save_results_button.setChecked(True)
+        self.is_save_results_button.setObjectName("is_save_results_button")
 
         close_packing_params_layout.addRow("No. of System:", self.number_system_input)
         close_packing_params_layout.addRow("Step Size:", self.step_size_input)
@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
         close_packing_params_layout.addRow(self.is_gravity_button)
         close_packing_params_layout.addRow(self.is_update_sampleholder_button)
         close_packing_params_layout.addRow(self.is_contour_buffer_button)
-        close_packing_params_layout.addRow(self.is_plot_area_button)
+        close_packing_params_layout.addRow(self.is_save_results_button)
 
         close_packing_params.setLayout(close_packing_params_layout)
 
@@ -398,15 +398,14 @@ class MainWindow(QMainWindow):
         self.matplotlib_canvas.ax_sampleholder.set(xticks=[], yticks=[])
 
         # plot the area evolution
-        if local_batch_optimization_kwargs["is_plot_area"]:
-            self.matplotlib_canvas.ax_evolution.clear()
-            ax_ratio = self.matplotlib_canvas.ax_evolution.twinx()
-            visualize_area_evolution(
-                self.sampleholder,
-                self.area_evolution_list,
-                self.matplotlib_canvas.ax_evolution,
-                ax_ratio,
-            )
+        self.matplotlib_canvas.ax_evolution.clear()
+        ax_ratio = self.matplotlib_canvas.ax_evolution.twinx()
+        visualize_area_evolution(
+            self.sampleholder,
+            self.area_evolution_list,
+            self.matplotlib_canvas.ax_evolution,
+            ax_ratio,
+        )
 
         self.matplotlib_canvas.draw()
 
@@ -512,7 +511,7 @@ class MainWindow(QMainWindow):
         is_gravity = self.is_gravity_button.isChecked()
         is_update_sampleholder = self.is_update_sampleholder_button.isChecked()
         is_contour_buffer = self.is_contour_buffer_button.isChecked()
-        is_plot_area = self.is_plot_area_button.isChecked()
+        is_save_results = self.is_save_results_button.isChecked()
 
         # Now you can use these parameters as needed
         local_batch_optimization_kwargs = {
@@ -527,7 +526,7 @@ class MainWindow(QMainWindow):
             "is_gravity": is_gravity,
             "is_update_sampleholder": is_update_sampleholder,
             "is_contour_buffer": is_contour_buffer,
-            "is_plot_area": is_plot_area,
+            "is_save_results": is_save_results,
             "is_plot": False,
             "is_print": False,
         }
