@@ -9,7 +9,7 @@ updated on 26th Oct. 2024
 
 import numpy as np
 import os, trimesh
-from classes import Sample, FunctionalSampleHolder, Contour
+from classes import FunctionalSampleHolder
 from close_packing import sampleholder2vertices_list
 from shapely.geometry import Polygon
 from config import config, physical_size

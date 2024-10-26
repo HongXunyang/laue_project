@@ -51,7 +51,11 @@ The dictionary `STEP_CONTROL` controls the steps of the program. The following s
 
 ----------------------------------------------
 # [Real-life Application] Usage:
-For any realy-life application, the users are suggested to supervise the whole process from the beginning, i.e. the image processing. Please follow the steps below:
+For any realy-life application, the users are suggested to supervise the whole process from the beginning, i.e. the image processing. 
+
+All the parameters can be found and adjusted in the `config/config.py` file. It's recommended to adjust it in the config file for a better overall global controll of the program
+
+Please follow the steps below:
 
 1. Image processing: Set `STEP-CONTROL["contour_finding"]= True` and EVERYTHING ELSE to `False`. Please refer to the README.md file for the detailed information of the image processing. Long story short: the processing involves: manual selection of stripes color vectors, and background color vectors for the program to filter out stripes and background. The users need to adjust the following parameters:
     - `stripes_vectors`

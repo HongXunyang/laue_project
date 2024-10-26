@@ -18,37 +18,131 @@ This is a sub-project of the larger project *Automizing Sample re-orientation fo
 - Sample contour is approimated by its convex hull. 
 
 
-# Installation
-To get started with the project:
-1. Install the required packages, such as NumPy and Matplotlib, using the following command:
+# Usage
+### Installation
+Ensure that you are running Python 3.6 or later. There are two main ways to run the program: Python script or GUI. Currently, the python script is more stable and recommended. GUI is still under development but still can be used for contour finding and close packing.
+
+0. Clone the repository to your local machine:
+   ```bash
+   git clone git@github.com:HongXunyang/laue_project.git
+   cd laue_project/
+   ```
+1. Install the required packages, using the following command:
    ```bash
    pip install -r requirements.txt
    ```
-2. Ensure that you are running Python 3.6 or later.
-## Usage
-Under development. `main_contour_finding` can be used to test the contour finding part. `main_close_packing` can be used to test the close packing part. `main_gui` can be used to test the GUI part. 
-
-Currently both `main_contour_finding.py` and `main_close_packing.py` requires manual input of the image path. You also need your own image to test the contour finding part. This is not super optimal at the moment. Only `main_gui.py` is fully functional.
-
-### Running the Script
-1. Navigate to the `workspace/` directory:
+2. Optional: create a folder `temporary_output/` in the root directory to store temporary output files generated during the process.
    ```bash
-   cd workspace
+   mkdir temporary_output
    ```
-2. Run the `main_gui.py` script:
-   ```bash
-   python main.py
-   ```
-3. The GUI window will open. Drag and drop an image file onto the window to start the process. 
-4. Click *select points* to select three points for the stripes, and three points for the background. Keep an eye on the output window for the instructions.
-5. Click *Image processing* to process the image.
-6. You will get the contours of the samples.
-7. Nothing else you can do with this GUI for the moment. 
+
+------------------
+### Usage Instructions: Python Script
+It's recommended to run the python script within an IDE (e.g., VScode or PyCharm) to better understand the procedure and debug if necessary. The following steps outline how to run the script:
+
+The script `main.py` in the root directory contains:
+- (1) image processing and contour finding;
+- (2) close packing optimization; 
+- (3) converting the optimized configuration to a CAD file; 
+- (4) visualization by animating the close packing process. 
+
+Please follow the steps below:
+
+**[Trial Run] Usage**: 
+
+Before doing any real application, users are suggested to go for a "trial run" to get a better understanding of the program. In the trial run, the image to process is a classic example. This image allows for a easy and quick contour finding. In this trial run, the users do not need to worry about the contour finding. The key point of this run is to figure out the best parameters for the optimization process.
+
+The dictionary `STEP_CONTROL` in the script controls the steps of the program. The following steps are the recommended steps: 
+
+1. Run the scripts with `STEP_CONTROL["test"] = True`. This will generate an animation of the close packing process. Look closely at the optimization process and determine the best parameters for the contour finding. Users are encouraged to adjust these parameters for the `optimization` function: 
+    - `number_of_iterations: int`
+    - `step_size: int`
+    - `temperature: float`
+    - `gravity_multiplier: float`
+    - `gravity_off_at: int`
+
+Please refer to section [Close Packing](#close-packing) for more detailed information about these parameters.
+
+2. Once you find the approprite parameters:
+    - set `STEP_CONTROL["test"] = False`, and everything else to `True`. When this set to `False`, a more serious optimization process will be launched, i.e. `batch_optimization` where multiple systems will be involved and get optimized in parallel. This will help to find a better configuratio for the system. 
+    - modify the corresponding parameters in `batch_optimization_kwargs` in `config/config.py`. Type in the appropriate parameters you found in the first step. They will be the parameters used for the bacth close packing process. For any serious senarios, please use `config/config.py` for an easier control on the parameters.
+    - additional parameters for `batch_optimization` are expected to be modified as well: `number_system: int`: the number is expected to lie in the range [3, 1000]. Of course it would not cause any problem to type in 2 or any number more than 1000. If the number is too large, it might cause a big burden to your computer. (*For the moment this number cannot be 1... need to fix in the future. Also a better handle of large number of systems is also required to implement in future develoment.*)
+    - if not sure about what the other keywords arguements mean, please keep them as default.
+
+3. Run the script again, the results will be plotted and saved in the `temporary_output/` folder. The output files include: 
+    - different stages of the processed images.
+    - The figure of the optimized configuration
+    - the JSON file of the sample holder, containing information of the optimized configuration, the ratio, and etc.
+    - the evolution of the optimization process.
+    - the CAD/STL file of the engraved sample holder
+    - the CAD/STL file of the samples configuration
+
+4. The above files can help the user to better visualize the process and results. Here are how the user can use the output:
+
+- With the intermediate processed images, the user can check whether the parameters for the image processing is appropriate. IF NOT, modify the `image2contours_kwargs` in `config/config.py` and redo the process. In the trial run, the default parameters should be good enough. In case you lost the default value, here are them:
+    ```Python
+      image2contours_kwargs = dict(
+         epsilon=2.5,
+         lowercut=100,
+         area_lowercut=1000,
+         threshold=50,
+         gaussian_window=np.array([5, 5]),
+         is_gaussian_filter=False,
+      )
+    ```
+- With the `area_evolution.jpg` the user can check whether the close-packing parameters are properly set. 
+
+----------------------------------------------
+
+**[Real-life Application] Usage:**
+
+For any real-life application, the users are suggested to supervise the whole process from the beginning, i.e. the image processing. 
+
+All the parameters can be found and adjusted in the `config/config.py` file. It's recommended to adjust it in the config file for a better overall global controll of the program.
+
+Please follow the steps below:
+
+1. Image processing: Set `STEP-CONTROL["contour_finding"]= True` and EVERYTHING ELSE to `False`. Please refer to the section [Image processing](#image-processing) for the detailed information of the image processing. Long story short: the processing involves: manual selection of stripes color vectors, and background color vectors for the program to filter out stripes and background. The users need to adjust the following parameters:
+    - `stripes_vectors`
+    - `background_vectors`
+    - `target_background_vector`
+    - `epsilon`
+    - `lowercut`
+    - `area_lowercut`
+    - `threshold`
+    - `gaussian_window`
+    - `is_gaussian_filter`
+
+Check the `temporary_output/` folder for the processed images. If the contours are not found as expected, please adjust the parameters and redo the process.
+
+2. Test Optimization: Once you obtain a satisfactory image processing result, set `STEP_CONTROL["test"]=True` to start a test run. This is again to determine the best parameters for the optimization process. Everything else is the same as the trial run.
+
+3. Batch Optimization: Once you find the best parameters for the optimization process, set `STEP_CONTROL["test"]=False` and `STEP_CONTROL["close_packing"]=True` and `STEP_CONTROL["convert_to_cad"]=True`. Everything else is the same as the trial run. The results will be saved in the `temporary_output/` folder.
 
 -------
+### Usage Instructions: GUI
+The GUI can be opened up by running the `main_gui.py` script. The GUI provides a user-friendly interface for uploading images, processing contours, and optimizing sample configurations. Currently, the GUI is under development and coversion to CAD file is not yet supported.
 
-# Detailed Dig-in
-(*Updated on 2024-10-20*)  Currently I am working on the (1) Contour finding; (2) Close packing; (3) GUI design parts. 
+1. Run the GUI script using the following command:
+   ```bash
+   python main_gui.py
+   ```
+   or use an IDE to run the script.
+
+2. The GUI window will open. Drag and drop an image of the sample holder with samples onto the designated area in the GUI. 
+
+3. Click the "*Select Points*" button in the controls panel. Keep an eye on the output log panel to see the instructions and the progress. The user will be required to select three points on the image (directly click on the image) to define the color vectors for stripe detection; after this, the the user will need to select another three points to define the background color vectors. See [Image processing](#image-processing) for more details. 
+
+4. On the top of the middle panel, the user can define the contour-finding parameters. When left empty, the parameters will be set to default values (indicated by the gray placeholder text). 
+
+5. Once the parameters are set, click the "Process Image" button to start the contour-finding process. The program will display the processed image with the detected contours. If the results are not satisfactory, the user might need to quit the GUI and restart it again to reprocess the image with different parameters. (*I know I know this is not ideal but as I said the GUI is still under development...*)
+
+6. After the contours are found, and before starting the close packing process, the user is suggested to adjust the parameters for the close packing in the middle panel. P.S. For now, I will suggest `NO. of system = 3` and `number_of_iterations = 3000` to start a trial run before any commitment. (*In the future, a "test close packing" need to be implemented for the user to find out the best optimization parameters...*)
+
+7. Once the parameters are set, click the "Start Close Packing" button to begin the optimization process. On the output log panel, the progress of the optimization will be displayed. The final optimized configuration and the evolution of the optimization process will be shown on the bottom left panel. You can re-run the optimization process by re-clicking the "Start Close Packing" button again. You don't need to quit the GUI. 
+
+
+# Detailed Dig-in 
 
 ## Folder Structure
 The project folder is structured as follows:
@@ -161,44 +255,101 @@ The `FunctionalSampleHolder` class enhances the basic `SampleHolder` by providin
 - Extend visualization with additional features such as 3D plotting or alignment indicators.
 
 ----------------------------
-# Appendix
-### Simulated Annealing for Close Packing
+# Algorithm Details
 
-The `batch_optimization` and `optimization` functions are implemented to optimize the configuration of polygons representing samples on a sample holder. The goal of this optimization is to achieve close packing of the samples by minimizing the area of the convex hull that contains all samples. This process uses a simulated annealing approach, the temperature parameters of which controls the random fluctuations of the configuration. 
+### Image Processing
+The image processing is implemented in the package `contour_finding`.
+
+This process includes stripe removal, background unification, grayscale conversion, binarization, and contour finding. Each step is designed to optimize the quality of the detected contours, ensuring accurate results.
+
+
+1. **Filter out stripes**: The `remove_stripes` function removes unwanted stripe patterns by analyzing the color vectors (`stripes_vectors`) of the stripes in the image. The color of each point in the image is represented by a BGR (Blue Green Red) vector, `np.array([100, 255, 1], dtype=np.uint8)` for example.
+
+    - `stripes_vectors`: A list of BGR color vectors representing the stripe colors.
+    - `target_background_vector`: A BGR vector representing the target color for the background after stripe removal.
+    - `min_R` and `max_R`: Minimum and maximum distance for  defining the color range around the stripe vectors.
+
+   All the colors that are close enough to the mean vector of the `stripes_vectors` will be set to `target_background_vector`. This will more or less remove the stripes from the image.
+
+
+2. **Unify the background**: This function, `unify_background`, aims to smooth the image background by setting a uniform background color. Using sample vectors (`background_vectors`) from the background, it calculates the center of mass and defines a radius (`R`) within which pixels are replaced with the target background color (`target_background_vector`). Parameters:
+    - `background_vectors`: A list of BGR color vectors representing sampled areas of the background.
+    - `target_background_vector`: The color that will unify the background.
+    - `min_R` and `max_R`: Minimum and maximum radius for defining the color range for the background vectors.
+
+3. **Convert to grayscale**: After stripe removal and background unification, the image is converted to grayscale using `cv2.cvtColor`. Grayscale conversion simplifies further processing by reducing color information, leaving only intensity data, which is essential for effective contour detection.
+
+4. **Binarize the image**: The grayscale image is then binarized using a threshold set by the `threshold` parameter, creating a high-contrast image where contour regions are highlighted. In this binary form, pixels above the threshold become white, and those below become black. Parameter:
+    - `threshold`: The pixel intensity value used to binarize the image. All pixels with intensity above this threshold will be set to white, and those below will be set to black.
+
+5. **Find contours**: The `cv2.findContours` function identifies all contours in the binary image. Detected contours are then simplified and filtered to ensure only significant shapes remain. Using the Ramer-Douglas-Peucker algorithm, contours are approximated with fewer points, which is controlled by `epsilon`. Additionally, the `contours2approximated_contours` function filters out contours below a certain perimeter (`lowercut`) or area (`area_lowercut`). Parameters (all in the unit of pixels or pixel^2):
+    - `epsilon`: Approximation accuracy for contour simplification. Lower values retain more detail.
+    - `lowercut`: Minimum contour perimeter required to keep the contour.
+    - `area_lowercut`: Minimum contour area required to retain the contour.
+
+6. **Get convex hulls**: Finally, the `contours2hulls` function converts the simplified contours into convex hulls. Convex hulls provide a boundary around each contour that minimizes points, ensuring the shapes are as simplified and closed as possible. 
+
+In our close packing process, all the contours are approximted by their convex hulls.
+
+**Parameters:**
+
+- `image`: The input image to be processed.
+- `is_preprocess`: If `True`, performs stripe removal and background unification.
+- `stripes_vectors`: Color vectors of stripes to remove.
+- `background_vectors`: Color vectors of background areas.
+- `target_background_vector`: The target background color for unified background.
+- `min_R` / `max_R`: Control color similarity tolerance for stripe and background adjustments.
+- `threshold`: The intensity threshold for binarizing the image.
+- `epsilon`: Accuracy of contour simplification; lower values retain more detail.
+- `lowercut`: Minimum perimeter of contours to retain after simplification.
+- `area_lowercut`: Minimum area of contours to retain after simplification.
+- `gaussian_window`: Size of the Gaussian filter window to smooth the grayscale image.
+- `is_gaussian_filter`: If `True`, applies Gaussian filtering to the grayscale image.
+- `is_output_image`: If `True`, saves images at each processing step for review.
+
+--------------------
+
+### Close Packing
+
+The `batch_optimization` and `optimization` functions optimize the configuration of polygons (representing samples) on a sample holder to achieve a close-packed arrangement, minimizing the area of the encclosing circle that contains all samples. This optimization is implemented using a **Simulated Annealing** algorithm, which iteratively explores configurations by adjusting positions based on temperature and step size parameters, controlling movement randomness and acceptance of less optimal configurations.
+
 
 1. **Initial Setup**:
-   - The initial temperature is set to a high value (default 1000) and gradually reduced to one percent of its initial value over the course of iterations.
-   - A list of vertices representing the samples is prepared. If `is_rearrange_vertices` is `True`, the initial positions are rearranged randomly to facilitate a better starting point for optimization.
+   - The initial temperature (e.g., 300) is high, exponentially reducing to about 20% of its starting value by the `gravity_off_at` iteration, helping the optimization converge smoothly.
+   - The function uses `is_rearrange_vertices` to randomly rearrange initial sample positions, helping avoid poor local minima. Samples may also have a slight contour buffer applied (`contour_buffer_multiplier`), which inflates each sample’s contour to prevent overlap. 1.01 means the contour is expanded by 1%. 
 
 2. **Temperature and Step Size Decay**:
-   - The temperature is linearly decreased after each iteration, which reduces the probability of accepting worse configurations as the optimization progresses. 
-   - The step size, which determines how far a polygon can move in each iteration, also decreases over time.
+   - **Temperature**: Controls how likely it is to accept worse configurations. Intuitively, this controls the fluctuations of the samples, i.e. they could move more randomly when the temperature is hight. This temperature decreases exponentially over the optimization iterations. 
+   - **Step Size**: Determines the maximum movement a polygon can make in a single iteration, in pixel, linearly decreasing to 50% of its initial value. 
 
 3. **Iteration Process**:
-   - In each iteration, a random polygon is selected, and a movement vector is generated. The movement may be influenced by gravitational forces between the polygons if `is_gravity` is `True`. Otherwise, the movement is purely random within the step size limit.
-   - A new position for the selected polygon is proposed by adding the movement vector to the original position.
-   - The algorithm checks if the new configuration is valid, i.e., if it results in any overlap between polygons. If no overlap, go to the next step. If overlap is detected, attempt to repeat the last step and generate another movement again (3 attempts max)
-   - If the new configuration is valid, it further checks the current area of the convex hull. If the area drops, accept. But even if the area increases, it may still be accepted with a probability related to the temperature (high temperature -> more likely to accept worse solutions).
+   - A random polygon/sample is selected in each iteration, and a **movement vector** is generated. The direction of movement may be influenced by gravitational forces between polygons (if `is_gravity=True`), guiding them towards a more compact configuration. The gravity effect is to accelerate the movement of the polygons towards each other at the very early stage. But this gravity also need to be turned off at some point because it could also hinder the movement of the polygons once they are already close enough to each other. set `gravity_off_at: int` to control at which iteration the gravity is turned off.
+   - The proposed position is checked for overlap with other polygons. If overlap is detected, the movement is retried up to 3 times before discarding the attempt.
+   - If the new position avoids overlap, the  enclosing-circle area of the new configuration is calculated. The change in area is evaluated against the acceptance criteria to determine if the move should be accepted.
 
 4. **Acceptance Criteria**:
-   - If the new configuration has a smaller area than the previous one, it is always accepted.
-   - If the area is larger, the new configuration is accepted with a probability given by `exp(-(new_area - area) / temperature)`. This probability decreases as the temperature drops, making the algorithm less likely to accept worse solutions as it converges.
+   - New configurations with a smaller area are always accepted.
+   - Configurations with larger areas may still be accepted with a probability determined by `exp(-(new_area - area) / temperature)`, allowing the optimization to escape local minima at higher temperatures.
 
-A suitable order of magnitude for the temperature should be roughly: `scale * step_size`. Where `Scale` is the scale of the overall convex hull. It shouldn't be 10 times larger or smaller than this value.
+   **Note**: The temperature's magnitude should be roughly proportional to `0.1 * scale_hull * step_size` (where `scale_hull` represents the convex hull’s scale) to maintain effective control over movement randomness.
 
 5. **Updating Sample Positions**:
-   - If both checks are passed, the new configuration or the new position of the polygon is accepted
+   - Accepted moves update the configuration and new positions are set. The step size and temperature decay continue to refine the configuration towards an optimal state as the iterations progress.
 
 6. **Batch Optimization**:
-   - The `batch_optimization` function allows running multiple instances of the optimization process in parallel, each with potentially different starting conditions. This approach increases the chances of finding a better global solution.
-   - After completing the optimizations, the configurations are plotted to visually compare their areas and determine the most optimal arrangement.
+   - The `batch_optimization` function enables running multiple optimization instances in parallel, increasing the chances of finding a global optimum. Each batch may have varied initial conditions.
+   - Results are visualized post-optimization, including the final configuration and area evolution over iterations, to evaluate the optimal configuration visually.
 
-**Parameters**:
-- `number_of_iteration`: Controls how many iterations the algorithm runs, which affects convergence quality.
-- `step_size`: Sets the maximum distance a sample can move in each iteration, which influences how quickly the configuration changes.
-- `temperature`: The initial temperature, which controls the randomness of the movement and acceptance of worse solutions.
-- `is_gravity`: Determines whether gravitational forces between samples affect the movement, potentially guiding the optimization towards more compact arrangements.
-- `is_update_sampleholder`: If `True`, the sample holder's internal representation is updated after optimization to reflect the new positions of the samples.
+**Parameters**
 
-This simulated annealing-based optimization effectively allows for exploring different configurations to achieve a close-packed arrangement of samples on a sample holder, balancing randomness and systematic reduction of overlap to reach a stable and efficient configuration.
+- `number_of_iterations`: Defines the total number of iterations for convergence.
+- `step_size`: Maximum pixel movement per iteration, controlling the rate of configuration changes.
+- `temperature`: Initial temperature for simulated annealing, influencing the fluctuation of the sample movement.
+- `contour_buffer_multiplier`: Multiplier to slightly expand each sample’s contour, preventing edge touching.
+- `optimize_shape`: Shape to minimize, either `convex_hull` or `min_circle`, determining the target area type. 
+- `is_rearrange_vertices`: If `True`, samples are randomly rearranged at the start of the process. 
+- `is_gravity`: If `True`, gravitational forces influence movement direction, facilitating a compact arrangement.
+- `gravity_multiplier` and `gravity_off_at`: Control gravity strength and when it is disabled, improving compactness early on without interfering in later iterations. multiplier = 1 means the movement of the polygons are always along the gravity force; 0.5 means the movement is half along the gravity force and half random. gravity_off_at = 2500 means the gravity is turned off at the 2500th iteration.
+- `is_update_sampleholder`: If `True`, updates the sample holder object after the process.
 
+This simulated annealing-based approach systematically explores configurations, balancing randomness with structured optimization to achieve an efficient, close-packed layout of samples.
