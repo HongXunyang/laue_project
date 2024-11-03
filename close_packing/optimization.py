@@ -168,7 +168,7 @@ def batch_optimization(
 def optimization(
     sampleholder: FunctionalSampleHolder,
     number_of_iterations: int = 3000,
-    step_size: int = 5,
+    step_size: int = 20,
     temperature: float = 1000,
     contour_buffer_multiplier: float = 1.01,
     optimize_shape="min_circle",
@@ -421,6 +421,7 @@ def _create_movement_vector(
     else:
         direction_gravity = np.array([0, 0])
     # create a final movement vector
+
     movement_vector = (
         direction_gravity * step_size
     ) * gravity_multiplier + np.random.randint(-step_size, step_size, 2)

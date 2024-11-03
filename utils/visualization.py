@@ -1,6 +1,6 @@
 import numpy as np
 import json
-import cv2
+import cv2, os
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 from classes import _remove_background_contour
@@ -363,9 +363,10 @@ def animate_config_evolution(
     """
     # Set up the figure and axes
     if axs is None or fig is None:
-        fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+        fig, axs = plt.subplots(1, 2, figsize=(8, 4))
     ax_ratio, ax_config = axs
     ax_config.set_aspect("equal")
+    ax_config.set(xticks=[], yticks=[])
     area_evolution = np.array(area_evolution) ** 2 * np.pi
     ratio_evolution = 100 * samples_area / np.array(area_evolution)
     # Initialize the list to store polygon patches
@@ -448,22 +449,30 @@ def animate_config_evolution(
         ]
 
     # Create the animation
-    total_frames = len(configurations) // 7
-    interval = min(3, max_duration * 1000 / total_frames)  # interval in ms
+    total_frames = len(configurations)
+    interval = 20
+    allowed_frames = max_duration * 1000 / interval
+    multiplier = (
+        int(total_frames // allowed_frames) if total_frames > allowed_frames else 1
+    )
     ani = animation.FuncAnimation(
         fig,
         update,
-        frames=range(0, len(configurations), 7),
+        frames=range(0, len(configurations), multiplier),
         init_func=init,
         blit=True,
         interval=interval,
     )
     filename = filename if (filename is not None) else "config_and_area_evolution.mp4"
+    folder_path = config["temporary_output_folder"]
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    path = os.path.join(folder_path, filename)
     if is_save:
         ani.save(
-            filename,
+            path,
             writer="ffmpeg",
-            fps=1000 / interval,
+            fps=30,
         )
     # Display the animation
     plt.show()

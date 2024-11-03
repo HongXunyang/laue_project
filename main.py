@@ -118,11 +118,11 @@ if STEP_CONTROL["test"]:
     start_time = time.time()
     best_vertices_list, best_area, optimization_history = optimization(
         sampleholder,
-        number_of_iterations=10000,
-        step_size=20,
-        temperature=300,
+        number_of_iterations=30000,
+        step_size=25,
+        temperature=500,
         gravity_multiplier=0.5,
-        gravity_off_at=2500,
+        gravity_off_at=2700,
         contour_buffer_multiplier=1.01,
         optimize_shape="min_circle",
         is_rearrange_vertices=True,
@@ -135,7 +135,7 @@ if STEP_CONTROL["test"]:
     end_time = time.time()
     sampleholder.update()
     print(f"optimization time: {end_time - start_time} seconds\n")
-    fig_ani, axs = plt.subplots(1, 2, figsize=(12, 6))
+    fig_ani, axs = plt.subplots(1, 2, figsize=(8, 4))
     configurations = optimization_history["vertices_list_evolution"]
     area_evolution = optimization_history["area_evolution"]
 
@@ -145,9 +145,9 @@ if STEP_CONTROL["test"]:
         samples_area=sampleholder.samples_area,
         fig=fig_ani,
         axs=axs,
-        is_save=False,
-        filename="config_and_area_evolution.mp4",
-        max_duration=5,
+        is_save=True,
+        filename="temperature_too_large.mp4",
+        max_duration=10,
     )
 
 # ------------------- end of test -------------- #
