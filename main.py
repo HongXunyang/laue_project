@@ -7,7 +7,7 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import animate_config_evolution
+from utils import animate_config_evolution, save_sampleholder
 from to_cad import vertices_list_to_cad, sampleholder_to_cad
 from config.config import (
     batch_optimization_kwargs,
@@ -109,7 +109,6 @@ if STEP_CONTROL["contour_finding"] or STEP_CONTROL["test"]:
     # create samples objects and sample holder object
     samples_list = generate_sample_objects(approximated_contours, hulls)
     sampleholder = generate_sampleholder_object(samples_list)
-
 # ----------- end of contour finding ----------- #
 # ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 # ----------------- Test ----------------- #
@@ -118,7 +117,7 @@ if STEP_CONTROL["test"]:
     start_time = time.time()
     best_vertices_list, best_area, optimization_history = optimization(
         sampleholder,
-        number_of_iterations=30000,
+        number_of_iterations=3000,
         step_size=25,
         temperature=500,
         gravity_multiplier=0.5,

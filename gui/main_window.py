@@ -509,7 +509,6 @@ class MainWindow(QMainWindow):
         )
         # Retrieve boolean parameters
         is_gravity = self.is_gravity_button.isChecked()
-        is_update_sampleholder = self.is_update_sampleholder_button.isChecked()
         is_contour_buffer = self.is_contour_buffer_button.isChecked()
         is_save_results = self.is_save_results_button.isChecked()
 
@@ -524,10 +523,8 @@ class MainWindow(QMainWindow):
             "gravity_multiplier": gravity_multiplier,
             "gravity_off_at": gravity_off_at,
             "is_gravity": is_gravity,
-            "is_update_sampleholder": is_update_sampleholder,
             "is_contour_buffer": is_contour_buffer,
             "is_save_results": is_save_results,
-            "is_plot": False,
             "is_print": False,
         }
 
