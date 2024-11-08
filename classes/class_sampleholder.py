@@ -52,6 +52,9 @@ class SampleHolder:
         self.ratio: float = (
             None  # the ratio of the total area of the samples to the total area of the sample holder
         )
+        self.ratio_convex: float = (
+            None  # the ratio again, but the sample area is the area of its convex hull.
+        )
         self._id2sample = {}  # given the id, return the sample object
         self._id2list_index = (
             {}
@@ -103,21 +106,27 @@ class SampleHolder:
         self.radius = radius
         return center, radius
 
-    def calculate_samples_area(self):
+    def calculate_samples_area(self, is_convex=False):
         """
         calculate the area of the samples
         """
         sample_area = 0
         for sample in self.samples_list:
-            contour = sample.contour_new.contour
+            contour = (
+                sample.contour_new.hull if is_convex else sample.contour_new.contour
+            )
             sample_area += cv2.contourArea(contour)
         return sample_area
 
-    def calculate_ratio_of_samples(self):
+    def calculate_ratio_of_samples(self, is_convex=False):
         """
         calcualte the total area of the samples' contour divided by the total area of the sample holder
+
+        is_convex:
+            - False: the sample area is calculated for the real contour
+            - True: the sample area is calculated for the approximated convex contour
         """
-        sample_area = self.calculate_samples_area()
+        sample_area = self.calculate_samples_area(is_convex=is_convex)
         self.update_min_circle()
         sampleholder_area = np.pi * self.radius**2
         return sample_area / sampleholder_area
@@ -132,7 +141,8 @@ class SampleHolder:
         self.update_convex_hull()
         self.update_min_circle()
         self.vertices_list = self.update_vertices_list()
-        self.ratio = self.calculate_ratio_of_samples()
+        self.ratio = self.calculate_ratio_of_samples(is_convex=False)
+        self.ratio_convex = self.calculate_ratio_of_samples(is_convex=True)
         self.samples_area = self.calculate_samples_area()
         self.thickness = physical_size["sampleholder_thickness"]
         self.sample_thickness = physical_size["sample_thickness"]

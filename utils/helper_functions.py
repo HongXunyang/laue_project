@@ -152,6 +152,9 @@ def save_sampleholder(sampleholder, folder_path=None, filename=None):
         sampleholder.samples_area if (sampleholder.samples_area is not None) else 0
     )
     ratio: float = sampleholder.ratio if (sampleholder.ratio is not None) else 0
+    ratio_convex: float = (
+        sampleholder.ratio_convex if (sampleholder.ratio_convex is not None) else 0
+    )
     convex_hull: list[list[list[float, float]]] = (
         sampleholder.convex_hull.tolist()
         if (sampleholder.convex_hull is not None)
@@ -173,6 +176,7 @@ def save_sampleholder(sampleholder, folder_path=None, filename=None):
         center=center,
         samples_area=samples_area,
         ratio=ratio,
+        ratio_convex=ratio_convex,
         convex_hull=convex_hull,
         vertices_list=vertices_list,
     )
