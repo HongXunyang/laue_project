@@ -329,7 +329,7 @@ def visualize_area_evolution(
     ax_ratio.text(
         len(area_evolution) - 1,
         max_ratio,
-        f"{max_ratio:.2f}%",
+        f"approx. >~{max_ratio:.2f}%",
         color=plot_ratio_evolution_kwargs["color"],
         fontsize=12,
         verticalalignment="bottom",
@@ -420,7 +420,7 @@ def animate_config_evolution(
         """Initialize the background of the animation."""
         ratio_line.set_data([], [])
         horizontal_line.set_ydata(ratio_evolution[0])
-        text_annotation.set_text(f"{ratio_evolution[0]:.2f}%")
+        text_annotation.set_text(f"approx. >~{ratio_evolution[0]:.2f}%")
         return polygon_patches + [
             ratio_line,
             horizontal_line,
@@ -437,7 +437,7 @@ def animate_config_evolution(
         current_ratio = ratio_evolution[frame]
         horizontal_line.set_ydata(current_ratio)
         text_annotation.set_position((frame, current_ratio))
-        text_annotation.set_text(f"{current_ratio:.2f}%")
+        text_annotation.set_text(f"approx. >~{current_ratio:.2f}%")
 
         # Update area plot
         ratio_line.set_data(range(frame + 1), ratio_evolution[: frame + 1])

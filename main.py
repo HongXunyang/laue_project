@@ -7,7 +7,7 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import animate_config_evolution, save_sampleholder
+from utils import animate_config_evolution, save_sampleholder, visualize_sampleholder
 from to_cad import vertices_list_to_cad, sampleholder_to_cad
 from config.config import (
     batch_optimization_kwargs,
@@ -129,7 +129,8 @@ if STEP_CONTROL["test"]:
         is_update_sampleholder=True,
         is_contour_buffer=True,
         is_plot_evolution=False,
-        is_record_history=True,
+        is_record_area_history=True,
+        is_record_configuration_history=True,
     )
     end_time = time.time()
     sampleholder.update()
@@ -137,7 +138,6 @@ if STEP_CONTROL["test"]:
     fig_ani, axs = plt.subplots(1, 2, figsize=(8, 4))
     configurations = optimization_history["vertices_list_evolution"]
     area_evolution = optimization_history["area_evolution"]
-
     animate_config_evolution(
         configurations,
         area_evolution,
@@ -145,10 +145,9 @@ if STEP_CONTROL["test"]:
         fig=fig_ani,
         axs=axs,
         is_save=True,
-        filename="temperature_too_large.mp4",
+        filename="test_animation.mp4",
         max_duration=10,
     )
-
 # ------------------- end of test -------------- #
 # ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 # ----------------- Optimization --------------- #

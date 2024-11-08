@@ -43,6 +43,7 @@ def batch_optimization(
     gravity_off_at: int = 3000,
     is_contour_buffer=True,
     is_save_results=True,
+    is_record_area_history=True,
     ax_area=None,
     progress_callback=None,
 ):
@@ -99,7 +100,8 @@ def batch_optimization(
             is_update_sampleholder=False,
             is_contour_buffer=is_contour_buffer,
             is_plot_evolution=False,
-            is_record_history=True,
+            is_record_area_history=is_record_area_history,
+            is_record_configuration_history=False,
         )
         area_evolution_list[batch_index] = optimization_history["area_evolution"]
         optimized_configuration_list[batch_index] = optimized_configuration
@@ -179,7 +181,8 @@ def optimization(
     is_update_sampleholder=False,
     is_contour_buffer=True,
     is_plot_evolution=False,
-    is_record_history=True,
+    is_record_configuration_history=False,
+    is_record_area_history=True,
     ax_area=None,
     ax_ratio=None,
 ):
@@ -223,15 +226,14 @@ def optimization(
 
     # read polygons and convert them to list of vertices: list of (Nx2) np array, dtype= int32
     vertices_list = sampleholder2vertices_list(sampleholder)
-
-    # here stores the best configuration ever
-    best_vertices_list = vertices_list.copy()
-
-    # inflate the vertices to leave buffer area between samples.
     if is_contour_buffer:
         vertices_list = _inflate_vertices_list(
             vertices_list=vertices_list, multiplier=contour_buffer_multiplier
         )
+
+    # here stores the best configuration ever
+    best_vertices_list = vertices_list.copy()
+
     # rearrange the vertices_list for a better optimization (if is_rearrange_vertices is True)
     if is_rearrange_vertices:
         rearranged_vertices_list = _rearrange_vertices_list(vertices_list)
@@ -252,13 +254,13 @@ def optimization(
     best_area = area  # the best area ever
 
     # ---------------- History recording variables ---------------- #
-    if is_plot_evolution or is_record_history:
+    if is_plot_evolution or is_record_area_history:
         area_evolution = np.zeros(number_of_iterations)
         area_evolution[0] = area
     else:
         area_evolution = None
 
-    if is_record_history:
+    if is_record_configuration_history:
         vertices_list_evolution = [None] * number_of_iterations
         vertices_list_evolution[0] = rearranged_vertices_list.copy()
     else:
@@ -339,9 +341,9 @@ def optimization(
             current_temperature * temperature_decay_rate
         )  # exponentially decrease the temperature
         step_size -= step_size_decay  # linearly decrease the step_size
-        if is_plot_evolution or is_record_history:
+        if is_plot_evolution or is_record_area_history:
             area_evolution[iteration] = area
-        if is_record_history:
+        if is_record_configuration_history:
             vertices_list_evolution[iteration] = rearranged_vertices_list.copy()
             if is_contour_buffer:
                 vertices_list_evolution[iteration] = _inflate_vertices_list(
@@ -352,13 +354,6 @@ def optimization(
 
     if is_contour_buffer:
         # remove the buffer area by deflating the vertices again
-        vertices_list = _inflate_vertices_list(
-            vertices_list=vertices_list, multiplier=1 / contour_buffer_multiplier
-        )
-        rearranged_vertices_list = _inflate_vertices_list(
-            vertices_list=rearranged_vertices_list,
-            multiplier=1 / contour_buffer_multiplier,
-        )
         best_vertices_list = _inflate_vertices_list(
             vertices_list=best_vertices_list, multiplier=1 / contour_buffer_multiplier
         )
