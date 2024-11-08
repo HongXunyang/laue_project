@@ -75,7 +75,7 @@ Check the `temporary_output/` folder for the processed images. If the contours a
 """
 
 STEP_CONTROL = dict(
-    test=True, contour_finding=True, close_packing=True, convert_to_cad=True
+    test=False, contour_finding=True, close_packing=True, convert_to_cad=True
 )
 
 

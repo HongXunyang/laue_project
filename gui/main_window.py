@@ -392,6 +392,7 @@ class MainWindow(QMainWindow):
 
         # plot the sampleholder
         self.matplotlib_canvas.ax_sampleholder.clear()
+        self.sampleholder.update()
         visualize_sampleholder(
             self.sampleholder, self.matplotlib_canvas.ax_sampleholder
         )

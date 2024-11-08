@@ -153,7 +153,7 @@ if STEP_CONTROL["test"]:
 # ----------------- Optimization --------------- #
 if STEP_CONTROL["close_packing"] and not STEP_CONTROL["test"]:
     start_time = time.time()
-    optimized_configuration_list, area_list, sorted_indices, _ = batch_optimization(
+    best_configuration, area_list, sorted_indices, _ = batch_optimization(
         sampleholder,
         **batch_optimization_kwargs,
     )

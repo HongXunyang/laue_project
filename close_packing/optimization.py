@@ -66,7 +66,9 @@ def batch_optimization(
     # initialization
     max_configurations = 9  # the maximum number of configurations to plot
 
-    optimized_configuration_list = [None] * number_system
+    ## optimized_configuration_list = [None] * number_system
+    best_configuration = None  # the best configuration ever
+    best_area = np.inf  # the best area ever
     area_list = np.zeros(number_system)
     start_time = time.time()
     iteration_times = []
@@ -104,7 +106,11 @@ def batch_optimization(
             is_record_configuration_history=False,
         )
         area_evolution_list[batch_index] = optimization_history["area_evolution"]
-        optimized_configuration_list[batch_index] = optimized_configuration
+        if optimized_area < best_area:
+            best_area = optimized_area
+            best_configuration = optimized_configuration
+
+        ## optimized_configuration_list[batch_index] = optimized_configuration
         area_list[batch_index] = optimized_area
         sorted_indices = np.argsort(area_list)
 
@@ -123,8 +129,8 @@ def batch_optimization(
             progress_callback(progress, estimated_total_time, remaining_time)
     # ---------------- end the optimization ---------------- #
 
-    # update the sample holder if is_update_sampleholder is True
-    new_vertices_list = optimized_configuration_list[sorted_indices[0]]
+    # update the sample holder anyway
+    new_vertices_list = best_configuration
     update_sampleholder(sampleholder, new_vertices_list)
 
     # ------- plot the optimized configuration ------- #
@@ -164,7 +170,7 @@ def batch_optimization(
         # save the sampleholder. change the name of the output file within the folder if the results are desirable
         save_sampleholder(sampleholder)
 
-    return optimized_configuration_list, area_list, sorted_indices, area_evolution_list
+    return best_configuration, area_list, sorted_indices, area_evolution_list
 
 
 def optimization(
