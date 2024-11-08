@@ -35,7 +35,7 @@ def batch_optimization(
     number_of_iterations: int = 10000,
     step_size: int = 20,
     temperature: float = 300,
-    contour_buffer_multiplier: float = 1.01,
+    contour_buffer_multiplier: float = 1.0,
     optimize_shape="convex_hull",
     is_rearrange_vertices=True,
     is_gravity=True,
@@ -170,7 +170,7 @@ def optimization(
     number_of_iterations: int = 3000,
     step_size: int = 20,
     temperature: float = 1000,
-    contour_buffer_multiplier: float = 1.01,
+    contour_buffer_multiplier: float = 1.0,
     optimize_shape="min_circle",
     is_rearrange_vertices=True,
     is_gravity=True,
@@ -209,7 +209,8 @@ def optimization(
     - optimization_history: a dictionary containing the area_evolution and vertices_list_evolution
     """
     # initialization
-
+    sampleholder.contour_buffer_multiplier = contour_buffer_multiplier
+    sampleholder.is_contour_buffer = is_contour_buffer
     # preset annealing parameters
     initial_temperature = temperature
     current_temperature = temperature

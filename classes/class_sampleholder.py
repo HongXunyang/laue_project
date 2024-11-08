@@ -55,6 +55,10 @@ class SampleHolder:
         self.ratio_convex: float = (
             None  # the ratio again, but the sample area is the area of its convex hull.
         )
+        self.contour_buffer_multiplier: float = (
+            1  # the buffer multiplier for the contour of the sample holder. 1 means no buffer; 1.1 for 10% buffer, i.e. the contour is 10% larger when doing optimization
+        )
+        self.is_contour_buffer: bool = False  # if the contour is buffered
         self._id2sample = {}  # given the id, return the sample object
         self._id2list_index = (
             {}

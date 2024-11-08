@@ -165,6 +165,8 @@ def save_sampleholder(sampleholder, folder_path=None, filename=None):
         if sampleholder.vertices_list is not None
         else [[[0, 0]]]
     )
+    contour_buffer_multiplier: float = sampleholder.contour_buffer_multiplier
+    is_contour_buffer: bool = sampleholder.is_contour_buffer
 
     sampleholder_dict = dict(
         name=name,
@@ -177,6 +179,8 @@ def save_sampleholder(sampleholder, folder_path=None, filename=None):
         samples_area=samples_area,
         ratio=ratio,
         ratio_convex=ratio_convex,
+        contour_buffer_multiplier=contour_buffer_multiplier,
+        is_contour_buffer=is_contour_buffer,
         convex_hull=convex_hull,
         vertices_list=vertices_list,
     )
