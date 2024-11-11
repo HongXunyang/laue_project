@@ -117,9 +117,9 @@ if STEP_CONTROL["test"]:
     start_time = time.time()
     best_vertices_list, best_area, optimization_history = optimization(
         sampleholder,
-        number_of_iterations=3000,
+        number_of_iterations=35000,
         step_size=25,
-        temperature=500,
+        temperature=400,
         gravity_multiplier=0.5,
         gravity_off_at=2700,
         contour_buffer_multiplier=1.01,
