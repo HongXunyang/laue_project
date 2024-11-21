@@ -1,21 +1,3 @@
-from matplotlib import pyplot as plt
-import numpy as np
-import matplotlib.pyplot as plt
-import time, cv2
-from contour_finding import (
-    image2contours,
-    generate_sample_objects,
-    generate_sampleholder_object,
-)
-from utils import animate_config_evolution, save_sampleholder, visualize_sampleholder
-from to_cad import vertices_list_to_cad, sampleholder_to_cad
-from config.config import (
-    batch_optimization_kwargs,
-    tests_config,
-    image2contours_kwargs,
-)
-from close_packing import batch_optimization, optimization
-
 """ 
 __version__ = 1.0
 __author__ = "Xunyang Hong"
@@ -73,6 +55,23 @@ Check the `temporary_output/` folder for the processed images. If the contours a
 
 3. Batch Optimization: Once you find the best parameters for the optimization process, set `STEP_CONTROL["test"]=False` and `STEP_CONTROL["close_packing"]=True` and `STEP_CONTROL["convert_to_cad"]=True`. Everything else is the same as the trial run. The results will be saved in the `temporary_output/` folder.
 """
+
+import time, cv2
+from matplotlib import pyplot as plt
+from contour_finding import (
+    image2contours,
+    generate_sample_objects,
+    generate_sampleholder_object,
+)
+from utils import animate_config_evolution
+from to_cad import vertices_list_to_cad, sampleholder_to_cad
+from config.config import (
+    batch_optimization_kwargs,
+    tests_config,
+    image2contours_kwargs,
+)
+from close_packing import batch_optimization, optimization
+
 
 STEP_CONTROL = dict(
     test=True, contour_finding=True, close_packing=True, convert_to_cad=True
