@@ -17,4 +17,5 @@ from .helper_functions import (
     vertices_area,
     update_sampleholder,
     save_sampleholder,
+    rearrange_samples_indeces,
 )

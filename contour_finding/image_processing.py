@@ -16,7 +16,7 @@ from classes import (
     distance,
 )
 from config.config import config
-from utils import visualize_contours
+from utils import visualize_contours, rearrange_samples_indeces
 
 
 # --------------------------------
@@ -338,7 +338,9 @@ def generate_sample_object(id, contour, hull, grid_index=None) -> Sample:
     return sample
 
 
-def generate_sample_objects(contours, hulls, is_remove_background_contour=True) -> list:
+def generate_sample_objects(
+    contours, hulls, is_remove_background_contour=True, is_rearrange_indeces=True
+) -> list:
     """
     This function generates a list of Sample objects from the contours, approximated contours, and hulls.
 
@@ -346,6 +348,7 @@ def generate_sample_objects(contours, hulls, is_remove_background_contour=True) 
     - contours: list of contours.
     - hulls: list of hulls.
     - is_remove_background_contour: if True, remove the background contour.
+    - (not functional yet) is_rearrange_indeces: if True, rearrange the samples in the sampleholder.
     Returns: list of Sample objects. Usually, the 0th element is the background...
     ---------------
     """
@@ -353,17 +356,25 @@ def generate_sample_objects(contours, hulls, is_remove_background_contour=True) 
         contours, hulls = _remove_background_contour(contours, hulls)
     sample_objects = []
 
+    # rearrange the indeces of the samples
+    if is_rearrange_indeces:
+        # calculate the center of each hulls
+        pass
+
     for i, (contour, hull) in enumerate(zip(contours, hulls)):
         sample_objects.append(generate_sample_object(i, contour, hull))
     return sample_objects
 
 
-def generate_sampleholder_object(samples) -> FunctionalSampleHolder:
+def generate_sampleholder_object(
+    samples, is_rearrange_indeces=True
+) -> FunctionalSampleHolder:
     """
     This function generates a SampleHolder object from the list of Sample objects.
 
     Args:
     - samples: list of Sample objects.
+    - is_rearrange_indeces: if True, rearrange the samples indeces in the sampleholder.
 
     Returns: SampleHolder object
     ---------------
@@ -371,4 +382,6 @@ def generate_sampleholder_object(samples) -> FunctionalSampleHolder:
     sampleholder = FunctionalSampleHolder()
     for sample in samples:
         sampleholder.add_sample(sample)
+    if is_rearrange_indeces:
+        rearrange_samples_indeces(sampleholder)
     return sampleholder

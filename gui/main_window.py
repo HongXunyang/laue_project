@@ -280,8 +280,22 @@ class MainWindow(QMainWindow):
                 background_vectors=self.background_vectors,
                 **image2contours_kwargs,
             )
+            # update the sampleholder object
+            samples_list = generate_sample_objects(approximated_contours, hulls)
+            self.sampleholder = generate_sampleholder_object(
+                samples_list, is_rearrange_indeces=True
+            )
+            samples_list = self.sampleholder.samples_list
+            rearranged_contours = [
+                sample.contour_original.contour
+                for sample in self.sampleholder.samples_list
+            ]
+            rearranged_hulls = [
+                sample.contour_original.hull
+                for sample in self.sampleholder.samples_list
+            ]
             image_to_visualize = visualize_contours(
-                image, approximated_contours, hulls, is_plot=False
+                image, rearranged_contours, rearranged_hulls, is_plot=False
             )
             min_area = min([cv2.contourArea(hull) for hull in hulls])
             max_area = max([cv2.contourArea(hull) for hull in hulls])
@@ -291,9 +305,7 @@ class MainWindow(QMainWindow):
             # re-plot the image in image_display
             self.image_display.replot_image_with_contours(image_to_visualize)
 
-            # update the sampleholder object
-            samples_list = generate_sample_objects(approximated_contours, hulls)
-            self.sampleholder = generate_sampleholder_object(samples_list)
+            # logging
             self.output_log.append(f"Information about the Image:")
             # max brighness, min brightness, width in pixel, height in pixel
             self.output_log.append(f"max brightness: {logging_dict['max_brightness']}")

@@ -7,7 +7,10 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import animate_config_evolution, save_sampleholder, visualize_sampleholder
+from utils import (
+    visualize_sampleholder,
+    rearrange_samples_indeces,
+)
 from to_cad import vertices_list_to_cad, sampleholder_to_cad
 from config.config import (
     batch_optimization_kwargs,
@@ -19,19 +22,16 @@ from close_packing import batch_optimization, optimization
 STEP_CONTROL = dict(
     test=False, contour_finding=True, close_packing=True, convert_to_cad=True
 )
-stripes_vectors = [[124, 128, 147], [105, 115, 133], [104, 115, 142]]
-
 
 # ----------- image pre-processing ----------- #
 if STEP_CONTROL["contour_finding"] or STEP_CONTROL["test"]:
     start_time = time.time()
-    stripes_vectors, background_vectors, target_background_vector = (
-        tests_config["stripes_vectors"],
-        tests_config["background_vectors"],
-        tests_config["target_background_vector"],
-    )
+    stripes_vectors = np.array([[124, 128, 147], [105, 115, 133], [104, 115, 142]])
+    background_vectors = np.array([[175, 169, 162], [184, 178, 171], [189, 181, 174]])
+    target_background_vector = np.array([180, 175, 168])
+
     # Load image
-    image = cv2.imread(tests_config["test_image_path"])
+    image = cv2.imread("../images/samples_from_jasmin.jpg")
     rows, columns, channels = image.shape
 
     # ----------- end of image pre-processing ----------- #
@@ -52,6 +52,6 @@ if STEP_CONTROL["contour_finding"] or STEP_CONTROL["test"]:
     samples_list = generate_sample_objects(approximated_contours, hulls)
     sampleholder = generate_sampleholder_object(samples_list)
 # ----------- end of contour finding ----------- #
-
+visualize_sampleholder(sampleholder, is_min_circle=False)
 
 plt.show()

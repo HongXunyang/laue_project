@@ -224,3 +224,37 @@ def load_sampleholder(folder_path, filename):
     # rebuild the samples_list
     print("XUN-WARNING - Currently rebuidling samples_list not supported...")
     return sampleholder
+
+
+def rearrange_samples_indeces(sampleholder: FunctionalSampleHolder):
+    """
+    rearrange the labels/indeces of the samples in a sampleholder. the sample labeled by 0 is the
+    one on the top left corner. sample with index 1 is the one on the right of sample 0. An
+    examplary index configuration:
+    0 1 2
+    3 4 5
+    6 7 8
+
+    Mechanism:
+    ------------
+    sort the samples based on their y coordinates, group them with the size of 10, and sort them by
+    their x coordinates within each group.
+    """
+    samples_list = sampleholder.samples_list
+    # coordinates_list = [sample.position_original for sample in samples_list]
+
+    # sort the coordinates based on the y coordinates
+    samples_list.sort(key=lambda x: x.position_original[1])
+
+    # group the coordinates into groups of 10
+    for i in range(0, len(samples_list), 10):
+        # sort the coordinates within each group based on the x coordinates
+        samples_list[i : min(i + 10, len(samples_list))] = sorted(
+            samples_list[i : min(i + 10, len(samples_list))],
+            key=lambda x: x.position_original[0],
+        )
+
+    for index, sample in enumerate(samples_list):
+        sample.id = index
+
+    return samples_list
