@@ -69,6 +69,7 @@ def sampleholder_to_cad(
     folder_path=None,
     filename=None,
     radius_multiplier: float = None,
+    mm_per_pixel: float = None,
 ):
     """
     Convert a sampleholder (FunctionalSampleHolder object) to a CAD file.
@@ -79,7 +80,10 @@ def sampleholder_to_cad(
     Keyword Args:
     - `folder_path`: str, the folder to save the CAD file, default is defined in the config dictionary `config/config.py` file.
     - `filename`: str, the name of the CAD file, default is defined in the config dictionary `config/config.py` file.
-    - `radius_multiplier`: float, the multiplier to adjust the radius of the sample holder. For example, 1.2 means the radius is 20% larger than the minimum enclosing circle of all samples. Default is defined in the `physical_size` dictionary in the `config/config.py` file.
+    - `radius_multiplier`: float, the multiplier to adjust the radius of the sample holder. For
+    example, 1.2 means the radius is 20% larger than the minimum enclosing circle of all samples.
+    Default is defined in the `physical_size` dictionary in the `config/config.py` file.
+    - `mm_per_pixel`: float, the conversion factor between pixels and millimeters.
     """
     # check folder_path and filename
     if folder_path is None:
@@ -109,7 +113,6 @@ def sampleholder_to_cad(
         # Define the holder rectangle
         holder_rectangle = _size_to_rectangle(sampleholder.size)
         # Extrude the holder rectangle to create a cuboid
-        holder_thickness = 60.0  # Adjust as needed
         holder_mesh = _extrude_polygon(
             holder_rectangle, height=sampleholder_thickness
         )  # convert it to a 3D shape by extruding the rectangle
@@ -118,6 +121,7 @@ def sampleholder_to_cad(
         vertices_list = sampleholder2vertices_list(sampleholder)
 
         for idx, poly_points in enumerate(vertices_list):
+            poly_points_mm = poly_points * mm_per_pixel
             engrave_mesh = _extrude_polygon(poly_points, height=sample_thickness)
             engrave_meshes.append(engrave_mesh)
 
@@ -139,13 +143,15 @@ def sampleholder_to_cad(
         final_mesh.export(path)
 
     else:
-        radius = sampleholder.radius * radius_multiplier
-        center = sampleholder.center
+        # Convert pixel measurements to mm
+        radius_mm = sampleholder.radius * radius_multiplier * mm_per_pixel
+        center_mm = sampleholder.center * mm_per_pixel
+
         # Create a mesh of a cylinder along Z centered at the origin.
         holder_mesh = trimesh.creation.cylinder(
-            radius=radius, height=sampleholder_thickness, sections=64
+            radius=radius_mm, height=sampleholder_thickness, sections=64
         )
-        translation = np.append(center, 0) + np.array(
+        translation = np.append(center_mm, 0) + np.array(
             [0, 0, sampleholder_thickness / 2]
         )
         holder_mesh.apply_translation(translation)
@@ -154,7 +160,9 @@ def sampleholder_to_cad(
         vertices_list = sampleholder2vertices_list(sampleholder)
 
         for idx, poly_points in enumerate(vertices_list):
-            engrave_mesh = _extrude_polygon(poly_points, height=sample_thickness)
+            # Convert polygon vertices from pixels to mm
+            poly_points_mm = poly_points * mm_per_pixel
+            engrave_mesh = _extrude_polygon(poly_points_mm, height=sample_thickness)
             engrave_meshes.append(engrave_mesh)
 
             # Optional: Save individual engrave meshes for debugging

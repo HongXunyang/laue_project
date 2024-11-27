@@ -61,7 +61,6 @@ class Sample:
             )
             self.contour_new.contour[i][0][0] = x_contour_new
             self.contour_new.contour[i][0][1] = y_contour_new
-
         for i in range(len(hull_original)):
             x_hull_original, y_hull_original = hull_original[i][0]
             x_hull_new, y_hull_new = _rotate(
@@ -72,6 +71,7 @@ class Sample:
 
         # update the status of the sample (re-oriented)
         self.is_reoriented = True
+        self.contour_new.update()
 
     def relocate(self, is_print=False):
         """

@@ -391,7 +391,7 @@ def animate_config_evolution(
     ax_config.set_xlim(min(all_x) - 1, max(all_x) + 1)
     ax_config.set_ylim(min(all_y) - 1, max(all_y) + 1)
     ax_config.set_title("Configuration Evolution")
-
+    ax_config.invert_yaxis()
     # Initialize the area plot
     (ratio_line,) = ax_ratio.plot(
         [],

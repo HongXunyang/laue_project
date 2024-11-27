@@ -32,6 +32,12 @@ class Contour:
         self.hull = self.hull.astype(np.float32)
         pass
 
+    def update(self):
+        # update the polygon and the vertices according to the current contour and hull
+        self.polygon = Polygon(self.hull.squeeze().tolist())
+        self.vertices = self.hull.squeeze()
+        self.vertices = self.vertices.astype(np.float32)
+
     def relocate(self, translation: np.ndarray):
         # change the contour, hull, and vertices
         # convert all the int32 to float32 for better accuracy
