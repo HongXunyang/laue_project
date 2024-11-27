@@ -138,7 +138,7 @@ def sampleholder_to_cad(
         # Export the final engraved holder as an STL file
         final_mesh.export(path)
 
-    elif sampleholder.shape == "circle":
+    else:
         radius = sampleholder.radius * radius_multiplier
         center = sampleholder.center
         # Create a mesh of a cylinder along Z centered at the origin.

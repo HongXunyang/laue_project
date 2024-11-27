@@ -385,4 +385,11 @@ The `batch_optimization` and `optimization` functions optimize the configuration
 - `gravity_multiplier` and `gravity_off_at`: Control gravity strength and when it is disabled, improving compactness early on without interfering in later iterations. multiplier = 1 means the movement of the polygons are always along the gravity force; 0.5 means the movement is half along the gravity force and half random. gravity_off_at = 2500 means the gravity is turned off at the 2500th iteration.
 - `is_update_sampleholder`: If `True`, updates the sample holder object after the process.
 
-This simulated annealing-based approach systematically explores configurations, balancing randomness with structured optimization to achieve an efficient, close-packed layout of samples.
+This simulated annealing-based approach systematically explores configurations, balancing randomness
+with structured optimization to achieve an efficient, close-packed layout of samples.
+
+
+# To-do
+- Slider for the contour finding parameters. 
+- Rearrange the coordinates of the samples according to their position.
+- Automize orientation feed-in for the re-orientation.

@@ -188,9 +188,9 @@ def visualize_contours(
             cY = int(M["m01"] / M["m00"])
             # the color of the font depends on the i value: (255,255,255) while for i=0, and linearly decreases down to (150,150,150) gray
             font_color = (
-                int(255 - 105 * i / number_contours),
-                int(255 - 105 * i / number_contours),
-                int(255 - 105 * i / number_contours),
+                200,
+                int(255 - 50 * i / number_contours),
+                220,
             )
             # the font size depends on the i value: 1.8 while for i=0, and linearly decreases down to 1.0
             # horizontal alignment: center, vertical alignment: center

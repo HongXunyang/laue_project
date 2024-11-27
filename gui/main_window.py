@@ -28,6 +28,7 @@ from close_packing import batch_optimization
 from config.config import batch_optimization_kwargs, config, image2contours_kwargs
 from utils import visualize_sampleholder, visualize_area_evolution, save_sampleholder
 from .worker import ClosePackingWorker
+from to_cad import sampleholder_to_cad
 
 
 class MainWindow(QMainWindow):
@@ -220,6 +221,11 @@ class MainWindow(QMainWindow):
         controls_layout.addWidget(self.close_packing_button)
         self.close_packing_button.setObjectName("close_packing_button")
 
+        # Convert to CAD Button
+        self.convert_to_cad_button = QPushButton("Convert to CAD")
+        controls_layout.addWidget(self.convert_to_cad_button)
+        self.convert_to_cad_button.setObjectName("convert_to_cad_button")
+
         controls.setLayout(controls_layout)
 
         panelB_layout.addWidget(contour_finding_params)
@@ -248,6 +254,7 @@ class MainWindow(QMainWindow):
         self.process_button.clicked.connect(self.process_image)
         self.select_points_button.clicked.connect(self.start_point_selection)
         self.close_packing_button.clicked.connect(self.close_packing)
+        self.convert_to_cad_button.clicked.connect(self.convert_to_cad)
         # -----------------------
         # Signal management
         # -----------------------
@@ -409,6 +416,18 @@ class MainWindow(QMainWindow):
         )
 
         self.matplotlib_canvas.draw()
+
+    def convert_to_cad(self):
+        folder_path = config["temporary_output_folder"]
+        filename = config["sampleholder_cad_filename"]
+        sampleholder_to_cad(
+            self.sampleholder,
+            folder_path=folder_path,
+            filename=filename,
+        )
+        self.output_log.append(
+            f"Exported the sample holder to {folder_path} in STL format."
+        )
 
     # -----------------------
     # Signal management methods

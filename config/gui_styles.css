@@ -41,19 +41,20 @@ QGroupBox::title {
 }
 
 /* Button Styling */
-#select_points_button, #process_button, #close_packing_button {
+#select_points_button, #process_button, #close_packing_button, #convert_to_cad_button {
     background-color: #4CAF50;
     color: white;
     border-radius: 4px;
     padding: 8px 16px;
     border: none;
 }
-#select_points_button:hover, #process_button:hover, #close_packing_button:hover {
+#select_points_button:hover, #process_button:hover, #close_packing_button:hover, #convert_to_cad_button:hover {
     background-color: #45a049;
 }
-#select_points_button:pressed, #process_button:pressed, #close_packing_button:pressed {
+#select_points_button:pressed, #process_button:pressed, #close_packing_button:pressed, #convert_to_cad_button:pressed {
     background-color: #337335;
 }
+
 
 /* Line Edit Styling */
 QLineEdit {
