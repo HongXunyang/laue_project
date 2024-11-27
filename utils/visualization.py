@@ -152,6 +152,7 @@ def visualize_contours(
     hulls,
     is_remove_background_contour=True,
     is_plot=False,
+    is_output_image=True,
 ):
     """
     Overlay the contours and hulls on the image and label the contours.
@@ -210,6 +211,11 @@ def visualize_contours(
         cv2.namedWindow("result", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("result", 800, 500)
         cv2.imshow("result", image_copy)
+
+    if is_output_image:
+        folder_path = config["temporary_output_folder"]
+        output_image_path = os.path.join(folder_path, "6_temp_final_image.jpg")
+        cv2.imwrite(output_image_path, image_copy)
     return image_copy
 
 

@@ -238,19 +238,12 @@ def image2contours(
         )
         gray_image_path = os.path.join(folder_path, "4_temp_gray_image.jpg")
         binary_image_path = os.path.join(folder_path, "5_temp_binary_image.jpg")
-        final_image_path = os.path.join(folder_path, "6_temp_final_image.jpg")
 
         cv2.imwrite(original_image_path, image)
         cv2.imwrite(stripes_free_image_path, image_stripes_free)
         cv2.imwrite(unified_background_image_path, image_unfied_background)
         cv2.imwrite(gray_image_path, image_gray)
         cv2.imwrite(binary_image_path, image_binary)
-        final_image = visualize_contours(
-            image,
-            approximated_contours,
-            hulls,
-        )
-        cv2.imwrite(final_image_path, final_image)
 
     # OUTPUT: contours, approximated_contours, hulls, and a dirctionary of
     # - maximum brighness of the gray image

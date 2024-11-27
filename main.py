@@ -63,7 +63,7 @@ from contour_finding import (
     generate_sample_objects,
     generate_sampleholder_object,
 )
-from utils import animate_config_evolution
+from utils import animate_config_evolution, visualize_contours
 from to_cad import vertices_list_to_cad, sampleholder_to_cad
 from config.config import (
     batch_optimization_kwargs,
@@ -108,6 +108,15 @@ if STEP_CONTROL["contour_finding"] or STEP_CONTROL["test"]:
     # create samples objects and sample holder object
     samples_list = generate_sample_objects(approximated_contours, hulls)
     sampleholder = generate_sampleholder_object(samples_list)
+    contours = [sample.contour_original.contour for sample in sampleholder.samples_list]
+    hulls = [sample.contour_original.hull for sample in sampleholder.samples_list]
+    visualize_contours(
+        image,
+        contours,
+        hulls,
+        is_plot=False,
+        is_output_image=True,
+    )
 # ----------- end of contour finding ----------- #
 # ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 # ----------------- Test ----------------- #

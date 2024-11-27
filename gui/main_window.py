@@ -1,5 +1,5 @@
 import numpy as np
-import cv2, json, time
+import cv2, json, time, os
 from PyQt5.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -295,8 +295,13 @@ class MainWindow(QMainWindow):
                 for sample in self.sampleholder.samples_list
             ]
             image_to_visualize = visualize_contours(
-                image, rearranged_contours, rearranged_hulls, is_plot=False
+                image,
+                rearranged_contours,
+                rearranged_hulls,
+                is_plot=False,
+                is_output_image=True,
             )
+
             min_area = min([cv2.contourArea(hull) for hull in hulls])
             max_area = max([cv2.contourArea(hull) for hull in hulls])
             self.output_log.append(
