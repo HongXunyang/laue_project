@@ -28,7 +28,7 @@ class ReportGenerator:
         """Copy all relevant files from temporary_output to report assets"""
         # Copy all image files
         for filename in os.listdir(self.temp_dir):
-            if filename.endswith((".png", ".jpg", ".jpeg")):
+            if filename.endswith((".png", ".jpg", ".jpeg", ".stl", ".json")):
                 src = os.path.join(self.temp_dir, filename)
                 dst = os.path.join(self.assets_dir, filename)
                 shutil.copy2(src, dst)
