@@ -51,27 +51,10 @@ class Sample:
             raise ValueError(f"Phi offset of sample {self.id} is not assigned")
 
         # re-orient the sample
-        center = self.position_original  # rotate the sample around the center
-        contour_original = self.contour_original.contour
-        hull_original = self.contour_original.hull
-        for i in range(len(contour_original)):
-            x_contour_original, y_contour_original = contour_original[i][0]
-            x_contour_new, y_contour_new = _rotate(
-                center, (x_contour_original, y_contour_original), self.phi_offset
-            )
-            self.contour_new.contour[i][0][0] = x_contour_new
-            self.contour_new.contour[i][0][1] = y_contour_new
-        for i in range(len(hull_original)):
-            x_hull_original, y_hull_original = hull_original[i][0]
-            x_hull_new, y_hull_new = _rotate(
-                center, (x_hull_original, y_hull_original), self.phi_offset
-            )
-            self.contour_new.hull[i][0][0] = x_hull_new
-            self.contour_new.hull[i][0][1] = y_hull_new
+        self.contour_new.reorient(self.phi_offset)
 
         # update the status of the sample (re-oriented)
         self.is_reoriented = True
-        self.contour_new.update()
 
     def relocate(self, is_print=False):
         """

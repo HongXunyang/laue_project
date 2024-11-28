@@ -144,7 +144,7 @@ if True:
     start_time = time.time()
     best_configuration, area_list, sorted_indices, _ = batch_optimization(
         sampleholder,
-        number_system=10,
+        number_system=3,
         is_print=True,
         step_size=20,
         number_of_iterations=30000,

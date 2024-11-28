@@ -159,13 +159,13 @@ def batch_optimization(
         optimized_configuration_path = os.path.join(
             config["temporary_output_folder"], "optimized_configuration.jpg"
         )
-        fig_config.savefig(optimized_configuration_path)
+        fig_config.savefig(optimized_configuration_path, dpi=200)
 
         # save the area evolution plot
         area_evolution_path = os.path.join(
             config["temporary_output_folder"], "area_evolution.jpg"
         )
-        fig_area.savefig(area_evolution_path)
+        fig_area.savefig(area_evolution_path, dpi=200)
 
         # save the sampleholder. change the name of the output file within the folder if the results are desirable
         save_sampleholder(sampleholder)

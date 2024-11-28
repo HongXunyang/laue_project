@@ -256,5 +256,7 @@ def rearrange_samples_indeces(sampleholder: FunctionalSampleHolder):
 
     for index, sample in enumerate(samples_list):
         sample.id = index
+        sample.contour_original.id = index
+        sample.contour_new.id = index
 
     return samples_list

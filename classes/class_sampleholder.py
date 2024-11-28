@@ -258,8 +258,8 @@ class FunctionalSampleHolder(SampleHolder):
         # if phi offset is not assigned, raise an error
         if sample.phi_offset is None:
             raise ValueError(f"The phi offset of sample {sample.id} is not assigned")
-        sample.reorient()
-        pass
+        else:
+            sample.reorient()
 
     def reorient_sample_by_index(self, index, search_type="id"):
         """
