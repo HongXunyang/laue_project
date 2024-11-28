@@ -38,8 +38,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Contour-finding and Close-packing GUI")
 
-        # Add phi_offset_list to variables
-        self.phi_offset_list = None
         self.initUI()
 
         # variables
@@ -52,6 +50,7 @@ class MainWindow(QMainWindow):
         self.default_image2contours_kwargs = image2contours_kwargs
         self.default_batch_optimization_kwargs = batch_optimization_kwargs
         self.sampleholder = None  # sampleholder object
+        self.phi_offset_list = None
 
     def initUI(self):
         main_widget = QWidget()
@@ -108,6 +107,10 @@ class MainWindow(QMainWindow):
         self.process_button = QPushButton("Process Image")
         self.process_button.setObjectName("process_button")
 
+        # Reorient Samples Button
+        self.reorient_samples_button = QPushButton("Re-orient Samples")
+        self.reorient_samples_button.setObjectName("reorient_samples_button")
+
         # add row
         contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
         contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
@@ -118,6 +121,7 @@ class MainWindow(QMainWindow):
         contour_finding_params_layout.addRow("Threshold:", self.threshold_input)
         contour_finding_params_layout.addRow(self.select_points_button)
         contour_finding_params_layout.addRow(self.process_button)
+        contour_finding_params_layout.addRow(self.reorient_samples_button)
         contour_finding_params.setLayout(contour_finding_params_layout)
 
         # B-2: Close packing parameters
@@ -267,6 +271,7 @@ class MainWindow(QMainWindow):
         self.select_points_button.clicked.connect(self.start_point_selection)
         self.close_packing_button.clicked.connect(self.close_packing)
         self.convert_to_cad_button.clicked.connect(self.convert_to_cad)
+        self.reorient_samples_button.clicked.connect(self.reorient_samples)
         # -----------------------
         # Signal management
         # -----------------------
@@ -628,3 +633,54 @@ class MainWindow(QMainWindow):
             is_gaussian_filter=is_gaussian_filter,
         )
         return image2contours_kwargs
+
+    def reorient_samples(self):
+        """
+        Reorient samples based on the loaded phi offset array
+        """
+        # Check if sampleholder exists
+        if self.sampleholder is None:
+            self.output_log.append(
+                "❌ Error: Please process image first to create sample holder"
+            )
+            return
+
+        # Check if phi_offset_list exists
+        if self.phi_offset_list is None:
+            self.output_log.append("❌ Error: Please load phi offset array first")
+            return
+
+        # Check if lengths match
+        if len(self.phi_offset_list) != len(self.sampleholder.samples_list):
+            self.output_log.append(
+                f"❌ Error: Number of phi offsets ({len(self.phi_offset_list)}) "
+                f"does not match number of samples ({len(self.sampleholder.samples_list)})"
+            )
+            return
+
+        # Start reorientation process
+        self.output_log.append(
+            "----------- 🏃‍ Start [Sample Reorientation] -----------"
+        )
+
+        try:
+            # Assign phi offsets and reorient
+            for sample, phi_offset in zip(
+                self.sampleholder.samples_list, self.phi_offset_list
+            ):
+                self.sampleholder.assign_phi_offset(sample, phi_offset)
+
+            self.sampleholder.reorient()
+
+            self.output_log.append(
+                f"Successfully reoriented {len(self.sampleholder.samples_list)} samples"
+            )
+            self.output_log.append(
+                "----------- ✔️ End [Sample Reorientation] -----------\n"
+            )
+
+        except Exception as e:
+            self.output_log.append(f"❌ Error during reorientation: {str(e)}")
+            self.output_log.append(
+                "----------- ❌ End [Sample Reorientation] -----------\n"
+            )
