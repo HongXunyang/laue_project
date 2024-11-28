@@ -393,3 +393,4 @@ with structured optimization to achieve an efficient, close-packed layout of sam
 - Slider for the contour finding parameters. 
 - Rearrange the coordinates of the samples according to their position.
 - Automize orientation feed-in for the re-orientation.
+- auto-generation of report in the format of HTML.

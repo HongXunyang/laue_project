@@ -235,6 +235,11 @@ class MainWindow(QMainWindow):
         controls_layout.addWidget(self.convert_to_cad_button)
         self.convert_to_cad_button.setObjectName("convert_to_cad_button")
 
+        # Generate Report Button
+        self.generate_report_button = QPushButton("Generate Report")
+        controls_layout.addWidget(self.generate_report_button)
+        self.generate_report_button.setObjectName("generate_report_button")
+
         controls.setLayout(controls_layout)
 
         panelB_layout.addWidget(contour_finding_params)
@@ -272,6 +277,7 @@ class MainWindow(QMainWindow):
         self.close_packing_button.clicked.connect(self.close_packing)
         self.convert_to_cad_button.clicked.connect(self.convert_to_cad)
         self.reorient_samples_button.clicked.connect(self.reorient_samples)
+        self.generate_report_button.clicked.connect(self.generate_report)
         # -----------------------
         # Signal management
         # -----------------------
@@ -357,7 +363,7 @@ class MainWindow(QMainWindow):
         - read close packing keyword arguments
         - run the close packing algorithm
         """
-        self.output_log.append("----------- 🏃‍ Start [close packing] -----------")
+        self.output_log.append("----------- 🏃 Start [close packing] -----------")
 
         # get local batch optimization kwargs
         local_batch_optimization_kwargs = self.get_local_batch_optimization_kwargs()
@@ -684,3 +690,51 @@ class MainWindow(QMainWindow):
             self.output_log.append(
                 "----------- ❌ End [Sample Reorientation] -----------\n"
             )
+
+    def generate_report(self):
+        """Generate HTML report with all results"""
+        try:
+            # Check if sampleholder exists
+            if self.sampleholder is None:
+                self.output_log.append(
+                    "❌ Error: Please process image first to create sample holder"
+                )
+                return
+
+            from utils.report_generator import ReportGenerator
+
+            # Create report generator
+            generator = ReportGenerator()
+
+            # Generate report with proper type checking
+            optimization_results = {
+                "final_ratio": (
+                    float(self.sampleholder.ratio)
+                    if self.sampleholder and self.sampleholder.ratio is not None
+                    else 0.0
+                ),
+                "iterations": (
+                    len(self.area_evolution_list) if self.area_evolution_list else 0
+                ),
+                "computation_time": 0.0,  # You can add actual computation time if available
+            }
+
+            report_path = generator.generate_report(
+                self.sampleholder, optimization_results
+            )
+
+            self.output_log.append(
+                f"✅ Report generated successfully at: {report_path}"
+            )
+
+            # Open the report in default browser
+            import webbrowser
+
+            webbrowser.open(f"file://{os.path.abspath(report_path)}")
+
+        except Exception as e:
+            self.output_log.append(f"❌ Error generating report: {str(e)}")
+            # Print full traceback for debugging
+            import traceback
+
+            self.output_log.append(traceback.format_exc())

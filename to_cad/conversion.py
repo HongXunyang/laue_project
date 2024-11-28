@@ -69,7 +69,7 @@ def sampleholder_to_cad(
     folder_path=None,
     filename=None,
     radius_multiplier: float = None,
-    mm_per_pixel: float = None,
+    mm_per_pixel: float = 1.0,
 ):
     """
     Convert a sampleholder (FunctionalSampleHolder object) to a CAD file.

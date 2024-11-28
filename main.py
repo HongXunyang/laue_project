@@ -56,7 +56,7 @@ Check the `temporary_output/` folder for the processed images. If the contours a
 3. Batch Optimization: Once you find the best parameters for the optimization process, set `STEP_CONTROL["test"]=False` and `STEP_CONTROL["close_packing"]=True` and `STEP_CONTROL["convert_to_cad"]=True`. Everything else is the same as the trial run. The results will be saved in the `temporary_output/` folder.
 """
 
-import time, cv2
+import time, cv2, os
 from matplotlib import pyplot as plt
 from contour_finding import (
     image2contours,
@@ -71,10 +71,11 @@ from config.config import (
     image2contours_kwargs,
 )
 from close_packing import batch_optimization, optimization
+from utils.report_generator import ReportGenerator
 
 
 STEP_CONTROL = dict(
-    test=True, contour_finding=True, close_packing=True, convert_to_cad=True
+    test=False, contour_finding=True, close_packing=True, convert_to_cad=True
 )
 
 
@@ -188,4 +189,33 @@ if STEP_CONTROL["convert_to_cad"] and not STEP_CONTROL["test"]:
         sampleholder,
     )
 # ----------- end  ----------- #
+if any([STEP_CONTROL[key] for key in STEP_CONTROL.keys()]):
+    # Generate report after all processing is done
+    try:
+        generator = ReportGenerator()
+        optimization_results = {
+            "final_ratio": sampleholder.ratio if "sampleholder" in locals() else None,
+            "iterations": (
+                len(area_evolution_list) if "area_evolution_list" in locals() else None
+            ),
+            "computation_time": (
+                end_time - start_time
+                if "end_time" in locals() and "start_time" in locals()
+                else None
+            ),
+        }
+
+        report_path = generator.generate_report(
+            sampleholder if "sampleholder" in locals() else None, optimization_results
+        )
+        print(f"\nReport generated successfully at: {report_path}")
+
+        # Optionally open the report
+        import webbrowser
+
+        webbrowser.open(f"file://{os.path.abspath(report_path)}")
+
+    except Exception as e:
+        print(f"\nError generating report: {str(e)}")
+
 plt.show()
