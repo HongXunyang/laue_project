@@ -94,6 +94,16 @@ class MainWindow(QMainWindow):
             str(image2contours_kwargs["gaussian_window"][0]) + ", set to 0 if no filter"
         )
         self.threshold_input.setPlaceholderText(str(image2contours_kwargs["threshold"]))
+
+        # select-points button
+        self.select_points_button = QPushButton("Select Points")
+        self.select_points_button.setObjectName("select_points_button")
+
+        # Process Button
+        self.process_button = QPushButton("Process Image")
+        self.process_button.setObjectName("process_button")
+
+        # add row
         contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
         contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
         contour_finding_params_layout.addRow("Area lowercut:", self.area_lowercut_input)
@@ -101,7 +111,8 @@ class MainWindow(QMainWindow):
             "Gauss. filter size:", self.gaussian_size_input
         )
         contour_finding_params_layout.addRow("Threshold:", self.threshold_input)
-
+        contour_finding_params_layout.addRow(self.select_points_button)
+        contour_finding_params_layout.addRow(self.process_button)
         contour_finding_params.setLayout(contour_finding_params_layout)
 
         # B-2: Close packing parameters
@@ -178,6 +189,9 @@ class MainWindow(QMainWindow):
         self.is_save_results_button.setChecked(True)
         self.is_save_results_button.setObjectName("is_save_results_button")
 
+        self.close_packing_button = QPushButton("Start Close Packing")
+        self.close_packing_button.setObjectName("close_packing_button")
+
         close_packing_params_layout.addRow("No. of System:", self.number_system_input)
         close_packing_params_layout.addRow("Step Size:", self.step_size_input)
         close_packing_params_layout.addRow(
@@ -199,27 +213,13 @@ class MainWindow(QMainWindow):
         close_packing_params_layout.addRow(self.is_update_sampleholder_button)
         close_packing_params_layout.addRow(self.is_contour_buffer_button)
         close_packing_params_layout.addRow(self.is_save_results_button)
+        close_packing_params_layout.addRow(self.close_packing_button)
 
         close_packing_params.setLayout(close_packing_params_layout)
 
         # B-3: Buttons
         controls = QGroupBox("controls")
         controls_layout = QVBoxLayout()
-
-        # select-points button
-        self.select_points_button = QPushButton("Select Points")
-        controls_layout.addWidget(self.select_points_button)
-        self.select_points_button.setObjectName("select_points_button")
-
-        # Process Button
-        self.process_button = QPushButton("Process Image")
-        controls_layout.addWidget(self.process_button)
-        self.process_button.setObjectName("process_button")
-
-        # Close Packing Button
-        self.close_packing_button = QPushButton("Start Close Packing")
-        controls_layout.addWidget(self.close_packing_button)
-        self.close_packing_button.setObjectName("close_packing_button")
 
         # Convert to CAD Button
         self.convert_to_cad_button = QPushButton("Convert to CAD")
