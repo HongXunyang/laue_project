@@ -12,11 +12,12 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QCheckBox,
     QGridLayout,
+    QLabel,
 )
 from .image_display import ImageDisplay
 from .matplotlib_canvas import MatplotlibCanvas
 from .helper_functions import process_data
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, Qt, QThread, pyqtSignal
 from utils import visualize_contours
 from contour_finding import (
     image2contours,
@@ -29,12 +30,16 @@ from config.config import batch_optimization_kwargs, config, image2contours_kwar
 from utils import visualize_sampleholder, visualize_area_evolution, save_sampleholder
 from .worker import ClosePackingWorker
 from to_cad import sampleholder_to_cad
+from .array_drop_widget import ArrayFileDropWidget
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Contour-finding and Close-packing GUI")
+
+        # Add phi_offset_list to variables
+        self.phi_offset_list = None
         self.initUI()
 
         # variables
@@ -233,13 +238,20 @@ class MainWindow(QMainWindow):
         panelB_layout.addWidget(controls)
         panelB.setLayout(panelB_layout)
 
-        # Panel C: Output Log
+        # Panel C: Array Input and Output Log
         panelC = QWidget()
         panelC.setObjectName("panelC")
         panelC_layout = QVBoxLayout()
+
+        # Add the array drop widget
+        self.array_drop_widget = ArrayFileDropWidget()
+        panelC_layout.addWidget(self.array_drop_widget)
+
+        # Add the output log
         self.output_log = QTextEdit()
         self.output_log.setReadOnly(True)
         panelC_layout.addWidget(self.output_log)
+
         panelC.setLayout(panelC_layout)
 
         # Add panels to main layout
@@ -260,6 +272,7 @@ class MainWindow(QMainWindow):
         # -----------------------
         self.image_display.image_loaded_signal.connect(self._on_image_loaded)
         self.image_display.point_clicked_signal.connect(self._on_image_clicked)
+        self.array_drop_widget.array_loaded_signal.connect(self._on_array_loaded)
 
     def process_image(self):
         if self.image_display.image is not None:
@@ -498,6 +511,12 @@ class MainWindow(QMainWindow):
         self.stripes_vectors = [np.array(p["bgr"]) for p in stripe_points]
         self.background_vectors = [np.array(p["bgr"]) for p in background_points]
         self.target_background_vector = np.mean(self.background_vectors, axis=0)
+
+    def _on_array_loaded(self, array):
+        """Handle loaded array data"""
+        self.phi_offset_list = array
+        self.output_log.append(f"Loaded phi offset array with {len(array)} elements")
+        self.output_log.append(f"Array contents: {array}")
 
     # -----------------------
     # Helper methods

@@ -123,3 +123,27 @@ QScrollBar::handle:hover {
     background-color: #FFAAAA;
     color: white;
 }
+
+/* Array Drop Widget Styling */
+QLabel#arrayDropLabel {
+    border: 2px dashed #666;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f5f5f5;
+    color: #444;
+    font-size: 14px;
+    min-height: 80px;
+    margin: 10px;
+}
+
+QLabel#arrayDropLabel:hover {
+    background: #e8e8e8;
+    border-color: #444;
+}
+
+/* When dragging over the widget */
+QLabel#arrayDropLabel[dragOver="true"] {
+    background: #e0f0ff;
+    border-color: #2196F3;
+    border-style: solid;
+}
