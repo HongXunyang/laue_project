@@ -21,6 +21,7 @@ physical_size = dict(
     sampleholder_size=np.array([1000, 1000]),
     sample_thickness=0.6,  # in the unit of mm
     sampleholder_radius_multiplier=2.5,  # if set to 1.2, it means the radius of the sample holder is 20% bigger than the min-enclosing circle of all samples.
+    mm_per_pixel=0.02976,  # conversion factor from pixels to millimeters
 )
 
 batch_optimization_kwargs = dict(

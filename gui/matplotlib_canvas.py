@@ -9,3 +9,8 @@ class MatplotlibCanvas(FigureCanvas):
         self.setObjectName("matplotlib_canvas")
         self.ax_sampleholder = self.fig.add_subplot(121)
         self.ax_evolution = self.fig.add_subplot(122)
+        # remove all ticks on both axes
+        self.ax_sampleholder.set_xticks([])
+        self.ax_sampleholder.set_yticks([])
+        self.ax_evolution.set_xticks([])
+        self.ax_evolution.set_yticks([])

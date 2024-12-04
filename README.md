@@ -18,29 +18,82 @@ This is a sub-project of the larger project *Automizing Sample re-orientation fo
 - Sample contour is approimated by its convex hull. 
 
 
-# Usage
-### Installation
-Ensure that you are running Python 3.6 or later. There are two main ways to run the program: Python script or GUI. Currently, the python script is more stable and recommended. GUI is still under development but still can be used for contour finding and close packing.
+# Installation and Setup
+### Prerequisites
+Ensure that you are running Python 3.6 or later. The program can be run either through Python scripts or the GUI interface.
 
-0. Clone the repository to your local machine:
+### Installation Steps
+1. Clone the repository:
    ```bash
    git clone git@github.com:HongXunyang/laue_project.git
    cd laue_project/
    ```
-1. Install the required packages, using the following command:
+
+2. Install the package and its dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
-2. Optional: create a folder `temporary_output/` in the root directory to store temporary output files generated during the process.
+   This will install the package in "editable" or "development" mode, which means:
+   - All dependencies are properly installed
+   - Changes to the source code take effect immediately without reinstalling
+   - The package can be imported from any directory
+
+
+4. Create a folder for temporary outputs:
    ```bash
    mkdir temporary_output
    ```
 
-------------------
-### Usage Instructions: Python Script
+# Usage Instructions
+### GUI Interface
+The GUI now features an improved workflow with ordered buttons and new functionality. To use the GUI:
+
+1. Launch the GUI:
+   ```bash
+   python src/main_gui.py
+   ```
+
+2. Follow the button sequence as indicated by their names. The typical workflow is:
+
+   a. "**Upload Image**" - Drag and drop an image. Please crop the image before hand, removing
+   everything that could interfere with the detection of the sample holder. For example, the edge of
+   the sample holder, the numbers on the sample holder, etc.
+   
+   b. "**Select Points**" - Define stripe and background colors. Keep an eye on the output log panel to see the instructions and the progress. The user will be required to select three points on the image (directly click on the image) to define the color vectors for stripe detection; after this, the the user will need to select another three points to define the background color vectors. See [Image processing](#image-processing) for more details. 
+   
+   c. "**Process Image**" - Process the image and detect contours. On the top of the middle panel, the user can define the contour-finding parameters. When left empty, the parameters will be set to default values (indicated by the gray placeholder text). Once the parameters are set, click the "**Process Image**" button to start the contour-finding process. The program will display the processed image with the detected contours. If the results are not satisfactory, the user might need to quit the GUI and restart it again to reprocess the image with different parameters. (*I know I know this is not ideal but as I said the GUI is still under development...*)
+   
+   d. "**Input Phi Offset**" - Use the drop-in widget on the top right to specify orientation
+   offsets. The phi offset is determined by the laue measurement on each samples. This data should
+   be stored in a .TXT file. the format is like this: 
+   ```txt
+   10,15,20,5,-45,30
+   ```
+   The ordering is the same as the order of the indeces assigned directly by the GUI after the
+   contour finding process. The phi offset is in degree, positive value means the angle is counter-clockwise; negative value means the angle is clockwise.
+   
+   e. "**Start Close Packing**" - Begin optimization process. After the contours are found, and
+   before starting the close packing process, the user is suggested to adjust the parameters for the
+   close packing in the middle panel. P.S. For now, I will suggest `NO. of system = 3` and
+   `number_of_iterations = 3000` to start a trial run before any commitment. (*In the future, a
+   "test close packing" need to be implemented for the user to find out the best optimization
+   parameters...*) Once the parameters are set, click the "**Start Close Packing**" button to begin the optimization process. On the output log panel, the progress of the optimization will be displayed. The final optimized configuration and the evolution of the optimization process will be shown on the bottom left panel. You can re-run the optimization process by re-clicking the "**Start Close Packing**" button again. You don't need to quit the GUI. 
+
+
+   f. "**Convert to CAD**" - Convert the optimized configuration to a CAD file. the parameter
+   `mm_per_pixel` is the conversion factor between pixels and millimeters. This value is not
+   necessary if you are not planning to 3D print this out.
+
+   g. "**Generate Report**" - Generate a report of the optimization process
+
+3. Most of the intermediate and final outputs will be saved in the `temporary_output/` folder. The
+   report in .HTML format will be opened automatically once generated. The user can also find the
+   report in the `temporary_output/report_*/` folder by draging the .HTML file into the web browser.
+
+### Python Script
 It's recommended to run the python script within an IDE (e.g., VScode or PyCharm) to better understand the procedure and debug if necessary. The following steps outline how to run the script:
 
-The script `main.py` in the root directory contains:
+The script `src/main.py` in the root directory contains:
 - (1) image processing and contour finding;
 - (2) close packing optimization; 
 - (3) converting the optimized configuration to a CAD file; 
@@ -119,27 +172,6 @@ Check the `temporary_output/` folder for the processed images. If the contours a
 
 3. Batch Optimization: Once you find the best parameters for the optimization process, set `STEP_CONTROL["test"]=False` and `STEP_CONTROL["close_packing"]=True` and `STEP_CONTROL["convert_to_cad"]=True`. Everything else is the same as the trial run. The results will be saved in the `temporary_output/` folder.
 
--------
-### Usage Instructions: GUI
-The GUI can be opened up by running the `main_gui.py` script. The GUI provides a user-friendly interface for uploading images, processing contours, and optimizing sample configurations. Currently, the GUI is under development and coversion to CAD file is not yet supported.
-
-1. Run the GUI script using the following command:
-   ```bash
-   python main_gui.py
-   ```
-   or use an IDE to run the script.
-
-2. The GUI window will open. Drag and drop an image of the sample holder with samples onto the designated area in the GUI. 
-
-3. Click the "**Select Points**" button in the controls panel. Keep an eye on the output log panel to see the instructions and the progress. The user will be required to select three points on the image (directly click on the image) to define the color vectors for stripe detection; after this, the the user will need to select another three points to define the background color vectors. See [Image processing](#image-processing) for more details. 
-
-4. On the top of the middle panel, the user can define the contour-finding parameters. When left empty, the parameters will be set to default values (indicated by the gray placeholder text). 
-
-5. Once the parameters are set, click the "**Process Image**" button to start the contour-finding process. The program will display the processed image with the detected contours. If the results are not satisfactory, the user might need to quit the GUI and restart it again to reprocess the image with different parameters. (*I know I know this is not ideal but as I said the GUI is still under development...*)
-
-6. After the contours are found, and before starting the close packing process, the user is suggested to adjust the parameters for the close packing in the middle panel. P.S. For now, I will suggest `NO. of system = 3` and `number_of_iterations = 3000` to start a trial run before any commitment. (*In the future, a "test close packing" need to be implemented for the user to find out the best optimization parameters...*)
-
-7. Once the parameters are set, click the "**Start Close Packing**" button to begin the optimization process. On the output log panel, the progress of the optimization will be displayed. The final optimized configuration and the evolution of the optimization process will be shown on the bottom left panel. You can re-run the optimization process by re-clicking the "**Start Close Packing**" button again. You don't need to quit the GUI. 
 
 
 # Detailed Dig-in 
@@ -148,47 +180,50 @@ The GUI can be opened up by running the `main_gui.py` script. The GUI provides a
 The project folder is structured as follows:
 ```
 workspace/
+   ├── src/                     # Source code directory
+   │   ├── main.py             # Main execution script
+   │   └── scripts/            # Utility and test scripts
+   │       ├── case_study_first.py
+   │       ├── test.py
+   │       └── useless.py
    ├── classes/
    │   ├── __init__.py           # Package-level initialization
    │   ├── class_contour.py      # Defines the Contour class
    │   ├── class_sample.py       # Defines the Sample class
    │   ├── class_sampleholder.py # Defines the SampleHolder class
    │   ├── helper_functions.py   # internal helper functions
-   │   ├── visualization.py      # internal visualization functions
+   │   └── visualization.py      # internal visualization functions
    ├── close_packing/
    │   ├── __init__.py           # Package-level initialization
    │   ├── optimization.py       # close packing optimization
    │   ├── helper_functions.py   # internal helper functions
-   │   ├── visualization.py      # internal visualization functions
+   │   └── visualization.py      # internal visualization functions
    ├── contour_finding/
    │   ├── __init__.py           # Package-level initialization
-   │   ├── image_processing.py   # image processing functions
+   │   └── image_processing.py   # image processing functions
    ├── config/
    │   ├── config.py             # configuration parameters and variables
    │   ├── gui_styles.css        # CSS for the GUI
-   │   ├── stylesheet.json       # plot setting parameters
+   │   └── stylesheet.json       # plot setting parameters
    ├── gui/
    │   ├── __init__.py           # Package-level initialization
-   │   ├── main_window.py        # main window widget
-   │   ├── image_display.py      # image drop-in and display widget
-   │   ├── matplotlib_canvas.py  # results display panel widget
+   │   ├── main_window.py        # main window widget
+   │   ├── image_display.py      # image drop-in and display widget
+   │   ├── matplotlib_canvas.py  # results display panel widget
    │   ├── helper_functions.py   # helper functions only for internal use
-   │   ├── worker.py             # worker thread for close packing
+   │   └── worker.py             # worker thread for close packing
    ├── to_cad/
    │   ├── __init__.py           # Package-level initialization
    │   ├── to_cad.py             # functions for converting optimized configuration to CAD
-   │   ├── helper_functions.py   # internal helper FunctionalSampleHolder
+   │   └── helper_functions.py   # internal helper functions
    ├── utils/
    │   ├── __init__.py           # Package-level initialization 
-   │   ├── visualization.py      # general visualization tools/functions
-   │   ├── helper_functions.py   # general helper functions
-   ├── temporary_output/         # temporary output files
-   ├── tests/                    # test scripts
-   ├── main.py                   # main script for running the program
-   ├── main_gui.py               # main script for running the GUI
-   ├── requirements.txt          # required libraries
-   ├── .gitignore                # gitignore file
-   └── README.md                 # Project documentation (this file)
+   │   ├── visualization.py      # general visualization tools/functions
+   │   └── helper_functions.py   # general helper functions
+   ├── setup.py                  # Package installation script
+   ├── requirements.txt          # Dependencies list
+   ├── .gitignore               # gitignore file
+   └── README.md                # Project documentation
 ```
 ### Data structure
 the contour, sample and sample holder are defined as classes in the `classes/` package.

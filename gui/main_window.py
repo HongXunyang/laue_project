@@ -26,7 +26,12 @@ from contour_finding import (
 )
 from PyQt5.QtGui import QTextCursor
 from close_packing import batch_optimization
-from config.config import batch_optimization_kwargs, config, image2contours_kwargs
+from config.config import (
+    batch_optimization_kwargs,
+    config,
+    image2contours_kwargs,
+    physical_size,
+)
 from utils import visualize_sampleholder, visualize_area_evolution, save_sampleholder
 from .worker import ClosePackingWorker
 from to_cad import sampleholder_to_cad
@@ -99,19 +104,26 @@ class MainWindow(QMainWindow):
         )
         self.threshold_input.setPlaceholderText(str(image2contours_kwargs["threshold"]))
 
-        # select-points button
-        self.select_points_button = QPushButton("Select Points")
+        # Create a grid layout for the buttons in contour finding params
+        button_grid = QGridLayout()
+
+        # Add numbered buttons to the grid
+        self.select_points_button = QPushButton("1. Select Points")
         self.select_points_button.setObjectName("select_points_button")
 
-        # Process Button
-        self.process_button = QPushButton("Process Image")
+        self.process_button = QPushButton("2. Process Image")
         self.process_button.setObjectName("process_button")
 
-        # Reorient Samples Button
-        self.reorient_samples_button = QPushButton("Re-orient Samples")
+        self.reorient_samples_button = QPushButton("3. Re-orient Samples")
         self.reorient_samples_button.setObjectName("reorient_samples_button")
 
-        # add row
+        button_grid.addWidget(self.select_points_button, 0, 0)
+        button_grid.addWidget(self.process_button, 0, 1)
+        button_grid.addWidget(
+            self.reorient_samples_button, 1, 0, 1, 2
+        )  # span 2 columns
+
+        # Add the form layout items
         contour_finding_params_layout.addRow("Epsilon:", self.epsilon_input)
         contour_finding_params_layout.addRow("Lowercut:", self.lowercut_input)
         contour_finding_params_layout.addRow("Area lowercut:", self.area_lowercut_input)
@@ -119,9 +131,9 @@ class MainWindow(QMainWindow):
             "Gauss. filter size:", self.gaussian_size_input
         )
         contour_finding_params_layout.addRow("Threshold:", self.threshold_input)
-        contour_finding_params_layout.addRow(self.select_points_button)
-        contour_finding_params_layout.addRow(self.process_button)
-        contour_finding_params_layout.addRow(self.reorient_samples_button)
+
+        # Add the button grid to the form layout
+        contour_finding_params_layout.addRow(button_grid)
         contour_finding_params.setLayout(contour_finding_params_layout)
 
         # B-2: Close packing parameters
@@ -198,8 +210,15 @@ class MainWindow(QMainWindow):
         self.is_save_results_button.setChecked(True)
         self.is_save_results_button.setObjectName("is_save_results_button")
 
-        self.close_packing_button = QPushButton("Start Close Packing")
+        self.close_packing_button = QPushButton("4. Start Close Packing")
         self.close_packing_button.setObjectName("close_packing_button")
+
+        # Create a grid layout for the toggle buttons
+        toggle_grid = QGridLayout()
+        toggle_grid.addWidget(self.is_gravity_button, 0, 0)
+        toggle_grid.addWidget(self.is_update_sampleholder_button, 0, 1)
+        toggle_grid.addWidget(self.is_contour_buffer_button, 1, 0)
+        toggle_grid.addWidget(self.is_save_results_button, 1, 1)
 
         close_packing_params_layout.addRow("No. of System:", self.number_system_input)
         close_packing_params_layout.addRow("Step Size:", self.step_size_input)
@@ -218,26 +237,30 @@ class MainWindow(QMainWindow):
             "Turn off gravity at step:", self.gravity_off_at_input
         )
 
-        close_packing_params_layout.addRow(self.is_gravity_button)
-        close_packing_params_layout.addRow(self.is_update_sampleholder_button)
-        close_packing_params_layout.addRow(self.is_contour_buffer_button)
-        close_packing_params_layout.addRow(self.is_save_results_button)
+        close_packing_params_layout.addRow(toggle_grid)
         close_packing_params_layout.addRow(self.close_packing_button)
 
         close_packing_params.setLayout(close_packing_params_layout)
 
-        # B-3: Buttons
+        # B-3: Controls with numbered buttons in a grid
         controls = QGroupBox("controls")
-        controls_layout = QVBoxLayout()
+        controls_layout = QGridLayout()
+
+        # Add mm_per_pixel input
+        mm_per_pixel_label = QLabel("mm per pixel:")
+        self.mm_per_pixel_input = QLineEdit()
+        self.mm_per_pixel_input.setPlaceholderText(str(physical_size["mm_per_pixel"]))
+        controls_layout.addWidget(mm_per_pixel_label, 0, 0)
+        controls_layout.addWidget(self.mm_per_pixel_input, 0, 1)
 
         # Convert to CAD Button
-        self.convert_to_cad_button = QPushButton("Convert to CAD")
-        controls_layout.addWidget(self.convert_to_cad_button)
+        self.convert_to_cad_button = QPushButton("5. Convert to CAD")
+        controls_layout.addWidget(self.convert_to_cad_button, 1, 0)
         self.convert_to_cad_button.setObjectName("convert_to_cad_button")
 
         # Generate Report Button
-        self.generate_report_button = QPushButton("Generate Report")
-        controls_layout.addWidget(self.generate_report_button)
+        self.generate_report_button = QPushButton("6. Generate Report")
+        controls_layout.addWidget(self.generate_report_button, 1, 1)
         self.generate_report_button.setObjectName("generate_report_button")
 
         controls.setLayout(controls_layout)
@@ -461,10 +484,19 @@ class MainWindow(QMainWindow):
     def convert_to_cad(self):
         folder_path = config["temporary_output_folder"]
         filename = config["sampleholder_cad_filename"]
+
+        # Get mm_per_pixel value, use default if empty
+        mm_per_pixel = (
+            float(self.mm_per_pixel_input.text())
+            if self.mm_per_pixel_input.text()
+            else physical_size["mm_per_pixel"]
+        )
+
         sampleholder_to_cad(
             self.sampleholder,
             folder_path=folder_path,
             filename=filename,
+            mm_per_pixel=mm_per_pixel,
         )
         self.output_log.append(
             f"Exported the sample holder to {folder_path} in STL format."
