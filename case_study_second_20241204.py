@@ -102,53 +102,15 @@ axs[1].set_title("reoriented")
 fig.tight_layout()
 fig.savefig("temporary_output/reoriented_samples.jpg")
 
-if False:
-    # generate animation to determine the best parameters for the contour finding
-    start_time = time.time()
-    best_vertices_list, best_area, optimization_history = optimization(
-        sampleholder,
-        number_of_iterations=20000,
-        step_size=25,
-        temperature=400,
-        gravity_multiplier=0.5,
-        gravity_off_at=2700,
-        contour_buffer_multiplier=1.01,
-        optimize_shape="min_circle",
-        is_rearrange_vertices=True,
-        is_gravity=True,
-        is_update_sampleholder=True,
-        is_contour_buffer=True,
-        is_plot_evolution=False,
-        is_record_area_history=True,
-        is_record_configuration_history=True,
-    )
-    end_time = time.time()
-    sampleholder.update()
-    print(f"optimization time: {end_time - start_time} seconds\n")
-    fig_ani, axs = plt.subplots(1, 2, figsize=(8, 4))
-    configurations = optimization_history["vertices_list_evolution"]
-    area_evolution = optimization_history["area_evolution"]
-    animate_config_evolution(
-        configurations,
-        area_evolution,
-        samples_area=sampleholder.samples_area,
-        fig=fig_ani,
-        axs=axs,
-        is_save=True,
-        filename="test_animation.mp4",
-        max_duration=10,
-    )
-    visualize_sampleholder(sampleholder, is_min_circle=True)
-
 if True:
     start_time = time.time()
     best_configuration, area_list, sorted_indices, _ = batch_optimization(
         sampleholder,
-        number_system=20,
+        number_system=3,
         is_print=True,
         step_size=20,
         number_of_iterations=30000,
-        temperature=200,
+        temperature=100,
         contour_buffer_multiplier=1.05,
         optimize_shape="min_circle",
         is_gravity=True,
@@ -179,29 +141,27 @@ if True:
     # Save the engraved sampleholder to a CAD (STL) file
     # by default, the output CAD files will be saved in the `temporary_output/` folder.
     sampleholder_to_cad(
-        sampleholder,
-        mm_per_pixel=mm_per_pixel * 1.05,
-        filename="sampleholder_5perc_bigger.stl",
+        sampleholder, mm_per_pixel=mm_per_pixel, filename="sampleholder_normal"
     )
     sampleholder_to_cad(
         sampleholder,
-        mm_per_pixel=mm_per_pixel * 1.10,
-        filename="sampleholder_10perc_bigger.stl",
+        mm_per_pixel=mm_per_pixel * 1.05,
+        filename="sampleholder_5percent_bigger.stl",
+    )
+    sampleholder_to_cad(
+        sampleholder,
+        mm_per_pixel=mm_per_pixel * 1.1,
+        filename="sampleholder_10percent_bigger.stl",
     )
     sampleholder_to_cad(
         sampleholder,
         mm_per_pixel=mm_per_pixel * 1.15,
-        filename="sampleholder_15perc_bigger.stl",
+        filename="sampleholder_normal_15percent_bigger.stl",
     )
     sampleholder_to_cad(
         sampleholder,
         mm_per_pixel=mm_per_pixel * 1.2,
-        filename="sampleholder_20perc_bigger.stl",
-    )
-    sampleholder_to_cad(
-        sampleholder,
-        mm_per_pixel=mm_per_pixel * 1.3,
-        filename="sampleholder_30perc_bigger.stl",
+        filename="sampleholder_20percent_bigger.stl",
     )
     # ----------- end  ----------- #
 plt.show()
